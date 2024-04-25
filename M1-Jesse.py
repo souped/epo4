@@ -2,17 +2,6 @@ import serial
 import time
 import keyboard
 
-
-# comport = "COM5"
-# serial_port = serial.Serial(comport, 115200, rtscts=True)
-#
-# serial_port.write(b'D200\n')
-# serial_port.write(b'S\n')
-# status = serial_port.read_until(b'\x04')
-# print(status)
-# time.sleep(5)
-# serial_port.close()
-
 # beacon specs
 carrier_freq = 10000    # Carrier frequency, min = 5 kHz & max = 30 kHz
 bit_freq = 5000         # The bit frequency, min = 1 kHz & max = 5 kHz
@@ -37,10 +26,12 @@ class KITT:
         self.serial.write(b'C' + code + b'\n')
 
         # state variables such as speed, angle are defined here
-        self.prev_speed = 150  # Initialize previous speed to standstill
+        self.prev_speed = 150  # No speed
 
     def send_command(self, command):
-        self.serial.write(command.encode())
+        if isinstance(command, str):
+            command = command.encode()
+        self.serial.write(command)
 
     def set_speed(self, speed):
         self.prev_speed = speed  # Update previous speed
@@ -53,19 +44,20 @@ class KITT:
         self.set_speed(150)
         self.set_angle(150)
 
-    def emergency_brake(self):
+    def emergency_brake(self):  # STILL NEEDS TUNING!
         if self.prev_speed > 150:
-            # If previous speed was greater than standstill, apply emergency brake
-            self.set_speed(140)  # Set speed to move backwards
-            time.sleep(0.5)  # Reverse for a short period
-            self.stop()  # Stop the car
+            # If previous speed > standstill, apply emergency brake
+            self.set_speed(145)     # Set speed to move backwards
+            time.sleep(0.5)         # Reverse for a short period.
+            self.stop()             # Stop the car
 
     def __del__(self):
-        self.serial.close()     # safely closes the comport
+        self.stop()             # In case the car was still moving, stop the car.
+        self.serial.close()     # Safely closes the comport
 
 
 def wasd(kitt):
-    # checks for any keypress and what key is pressed.
+    # Checks for any keypress and what key is pressed.
     def on_key_event(event):
         # The statements below only run if the corresponding key is being pressed.
         if event.name == 'w' and event.event_type == keyboard.KEY_DOWN:
@@ -80,10 +72,10 @@ def wasd(kitt):
         elif event.name == 'd' and event.event_type == keyboard.KEY_DOWN:
             kitt.set_angle(100)  # turn wheels fully right
             print("right")
-        elif event.name == 'e':
+        elif event.name == 'e' and event.event_type == keyboard.KEY_DOWN:
             kitt.send_command(b'A1\n')
             print("start beacon")
-        elif event.name == 'q':
+        elif event.name == 'q' and event.event_type == keyboard.KEY_DOWN:
             kitt.send_command(b'A0\n')
             print("stop beacon")
         # Runs when the pressed key is released. Stops the car.
@@ -91,13 +83,18 @@ def wasd(kitt):
             kitt.stop()
             print("stop")
 
-    keyboard.hook(on_key_event)     # check for any key status change
+    keyboard.hook(on_key_event)     # Check for any key status change
     kitt.emergency_brake()          # Check for emergency brake condition
 
+
 if __name__ == "__main__":
-    kitt = KITT("COM4")   # create KITT instance
-    try:  # error handling
-        wasd(kitt)  # keyboard function
+    kitt = KITT("COM4")   # Create KITT instance
+
+    try:  # Error handling
+        wasd(kitt)  # Keyboard function
     except Exception as e:
         print(e)
-    keyboard.wait('ESC')  # Wait for 'q' key to exit
+
+    # When 'ESC' is pressed, exit
+    while not keyboard.is_pressed('esc'):
+        pass
