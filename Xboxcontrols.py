@@ -28,7 +28,7 @@ bit_freq = 5000         # The bit frequency, min = 1 kHz & max = 5 kHz
 repetition_cnt = 2500   # = bit_freq/repetition_freq, sets the time between transmissions, with repetition_freq 1-10 Hz.
 codeword = 0xFEEDBACC   # Code word in hexadecimal
 # speed specs
-max_speeding = 5
+max_speeding = 10
 max_speed = -max_speeding+15
 
 
@@ -117,7 +117,7 @@ def xbox_controls(kitt):
                     kitt.send_command(b'A1\n')
                     print("Beacon is on")
 
-        kitt.emergency_brake()  # Check for emergency brake condition
+        #kitt.emergency_brake()  # Check for emergency brake condition
         pygame.time.wait(10)    # Add a small delay to prevent high CPU usage
         keyboard.hook(exit_on_key('esc'))
 
@@ -130,7 +130,7 @@ def exit_on_key(keyname):   # since we are not actively listening to keyboard, w
 
 
 if __name__ == "__main__":
-    kitt = KITT("COM4")   # Create KITT instance
+    kitt = KITT("COM5")   # Create KITT instance
 
     try:  # Error handling
         xbox_controls(kitt)  # Xbox controller function
