@@ -27,11 +27,23 @@ class KITT:
 
         # state variables such as speed, angle are defined here
         self.prev_speed = 150  # No speed
+        self.distances = list()
 
     def send_command(self, command):
         if isinstance(command, str):
             command = command.encode()
         self.serial.write(command)
+
+    def read_command(self):
+        self.send_command(b'Sd\n')
+        message = self.serial.read_until(b'\x04')
+        message = message[:-6]
+        temp = message.strip("USLR")
+        temp = temp.split("\n")
+        temp = [int(i) for i in temp]
+        self.distances.append(temp)
+        print(self.distances)
+        #[[0,0]]
 
     def set_speed(self, speed):
         self.prev_speed = speed  # Update previous speed
