@@ -53,7 +53,7 @@ def wasd(kitt):
                     kitt.send_command(b'A1\n')
                 case "q":
                     kitt.send_command(b'A0\n')
-        else:
+        elif event.event_type == keyboard.KEY_UP:
             kitt.stop()
             print("stopping...")
 
