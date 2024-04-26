@@ -10,10 +10,26 @@ from wavaudioread import wavaudioread
 from recording_tool import recording_tool
 
 
+import numpy as np
+
+
+y1 = y[:, 0]  # First channel
+y2 = y[:, 1]  # Second channel
+y3 = y[:, 2]  # Third channel
+y4 = y[:, 3]  # Fourth channel
+y5 = y[:, 4]  # Fifth channel
+
+
+
+
+
+
+
+
 #def __init__(self, recording, debug=False):
     # Store the recordings
     # Load the reference signal from memory
-    # x_car, y_car = self.localization()
+    x_car, y_car = self.localization()
     
     
 #def localization(self):
@@ -25,9 +41,9 @@ from recording_tool import recording_tool
     # Calculate channel estimation of each recording using ch2 or ch3
     # Calculate TDOA between two recordings based on peaks
     # in the channel estimate
+    @staticmethod
     
-@staticmethod
-    
+@staticmethod 
 def ch3(x, y):
     Nx = len(x)           # Length of x
     Ny = len(y)             # Length of y
