@@ -11,52 +11,88 @@ from recording_tool import recording_tool
 
 
 import numpy as np
-
-#def __init__(self, recording, debug=False):
-    # Store the recordings
-    # Load the reference signal from memory
-    #x_car, y_car = self.localization()
+class self:
+    #def __init__(self, recording, debug=False):
+        # Store the recordings
+        # Load the reference signal from memory
+        #x_car, y_car = self.localization()
     
+
+    def localization(self, audiowav):
+        # Split each recording into individual pulses
+        y11 = audiowav[:,0]
+        y12 = audiowav[:,1]
+        y13 = audiowav[:,2]
+        y14 = audiowav[:,3]
+        y15 = audiowav[:,4]
+
+        # Calculate TDOA between different microphone pairs
+        D12 = self.TDOA(y11, y12)
+        D13 = self.TDOA(y11, y13)
+        D14 = self.TDOA(y11, y14)
+        
+        # Run the coordinate_2d using the calculated TDOAs
+        D12, D13, D14 = self.coordinate_2d(D12, D13, D14)
+
+
+
+        return D12, D13, D14
+        
+    def TDOA(self, rec1, rec2, min_val=0.025):
+        # Calculate channel estimation of each recording using ch2 or ch3
+        h0 = self.ch3(rec1, refsignal)
+        h1 = self.ch3(rec2, refsignal)
     
-#def localization(self):
-    # Split each recording into individual pulses
-    # Calculate TDOA between different microphone pairs
-    # Run the coordinate_2d using the calculated TDOAs
-    
-#def TDOA(self, rec1, rec2):
-    # Calculate channel estimation of each recording using ch2 or ch3
-    # Calculate TDOA between two recordings based on peaks
-    # in the channel estimate
-    
-@staticmethod 
-def ch3(x, y):
-    Nx = len(x)           # Length of x
-    Ny = len(y)             # Length of y
-    L = Ny - Nx + 1          # Length of h
-    Lhat = 1600000
-    epsi = 0.001
+        # Calculate TDOA between two recordings based on peaks in the channel estimate
+        start = 0
+        for i, k in enumerate(h0):
+            if np.abs(k) > min_val:
+                print(f"found value above threshold; {i}")
+                start = i
 
-    # Force x to be the same length as y
-    x = np.append(x, [0]* (L-1))     # Make x same length as y
+        # find peak of signal
+        segmh0 = h0[start:start + 650]
+        h0_peak = np.max(segmh0)
+        h0_index = np.argmax(h0)
 
-    # Deconvolution in frequency domain
-    Y = fft(y)
-    X = fft(x)
+        # find h1 channel peak
+        segmh1 = h1[start:start + 1000]
+        h1_peak = np.max(segmh1)
+        h1_index = np.argmax(h1)
 
-    # Threshold to avoid blow ups of noise during inversion
-    ii = np.abs(X) < epsi*np.max(np.abs(X))
-    X=X[:len(Y)]
-    Y=Y[:len(X)]
-    H = np.divide(Y,X)
-    H = [0 if condition else x for x, condition in zip(Y, ii)]
-    h = np.real(ifft(H))    
-    #h = h[0:Lhat]      
-    return h
+        #return indices & max values
+        print(f"peakh0: {np.abs(h0_peak)}, h0_index: {h0_index}")
+        return (np.abs(h0_peak), h0_index, np.abs(h1_peak), h1_index)
+        
+    @staticmethod 
+    def ch3(x, y):
+        Nx = len(x)           # Length of x
+        Ny = len(y)             # Length of y
+        L = Ny - Nx + 1          # Length of h
+        Lhat = 1600000
+        epsi = 0.001
 
-def coordinate_2d(self, D12, D13, D14):
-    # Calculate 2D coordinates based on TDOA measurements
-    # using the linear algebra given before
-    print()
+        # Force x to be the same length as y
+        x = np.append(x, [0]* (L-1))     # Make x same length as y
+
+        # Deconvolution in frequency domain
+        Y = fft(y)
+        X = fft(x)
+
+        # Threshold to avoid blow ups of noise during inversion
+        ii = np.abs(X) < epsi*np.max(np.abs(X))
+        X=X[:len(Y)]
+        Y=Y[:len(X)]
+        H = np.divide(Y,X)
+        H = [0 if condition else x for x, condition in zip(Y, ii)]
+        h = np.real(ifft(H))    
+        #h = h[0:Lhat]      
+        return h
+
+    def coordinate_2d(self, D12, D13, D14):
+        # Calculate 2D coordinates based on TDOA measurements
+        # using the linear algebra given before
+
 
 def print_plots(a, refsig, Fs_RX):
     y11 = a[:,0]
@@ -75,7 +111,19 @@ def print_plots(a, refsig, Fs_RX):
     H13 = fft(h13)
     H14 = fft(h14)
     H15 = fft(h15)
-    
+
+
+
+
+
+
+
+
+
+
+    #PLOT #PLOT #PLOT #PLOT #PLOT #PLOT #PLOT #PLOT
+
+
     fig, ax = plt.subplots(3, 5, figsize=(20,10))
     period = 1 / Fs_RX
     t = np.linspace(0, period*len(y11), len(y11))
