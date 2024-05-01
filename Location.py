@@ -89,132 +89,124 @@ class self:
         #h = h[0:Lhat]      
         return h
 
-    def coordinate_2d(self, D12, D13, D14):
+    #def coordinate_2d(self, D12, D13, D14):
         # Calculate 2D coordinates based on TDOA measurements
         # using the linear algebra given before
+        
+    def print_plots(a, refsig, Fs_RX, title, index):
+        y11 = a[:,0]
+        y12 = a[:,1]
+        y13 = a[:,2]
+        y14 = a[:,3]
+        y15 = a[:,4]
 
+        h11 = self.ch3(refsig,y11)
+        h12 = self.ch3(refsig,y12)
+        h13 = self.ch3(refsig,y13)
+        h14 = self.ch3(refsig,y14)
+        h15 = self.ch3(refsig,y15)
+        H11 = fft(h11)
+        H12 = fft(h12)
+        H13 = fft(h13)
+        H14 = fft(h14)
+        H15 = fft(h15)
 
-def print_plots(a, refsig, Fs_RX):
-    y11 = a[:,0]
-    y12 = a[:,1]
-    y13 = a[:,2]
-    y14 = a[:,3]
-    y15 = a[:,4]
+        #PLOT #PLOT #PLOT #PLOT #PLOT #PLOT #PLOT #PLOT
 
-    h11 = ch3(refsig,y11)
-    h12 = ch3(refsig,y12)
-    h13 = ch3(refsig,y13)
-    h14 = ch3(refsig,y14)
-    h15 = ch3(refsig,y15)
-    H11 = fft(h11)
-    H12 = fft(h12)
-    H13 = fft(h13)
-    H14 = fft(h14)
-    H15 = fft(h15)
+        fig, ax = plt.subplots(3, 5, figsize=(20,10))
+        period = 1 / Fs_RX
+        t = np.linspace(0, period*len(y11), len(y11))
 
+        ## first plot
+        ax[0,0].plot(t, y11, color='C0')
+        ax[0,0].set_title("Recording Channel 1")
+        ax[0,0].set_xlabel("Time [s]")
+        ax[0,0].set_ylabel("Amplitude")
 
+        ax[0,1].plot(t, y12, color='C0')
+        ax[0,1].set_title("Recording Channel 2")
+        ax[0,1].set_xlabel("Time [s]")
+        ax[0,1].set_ylabel("Amplitude")
 
+        ax[0,2].plot(t, y13, color='C0')
+        ax[0,2].set_title("Recording Channel 3")
+        ax[0,2].set_xlabel("Time [s]")
+        ax[0,2].set_ylabel("Amplitude")
 
+        ax[0,3].plot(t, y14, color='C0')
+        ax[0,3].set_title("Recording Channel 4")
+        ax[0,3].set_xlabel("Time [s]")
+        ax[0,3].set_ylabel("Amplitude")
 
+        ax[0,4].plot(t, y15, color='C0')
+        ax[0,4].set_title("Recording Channel 5")
+        ax[0,4].set_xlabel("Time [s]")
+        ax[0,4].set_ylabel("Amplitude")
 
+        t = np.linspace(0, len(h11)*period, len(h11))
+        ## first plot
+        ax[1,0].plot(t, h11, color='C0')
+        ax[1,0].set_title("Estimation of recording")
+        ax[1,0].set_xlabel("Time [s]")
+        ax[1,0].set_ylabel("Amplitude")
 
+        ax[1,1].plot(t, h12, color='C0')
+        ax[1,1].set_title("Estimation of recording")
+        ax[1,1].set_xlabel("Time [s]")
+        ax[1,1].set_ylabel("Amplitude")
 
+        ax[1,2].plot(t, h13, color='C0')
+        ax[1,2].set_title("Estimation of recording")
+        ax[1,2].set_xlabel("Time [s]")
+        ax[1,2].set_ylabel("Amplitude")
 
+        ax[1,3].plot(t, h14, color='C0')
+        ax[1,3].set_title("Estimation of recording")
+        ax[1,3].set_xlabel("Time [s]")
+        ax[1,3].set_ylabel("Amplitude")
 
-    #PLOT #PLOT #PLOT #PLOT #PLOT #PLOT #PLOT #PLOT
+        ax[1,4].plot(t, h15, color='C0')
+        ax[1,4].set_title("Estimation of recording")
+        ax[1,4].set_xlabel("Time [s]")
+        ax[1,4].set_ylabel("Amplitude")
 
+        f = np.linspace(0, Fs_RX/1000, len(h11))
+        ## first plot
+        ax[2,0].plot(f, abs(H11), color='C0')
+        ax[2,0].set_title("Frequency spectrum estimation")
+        ax[2,0].set_xlabel("Frequency [Hz]")
+        ax[2,0].set_ylabel("Amplitude")
+        ax[2,0].set_ylim(bottom=0)
 
-    fig, ax = plt.subplots(3, 5, figsize=(20,10))
-    period = 1 / Fs_RX
-    t = np.linspace(0, period*len(y11), len(y11))
+        ax[2,1].plot(f, abs(H12), color='C0')
+        ax[2,1].set_title("Frequency spectrum estimation")
+        ax[2,1].set_xlabel("Frequency [Hz]")
+        ax[2,1].set_ylabel("Amplitude")
+        ax[2,1].set_ylim(bottom=0)
 
-    ## first plot
-    ax[0,0].plot(t, y11, color='C0')
-    ax[0,0].set_title("Recording X=64, Y=40, Channel 1")
-    ax[0,0].set_xlabel("Time [s]")
-    ax[0,0].set_ylabel("Amplitude")
+        ax[2,2].plot(f, abs(H13), color='C0')
+        ax[2,2].set_title("Frequency spectrum estimation")
+        ax[2,2].set_xlabel("Frequency [Hz]")
+        ax[2,2].set_ylabel("Amplitude")
+        ax[2,2].set_ylim(bottom=0)
 
-    ax[0,1].plot(t, y12, color='C0')
-    ax[0,1].set_title("Recording X=64, Y=40, Channel 2")
-    ax[0,1].set_xlabel("Time [s]")
-    ax[0,1].set_ylabel("Amplitude")
+        ax[2,3].plot(f, abs(H14), color='C0')
+        ax[2,3].set_title("Frequency spectrum estimation")
+        ax[2,3].set_xlabel("Frequency [Hz]")
+        ax[2,3].set_ylabel("Amplitude")
+        ax[2,3].set_ylim(bottom=0)
 
-    ax[0,2].plot(t, y13, color='C0')
-    ax[0,2].set_title("Recording X=64, Y=40, Channel 3")
-    ax[0,2].set_xlabel("Time [s]")
-    ax[0,2].set_ylabel("Amplitude")
+        ax[2,4].plot(f, abs(H15), color='C0')
+        ax[2,4].set_title("Frequency spectrum estimation")
+        ax[2,4].set_xlabel("Frequency [Hz]")
+        ax[2,4].set_ylabel("Amplitude")
+        ax[2,4].set_ylim(bottom=0)
 
-    ax[0,3].plot(t, y14, color='C0')
-    ax[0,3].set_title("Recording X=64, Y=40, Channel 4")
-    ax[0,3].set_xlabel("Time [s]")
-    ax[0,3].set_ylabel("Amplitude")
-
-    ax[0,4].plot(t, y15, color='C0')
-    ax[0,4].set_title("Recording X=64, Y=40, Channel 5")
-    ax[0,4].set_xlabel("Time [s]")
-    ax[0,4].set_ylabel("Amplitude")
-
-    t = np.linspace(0, len(h11)*period, len(h11))
-    ## first plot
-    ax[1,0].plot(t, h11, color='C0')
-    ax[1,0].set_title("Estimation of recording")
-    ax[1,0].set_xlabel("Time [s]")
-    ax[1,0].set_ylabel("Amplitude")
-
-    ax[1,1].plot(t, h12, color='C0')
-    ax[1,1].set_title("Estimation of recording")
-    ax[1,1].set_xlabel("Time [s]")
-    ax[1,1].set_ylabel("Amplitude")
-
-    ax[1,2].plot(t, h13, color='C0')
-    ax[1,2].set_title("Estimation of recording")
-    ax[1,2].set_xlabel("Time [s]")
-    ax[1,2].set_ylabel("Amplitude")
-
-    ax[1,3].plot(t, h14, color='C0')
-    ax[1,3].set_title("Estimation of recording")
-    ax[1,3].set_xlabel("Time [s]")
-    ax[1,3].set_ylabel("Amplitude")
-
-    ax[1,4].plot(t, h15, color='C0')
-    ax[1,4].set_title("Estimation of recording")
-    ax[1,4].set_xlabel("Time [s]")
-    ax[1,4].set_ylabel("Amplitude")
-
-    f = np.linspace(0, Fs_RX/1000, len(h11))
-    ## first plot
-    ax[2,0].plot(f, abs(H11), color='C0')
-    ax[2,0].set_title("Frequency spectrum of channel estimation")
-    ax[2,0].set_xlabel("Frequency [Hz]")
-    ax[2,0].set_ylabel("Amplitude")
-    ax[2,0].set_ylim(bottom=0)
-
-    ax[2,1].plot(f, abs(H12), color='C0')
-    ax[2,1].set_title("Frequency spectrum of channel estimation")
-    ax[2,1].set_xlabel("Frequency [Hz]")
-    ax[2,1].set_ylabel("Amplitude")
-    ax[2,1].set_ylim(bottom=0)
-
-    ax[2,2].plot(f, abs(H13), color='C0')
-    ax[2,2].set_title("Frequency spectrum of channel estimation")
-    ax[2,2].set_xlabel("Frequency [Hz]")
-    ax[2,2].set_ylabel("Amplitude")
-    ax[2,2].set_ylim(bottom=0)
-
-    ax[2,3].plot(f, abs(H14), color='C0')
-    ax[2,3].set_title("Frequency spectrum of channel estimation")
-    ax[2,3].set_xlabel("Frequency [Hz]")
-    ax[2,3].set_ylabel("Amplitude")
-    ax[2,3].set_ylim(bottom=0)
-
-    ax[2,4].plot(f, abs(H15), color='C0')
-    ax[2,4].set_title("Frequency spectrum of channel estimation")
-    ax[2,4].set_xlabel("Frequency [Hz]")
-    ax[2,4].set_ylabel("Amplitude")
-    ax[2,4].set_ylim(bottom=0)
-
-    fig.tight_layout()
-    plt.show()
+        plt.suptitle(title)
+        fig.tight_layout()
+        #plt.show()
+        plt.savefig('plot_full_{}.png'.format(index), dpi=300)
+        plt.close()
                 
 
  
@@ -224,7 +216,7 @@ if __name__ == "__main__":
     # Read the .wav file
     # Localize the sound source
     # Present the results
-    Fs_RX = 40000
+    Fs_RX = 48000
     ABS1 = wavaudioread("opnames/record_x64_y40.wav", Fs_RX)
     ABS2 = wavaudioread("opnames/record_x82_y399.wav", Fs_RX)
     ABS3 = wavaudioread("opnames/record_x109_y76.wav", Fs_RX)
@@ -243,23 +235,23 @@ if __name__ == "__main__":
     
     for i in ABS:
         if i == "1":
-            print_plots(ABS1, refsig, Fs_RX)  
+            self.print_plots(ABS1, refsig, Fs_RX, "X = 64, Y = 40", 1)  
         if i == "2":
-            print_plots(ABS2, refsig, Fs_RX) 
+            self.print_plots(ABS2, refsig, Fs_RX, "X = 82, Y = 399", 2) 
         if i == "3":
-            print_plots(ABS3, refsig, Fs_RX) 
+            self.print_plots(ABS3, refsig, Fs_RX, "X = 109, Y = 76",3 ) 
         if i == "4":
-            print_plots(ABS4, refsig, Fs_RX) 
+            self.print_plots(ABS4, refsig, Fs_RX, "X = 143, Y = 296",4) 
         if i == "5":
-            print_plots(ABS5, refsig, Fs_RX) 
+            self.print_plots(ABS5, refsig, Fs_RX, "X = 150, Y = 185",5) 
         if i == "6":
-            print_plots(ABS6, refsig, Fs_RX) 
+            self.print_plots(ABS6, refsig, Fs_RX, "X = 178, Y = 439",6) 
         if i == "7":
-            print_plots(ABS7, refsig, Fs_RX) 
+            self.print_plots(ABS7, refsig, Fs_RX, "X = 232, Y = 275",7) 
         if i == "8":
-            print_plots(ABS8, refsig, Fs_RX) 
+            self.print_plots(ABS8, refsig, Fs_RX, "X = ?, Y = ?",8) 
         if i == "9":
-            print_plots(ABS9, refsig, Fs_RX) 
+            self.print_plots(ABS9, refsig, Fs_RX, "X = ?, Y = ?",9) 
         if i == "10":
-            print_plots(ABS10, refsig, Fs_RX) 
+            self.print_plots(ABS10, refsig, Fs_RX, "X = ?, Y = ?",10) 
 
