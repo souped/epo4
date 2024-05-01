@@ -2,6 +2,9 @@ import serial
 import time
 import keyboard
 import numpy as np
+import asyncio
+
+sys_port = 'COM1'
 
 # beacon specs
 carrier_freq = 10000    # Carrier frequency, min = 5 kHz & max = 30 kHz
@@ -14,6 +17,7 @@ max_speed = 10
 system_start = time.time()
 
 last_event = {'type': None, 'name': None}
+
 
 class KITT:
     def __init__(self, port, baudrate=115200):
@@ -33,35 +37,48 @@ class KITT:
         self.prev_speed = 150  # No speed
 
         self.distances = []
+        self.commands = []
 
-    def send_command(self, command):
+    def encode_command(self, command):
         if isinstance(command, str):
             command = command.encode()
-        self.serial.write(command)
+        self.commands.append(command)
+
+    async def send_command(self):
+        while True:
+            if not len(self.commands):
+                # self.read_command()
+                print("reading")
+
+            else:
+                self.serial.write(self.commands[0])
+                print("command ", self.commands[0], " sent")
+                self.commands.pop(0)
+            await asyncio.sleep(0.1)
 
     def read_command(self):
         start = time.time()
-        self.send_command(b'Sd\n')
+        self.encode_command(b'Sd\n')
         message = self.serial.read_until(b'\x04')
         stop = time.time()
         message = message.decode()
         message = message[:-2]
         temp = message.replace("USL", "")
-        temp=temp.replace("USR","")
+        temp = temp.replace("USR", "")
         temp = temp.split("\n")
         temp = [int(i) for i in temp]
-        temp.append(stop - system_start)
-        temp.append(stop-start)
+        temp.append(int(stop - system_start))
+        temp.append(int(stop-start))
         self.distances.append(temp)
         print(self.distances[-1])
         self.serial.flush()
 
     def set_speed(self, speed):
         self.prev_speed = speed  # Update previous speed
-        self.send_command(f'M{speed}\n')
+        self.encode_command(f'M{speed}\n')
 
     def set_angle(self, angle):
-        self.send_command(f'D{angle}\n')
+        self.encode_command(f'D{angle}\n')
 
     def stop(self):
         self.set_speed(150)
@@ -73,66 +90,77 @@ class KITT:
             # If previous speed > standstill, apply emergency brake
             self.set_speed(140)     # Set speed to move backwards
             time.sleep(0.5)         # Reverse for a short period.
-            self.stop()             # Stop the car
+            self.set_speed(150)            # Stop the car
         elif self.prev_speed < 147 and from_speed == 1:
             print('Emergency Brake')
             # If previous speed < standstill, apply emergency brake
             self.set_speed(160)  # Set speed to move backwards
             time.sleep(0.5)  # Reverse for a short period.
-            self.stop()  # Stop the car
-        elif ((self.distances[-1][0] < 100 or self.distances[-1][1] < 100) and from_speed == 0
-              and self.prev_speed != 150):
-            print('Distance emergency Brake')
-            self.set_speed(140)     # Set speed to move backwards
-            time.sleep(0.5)         # Reverse for a short period.
-            self.stop()             # Stop the car
+            self.set_speed(150)  # Stop the car
+        # elif ((self.distances[-1][0] < 100 or self.distances[-1][1] < 100) and from_speed == 0
+        #       and self.prev_speed != 150):
+        #     print('Distance emergency Brake')
+        #     self.set_speed(140)     # Set speed to move backwards
+        #     time.sleep(0.5)         # Reverse for a short period.
+        #     self.set_speed(150)            # Stop the car
+        else:
+            pass
 
     def __del__(self):
         self.stop()             # In case the car was still moving, stop the car.
         self.serial.close()     # Safely closes the comport
 
-# check if keypress is the same, if true do nothing. otherwise
-# recording function lags behind.
+
 def wasd(kitt):
     # Checks for any keypress and what key is pressed.
     def on_key_event(event):
-        if event.event_type == last_event['type']:
-            kitt.read_command()
+        if event.event_type == last_event['type'] and event.name == last_event['name']:
             kitt.emergency_brake(0)
-        # The statements below only run if the corresponding key is being pressed.
-        elif event.name == 'w' and event.event_type == keyboard.KEY_DOWN:
-            kitt.set_speed(150+max_speed)  # speed up the car forward
-            print('forward')
-        elif event.name == 's' and event.event_type == keyboard.KEY_DOWN:
-            kitt.set_speed(150-max_speed)  # speed up the car reverse
-        elif event.name == 'a' and event.event_type == keyboard.KEY_DOWN:
-            kitt.set_angle(200)  # turn wheels fully left
-        elif event.name == 'd' and event.event_type == keyboard.KEY_DOWN:
-            kitt.set_angle(100)  # turn wheels fully right
-        elif event.name == 'e' and event.event_type == keyboard.KEY_DOWN:
-            kitt.send_command(b'A1\n')
-        elif event.name == 'q' and event.event_type == keyboard.KEY_DOWN:
-            kitt.send_command(b'A0\n')
-        elif event.name=='r' and event.event_type==keyboard.KEY_DOWN:
-            kitt.read_command()
-        # Runs when the pressed key is released. Stops the car.
-        elif event.name == 'w' or event.name == 's':
-            kitt.emergency_brake(1)  # Check for emergency brake condition
-            kitt.stop()
-        elif event.name == 'a' or event.name == 'd':
-            kitt.set_angle(150)
-        last_event['name'] = event.name
+        elif event.event_type == keyboard.KEY_DOWN:
+            match event.name:
+                case "w":
+                    kitt.set_speed(150+max_speed)
+                    print("forward")
+                case "s":
+                    kitt.set_speed(150-max_speed)
+                    print("backward")
+                case "a":
+                    kitt.set_angle(200)  # turn wheels fully left
+                    print("turning left")
+                case "d":
+                    kitt.set_angle(100)  # turn wheels fully right
+                    print("turning right")
+                case "e":
+                    kitt.send_command(b'A1\n')
+                case "q":
+                    kitt.send_command(b'A0\n')
+                case "r":
+                    kitt.read_command()
+        elif event.event_type == keyboard.KEY_UP:
+            match event.name:
+                case "w" | "s":
+                    kitt.emergency_brake(1)
+                    kitt.set_speed(150)
+                case "a" | "d":
+                    kitt.set_angle(150)
         last_event['type'] = event.event_type
+        last_event['name'] = event.name
 
     keyboard.hook(on_key_event)     # Check for any key status change
 
-if __name__ == "__main__":
-    kitt = KITT("COM5")   # Create KITT instance
+
+async def main():
+    kitt = KITT(sys_port)   # Create KITT instance
 
     try:  # Error handling
         wasd(kitt)  # Keyboard function
     except Exception as e:
         print(e)
+
+    await kitt.send_command()
+
     # When 'ESC' is pressed, exit
     while not keyboard.is_pressed('esc'):
         pass
+
+asyncio.run(main())
