@@ -45,12 +45,12 @@ if __name__ == "__main__":
     data = record_audio(100, dev_id)
     process(data, plotter)
 
-    xdata = []
-    ydata = []
-    for x in np.arange(0,10,0.5):
-        xdata.append(x)
-        ydata.append(np.exp(-x**2)+10*np.exp(-(x-7)**2))
-        plotter.on_running(xdata, ydata, 0)
-        time.sleep(1)
+    # xdata = []
+    # ydata = []
+    # for x in np.arange(0,10,0.5):
+    #     xdata.append(x)
+    #     ydata.append(np.exp(-x**2)+10*np.exp(-(x-7)**2))
+    #     plotter.on_running(xdata, ydata, 0)
+    #     time.sleep(1)
 
     
