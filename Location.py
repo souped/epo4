@@ -58,33 +58,12 @@ def coordinate_2d(self, D12, D13, D14):
     # using the linear algebra given before
     print()
 
-
-if __name__ == "__main__":
-    # Main block for testing
-    # Read the .wav file
-    # Localize the sound source
-    # Present the results
-    Fs_RX = 40000
-    ABS1 = wavaudioread("opnames/record_x64_y40.wav", Fs_RX)
-    ABS2 = wavaudioread("opnames/record_x82_y399.wav", Fs_RX)
-    ABS3 = wavaudioread("opnames/record_x109_y76.wav", Fs_RX)
-    ABS4 = wavaudioread("opnames/record_x143_y296.wav", Fs_RX)
-    ABS5 = wavaudioread("opnames/record_x150_y185.wav", Fs_RX)
-    ABS6 = wavaudioread("opnames/record_x178_y439.wav", Fs_RX)
-    ABS7 = wavaudioread("opnames/record_x232_y275.wav", Fs_RX)
-    ABS8 = wavaudioread("opnames/record_x4_y_hidden_1.wav", Fs_RX)
-    ABS9 = wavaudioread("opnames/record_x_y_hidden_2.wav", Fs_RX)
-    ABS10 = wavaudioread("opnames/record_x_y_hidden_3.wav", Fs_RX)
-
-    refsig = wavaudioread("opnames/reference.wav", Fs_RX)
-    FTrefsig = fft(refsig)
-
-
-    y11 = ABS1[:,0]
-    y12 = ABS1[:,1]
-    y13 = ABS1[:,2]
-    y14 = ABS1[:,3]
-    y15 = ABS1[:,4]
+def print_plots(a, refsig, Fs_RX):
+    y11 = a[:,0]
+    y12 = a[:,1]
+    y13 = a[:,2]
+    y14 = a[:,3]
+    y15 = a[:,4]
 
     h11 = ch3(refsig,y11)
     h12 = ch3(refsig,y12)
@@ -188,3 +167,51 @@ if __name__ == "__main__":
 
     fig.tight_layout()
     plt.show()
+                
+
+ 
+
+if __name__ == "__main__":
+    # Main block for testing
+    # Read the .wav file
+    # Localize the sound source
+    # Present the results
+    Fs_RX = 40000
+    ABS1 = wavaudioread("opnames/record_x64_y40.wav", Fs_RX)
+    ABS2 = wavaudioread("opnames/record_x82_y399.wav", Fs_RX)
+    ABS3 = wavaudioread("opnames/record_x109_y76.wav", Fs_RX)
+    ABS4 = wavaudioread("opnames/record_x143_y296.wav", Fs_RX)
+    ABS5 = wavaudioread("opnames/record_x150_y185.wav", Fs_RX)
+    ABS6 = wavaudioread("opnames/record_x178_y439.wav", Fs_RX)
+    ABS7 = wavaudioread("opnames/record_x232_y275.wav", Fs_RX)
+    ABS8 = wavaudioread("opnames/record_x4_y_hidden_1.wav", Fs_RX)
+    ABS9 = wavaudioread("opnames/record_x_y_hidden_2.wav", Fs_RX)
+    ABS10 = wavaudioread("opnames/record_x_y_hidden_3.wav", Fs_RX)
+
+    refsig = wavaudioread("opnames/reference.wav", Fs_RX)
+    #FTrefsig = fft(refsig)
+
+    ABS = ["1","2","3","4","5","6","7","8","9","10"]
+    
+    for i in ABS:
+        if i == "1":
+            print_plots(ABS1, refsig, Fs_RX)  
+        if i == "2":
+            print_plots(ABS2, refsig, Fs_RX) 
+        if i == "3":
+            print_plots(ABS3, refsig, Fs_RX) 
+        if i == "4":
+            print_plots(ABS4, refsig, Fs_RX) 
+        if i == "5":
+            print_plots(ABS5, refsig, Fs_RX) 
+        if i == "6":
+            print_plots(ABS6, refsig, Fs_RX) 
+        if i == "7":
+            print_plots(ABS7, refsig, Fs_RX) 
+        if i == "8":
+            print_plots(ABS8, refsig, Fs_RX) 
+        if i == "9":
+            print_plots(ABS9, refsig, Fs_RX) 
+        if i == "10":
+            print_plots(ABS10, refsig, Fs_RX) 
+
