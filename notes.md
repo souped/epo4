@@ -59,3 +59,7 @@ code = 0xDEADBEEF.to_bytes(4, byteorder='big')
 serial_port.write(b'C' + code + b'\n')
 ```
 
+# EVENTHOOK MAKEN? 
+om data uit te lezen dan die data verder te processen en wanneer dit klaar is kan er weer nieuwe data in, vanwege asynchrone natuur van het programma kan dat misschien een oplossing / probleem zijn?
+
+# TODO: schrijf microfoon data naar een bestand (CSV?) en dan dat bestand plotten. IPV live plotting zodat mijn ram niet vol raakt?
