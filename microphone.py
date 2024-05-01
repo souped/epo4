@@ -7,6 +7,8 @@ import time
 
 from dynamicplotter import DynamicPlotter
 
+channelnumbers = 1
+N = 10000
 
 def list_devices():
     pyaudio_handle = pyaudio.PyAudio()
@@ -14,6 +16,7 @@ def list_devices():
     for i in range(pyaudio_handle.get_device_count()):
         device_info = pyaudio_handle.get_device_info_by_index(i)
         print(i, device_info['name'])
+        print(i, device_info['maxInputChannels'])
         if device_info['name'] == "":
             return i     
     return 0
@@ -21,7 +24,7 @@ def list_devices():
 def record_audio(N, devidx, Fs = 48000):
     pyaudio_handle = pyaudio.PyAudio()
     stream = pyaudio_handle.open(input_device_index=devidx,
-    channels=5,
+    channels=channelnumbers,
     format=pyaudio.paInt16,
     rate=Fs,
     input=True)
@@ -31,8 +34,8 @@ def record_audio(N, devidx, Fs = 48000):
     return data
 
 def process(data, plotter):    
-    for i in range(5):
-        channel = [k for i,k in enumerate(data[i:]) if i%5 == 0]
+    for i in range(channelnumbers):
+        channel = [k for i,k in enumerate(data[i:]) if i%channelnumbers == 0]
         # !!!note that its likely that i != microphone number 
         plotter.on_running(channel, np.arange(len(channel)), i)
           
@@ -42,8 +45,14 @@ if __name__ == "__main__":
 
     print("connecting...")
     dev_id = list_devices()
-    data = record_audio(100, dev_id)
-    process(data, plotter)
+    print(1)
+    
+    while 1:
+        data = record_audio(N, dev_id)
+        process(data, plotter)
+        print("plotted")
+        time.sleep(2)
+    
 
     # xdata = []
     # ydata = []
