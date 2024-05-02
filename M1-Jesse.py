@@ -4,6 +4,8 @@ import keyboard
 import numpy as np
 import asyncio
 
+from dynamicplotter import DynamicPlotter
+
 sys_port = 'COM1'
 
 # beacon specs
@@ -15,8 +17,6 @@ codeword = 0xFEEDBACC   # Code word in hexadecimal
 max_speed = 10
 
 system_start = time.time()
-
-last_event = {'type': None, 'name': None}
 
 
 class KITT:
@@ -36,8 +36,10 @@ class KITT:
         # state variables such as speed, angle are defined here
         self.prev_speed = 150  # No speed
 
-        self.distances = []
+        self.distances = []  # left, right, system time, data age since command is send
         self.commands = []
+
+        self.last_event = {'type': None, 'name': None}
 
     def encode_command(self, command):
         if isinstance(command, str):
@@ -47,7 +49,7 @@ class KITT:
     async def send_command(self):
         while True:
             if not len(self.commands):
-                # self.read_command()
+                self.read_command()
                 print("reading")
 
             else:
@@ -97,12 +99,12 @@ class KITT:
             self.set_speed(160)  # Set speed to move backwards
             time.sleep(0.5)  # Reverse for a short period.
             self.set_speed(150)  # Stop the car
-        # elif ((self.distances[-1][0] < 100 or self.distances[-1][1] < 100) and from_speed == 0
-        #       and self.prev_speed != 150):
-        #     print('Distance emergency Brake')
-        #     self.set_speed(140)     # Set speed to move backwards
-        #     time.sleep(0.5)         # Reverse for a short period.
-        #     self.set_speed(150)            # Stop the car
+        elif ((self.distances[-1][0] < 100 or self.distances[-1][1] < 100) and from_speed == 0
+              and self.prev_speed != 150):  # Brake because too close to an object
+            print('Distance emergency Brake')
+            self.set_speed(140)     # Set speed to move backwards
+            time.sleep(0.5)         # Reverse for a short period.
+            self.set_speed(150)            # Stop the car
         else:
             pass
 
@@ -114,7 +116,7 @@ class KITT:
 def wasd(kitt):
     # Checks for any keypress and what key is pressed.
     def on_key_event(event):
-        if event.event_type == last_event['type'] and event.name == last_event['name']:
+        if event.event_type == kitt.last_event['type'] and event.name == kitt.last_event['name']:
             kitt.emergency_brake(0)
         elif event.event_type == keyboard.KEY_DOWN:
             match event.name:
@@ -143,10 +145,30 @@ def wasd(kitt):
                     kitt.set_speed(150)
                 case "a" | "d":
                     kitt.set_angle(150)
-        last_event['type'] = event.event_type
-        last_event['name'] = event.name
+        kitt.last_event['type'] = event.event_type
+        kitt.last_event['name'] = event.name
 
     keyboard.hook(on_key_event)     # Check for any key status change
+
+
+async def collision_plotter(kitt):  # For the plotter to work with slowly driving towards the wall / stopping
+    # the car in between, the emergency_brake from distance should be turned off.
+    plotter = DynamicPlotter()
+    data = []
+    while True:
+        if np.shape(data)[0] > 1000:
+            print("Plotter has too much data!")
+            print("Cleaning data...")
+            data.clear()
+        elif kitt.prev_speed > 150 and kitt.distances[-1] < 250:
+            data.append(kitt.distances[-1])
+            plotter.on_running(data[0], plotter, 0)
+            plotter.on_running(data[1], plotter, 1)
+            await asyncio.sleep(0.3)
+        elif kitt.prev_speed < 150 and kitt.distances[-1] < 250:
+            np.savetxt('distance_data.csv', data, delimiter=',')
+        else:
+            await asyncio.sleep(0.1)
 
 
 async def main():
@@ -154,6 +176,11 @@ async def main():
 
     try:  # Error handling
         wasd(kitt)  # Keyboard function
+    except Exception as e:
+        print(e)
+
+    try:
+        await collision_plotter(kitt)
     except Exception as e:
         print(e)
 
