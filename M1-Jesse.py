@@ -37,7 +37,7 @@ class KITT:
         self.prev_speed = 150  # No speed
 
         self.distances = []  # left, right, system time, data age since command is send
-        self.commands = []
+        self.commands = []  # List where commands are stored that need to be sent to KITT
 
         self.last_event = {'type': None, 'name': None}
 
@@ -86,6 +86,12 @@ class KITT:
         self.set_speed(150)
         self.set_angle(150)
 
+    def start_beacon(self):
+        self.encode_command(b'A1\n')
+
+    def stop_beacon(self):
+        self.encode_command(b'A0\n')
+
     def emergency_brake(self, from_speed):  # STILL NEEDS TUNING!
         if self.prev_speed > 153 and from_speed == 1:
             print('Emergency Brake')
@@ -133,9 +139,9 @@ def wasd(kitt):
                     kitt.set_angle(100)  # turn wheels fully right
                     print("turning right")
                 case "e":
-                    kitt.send_command(b'A1\n')
+                    kitt.start_beacon()
                 case "q":
-                    kitt.send_command(b'A0\n')
+                    kitt.stop_beacon()
                 case "r":
                     kitt.read_command()
         elif event.event_type == keyboard.KEY_UP:
