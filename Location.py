@@ -65,9 +65,9 @@ class localization:
         #return indices & max values
         print(f"peakh0: {np.abs(h0_peak)}, h1_peak: {np.abs(h1_peak)}")
         print(f"index0: {np.abs(h0_index)}, index1: {np.abs(h1_index)}")
-        D=np.abs((h1_index - h0_index) / Fs_RX * 343 + 2.4)
+        D=((h1_index - h0_index) / Fs_RX * 343)
 
-        print(f"Time difference between peaks: {np.abs((h1_index - h0_index) / Fs_RX)} s")
+        print(f"Time difference between peaks: {(h1_index - h0_index) / Fs_RX} s")
         print(f"Distance (referenced to 0): {D} m\n\n")
         
         return D
