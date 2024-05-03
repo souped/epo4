@@ -23,11 +23,11 @@ class localization:
 
     def localization(audiowav):
         # Split each recording into individual pulses
-        y11 = audiowav[24000:30000,0]
-        y12 = audiowav[24000:30000,1]
-        y13 = audiowav[24000:30000,2]
-        y14 = audiowav[24000:30000,3]
-        y15 = audiowav[24000:30000,4]
+        y11 = audiowav[20000:40000,0]
+        y12 = audiowav[20000:40000,1]
+        y13 = audiowav[20000:40000,2]
+        y14 = audiowav[20000:40000,3]
+        y15 = audiowav[20000:40000,4]
 
         # Calculate TDOA between different microphone pairs
         D14 = localization.TDOA(y11, y14)
