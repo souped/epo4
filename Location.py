@@ -94,11 +94,11 @@ class self:
         # using the linear algebra given before
         
     def print_plots(a, refsig, Fs_RX, title, index):
-        y11 = a[24000:30000,0]
-        y12 = a[24000:30000,1]
-        y13 = a[24000:30000,2]
-        y14 = a[24000:30000,3]
-        y15 = a[24000:30000,4]
+        y11 = a[20000:40000,0]
+        y12 = a[20000:40000,1]
+        y13 = a[20000:40000,2]
+        y14 = a[20000:40000,3]
+        y15 = a[20000:40000,4]
 
         h11 = self.ch3(refsig,y11)
         h12 = self.ch3(refsig,y12)
