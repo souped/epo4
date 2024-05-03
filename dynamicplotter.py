@@ -1,11 +1,14 @@
+import matplotlib as mpl
 import matplotlib.pyplot as plt
-
+mpl.use('TkAgg')  # or can use 'TkAgg', whatever you have/prefer Qt5Agg
 # enables interactive mode allowing us
 # to dynamically plot new data on a single figure
 
 """
-This module uses plt.ion() which leads to plt.show() not working as expected. use figure.draw()
+This module uses plt.ion() which leads to plt.show() not working as expected.
 """
+
+plt.ion()
 
 
 class DynamicPlotter:
@@ -14,7 +17,7 @@ class DynamicPlotter:
         print("Initialising Dynamicplotter...")
 
         print("Enabling interactive mode...")
-        plt.ion()
+        # plt.ion()
 
         self.lines = []
         # get lines objects

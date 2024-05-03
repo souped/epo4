@@ -3,10 +3,11 @@ import time
 import keyboard
 import numpy as np
 import asyncio
+import matplotlib.pyplot as plt
 
 from dynamicplotter import DynamicPlotter
 
-sys_port = 'COM1'
+sys_port = 'COM5'
 
 # beacon specs
 carrier_freq = 10000    # Carrier frequency, min = 5 kHz & max = 30 kHz
@@ -38,6 +39,7 @@ class KITT:
 
         self.distances = []  # left, right, system time, data age since command is send
         self.commands = []  # List where commands are stored that need to be sent to KITT
+        self.data = []
 
         self.last_event = {'type': None, 'name': None}
 
@@ -50,17 +52,14 @@ class KITT:
         while True:
             if not len(self.commands):
                 self.read_command()
-                print("reading")
-
             else:
                 self.serial.write(self.commands[0])
-                print("command ", self.commands[0], " sent")
                 self.commands.pop(0)
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.01)
 
     def read_command(self):
         start = time.time()
-        self.encode_command(b'Sd\n')
+        self.serial.write(b'Sd\n')
         message = self.serial.read_until(b'\x04')
         stop = time.time()
         message = message.decode()
@@ -69,8 +68,8 @@ class KITT:
         temp = temp.replace("USR", "")
         temp = temp.split("\n")
         temp = [int(i) for i in temp]
-        temp.append(int(stop - system_start))
-        temp.append(int(stop-start))
+        temp.append(round((stop - system_start), 3))
+        temp.append(round((stop - start), 3))
         self.distances.append(temp)
         print(self.distances[-1])
         self.serial.flush()
@@ -84,7 +83,7 @@ class KITT:
 
     def stop(self):
         self.set_speed(150)
-        self.set_angle(150)
+        self.set_angle(151)
 
     def start_beacon(self):
         self.encode_command(b'A1\n')
@@ -97,22 +96,33 @@ class KITT:
             print('Emergency Brake')
             # If previous speed > standstill, apply emergency brake
             self.set_speed(140)     # Set speed to move backwards
-            time.sleep(0.5)         # Reverse for a short period.
+            time.sleep(0.4)         # Reverse for a short period.
             self.set_speed(150)            # Stop the car
         elif self.prev_speed < 147 and from_speed == 1:
             print('Emergency Brake')
             # If previous speed < standstill, apply emergency brake
             self.set_speed(160)  # Set speed to move backwards
-            time.sleep(0.5)  # Reverse for a short period.
+            time.sleep(0.4)  # Reverse for a short period.
             self.set_speed(150)  # Stop the car
-        elif ((self.distances[-1][0] < 100 or self.distances[-1][1] < 100) and from_speed == 0
-              and self.prev_speed != 150):  # Brake because too close to an object
+        elif not self.distances:
+            pass
+        elif (((100 > self.distances[-1][0] > 0) or (100 > self.distances[-1][1] > 0)) and from_speed==0
+              and self.prev_speed > 150):  # Brake because too close to an object
             print('Distance emergency Brake')
-            self.set_speed(140)     # Set speed to move backwards
-            time.sleep(0.5)         # Reverse for a short period.
+            self.set_speed(135)     # Set speed to move backwards
+            time.sleep(0.3)         # Reverse for a short period.
             self.set_speed(150)            # Stop the car
         else:
             pass
+
+    # def distance_emergency_brake(self):
+    #     if (100 > self.distances[-1][0] > 0) or (100 > self.distances[-1][1] > 0) and self.prev_speed > 150:
+    #         print('Distance emergency Brake')
+    #         self.set_speed(135)  # Set speed to move backwards
+    #         time.sleep(0.2)  # Reverse for a short period.
+    #         self.set_speed(150)  # Stop the car
+    #     else:
+    #         pass
 
     def __del__(self):
         self.stop()             # In case the car was still moving, stop the car.
@@ -144,13 +154,18 @@ def wasd(kitt):
                     kitt.stop_beacon()
                 case "r":
                     kitt.read_command()
+                case "p":
+                    np.savetxt('distance_data.csv',kitt.data,delimiter=',')
+                    print("saved data")
+                case "o":
+                    kitt.data.clear()
         elif event.event_type == keyboard.KEY_UP:
             match event.name:
                 case "w" | "s":
                     kitt.emergency_brake(1)
                     kitt.set_speed(150)
                 case "a" | "d":
-                    kitt.set_angle(150)
+                    kitt.set_angle(151)
         kitt.last_event['type'] = event.event_type
         kitt.last_event['name'] = event.name
 
@@ -159,20 +174,23 @@ def wasd(kitt):
 
 async def collision_plotter(kitt):  # For the plotter to work with slowly driving towards the wall / stopping
     # the car in between, the emergency_brake from distance should be turned off.
-    plotter = DynamicPlotter()
-    data = []
+    # plotter = DynamicPlotter()
     while True:
-        if np.shape(data)[0] > 1000:
+        if np.shape(kitt.data)[0] > 1000:
             print("Plotter has too much data!")
             print("Cleaning data...")
-            data.clear()
-        elif kitt.prev_speed > 150 and kitt.distances[-1] < 250:
-            data.append(kitt.distances[-1])
-            plotter.on_running(data[0], plotter, 0)
-            plotter.on_running(data[1], plotter, 1)
-            await asyncio.sleep(0.3)
-        elif kitt.prev_speed < 150 and kitt.distances[-1] < 250:
-            np.savetxt('distance_data.csv', data, delimiter=',')
+            kitt.data.clear()
+        # REMOVE '=' IN FIRST COMPARISON!!!
+        elif (kitt.prev_speed >= 150 or kitt.prev_speed < 150) and (kitt.distances[-1][0] < 250 or kitt.distances[-1][1] < 250):
+            kitt.data.append(kitt.distances[-1])
+            # plotter.on_running([j[2] for j in kitt.data], [j[0] for j in kitt.data], 0)
+            # plotter.on_running([j[2] for j in kitt.data], [j[1] for j in kitt.data], 1)
+            print("Getting data...")
+            await asyncio.sleep(0.01)
+        elif kitt.prev_speed == 150 and (kitt.distances[-1][0] < 250 or kitt.distances[-1][1] < 250):
+            # np.savetxt('distance_data.csv', kitt.data, delimiter=',')
+            # kitt.data.clear()
+            await asyncio.sleep(0.1)
         else:
             await asyncio.sleep(0.1)
 
@@ -186,13 +204,11 @@ async def main():
         print(e)
 
     try:
-        await collision_plotter(kitt)
+        await asyncio.gather(kitt.send_command(), collision_plotter(kitt))
     except Exception as e:
         print(e)
 
-    await kitt.send_command()
-
-    # When 'ESC' is pressed, exit
+    # When 'ESC' is pressed, exit. DOES NOT WORK!
     while not keyboard.is_pressed('esc'):
         pass
 
