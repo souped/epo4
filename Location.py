@@ -94,11 +94,11 @@ class self:
         # using the linear algebra given before
         
     def print_plots(a, refsig, Fs_RX, title, index):
-        y11 = a[:,0]
-        y12 = a[:,1]
-        y13 = a[:,2]
-        y14 = a[:,3]
-        y15 = a[:,4]
+        y11 = a[24000:30000,0]
+        y12 = a[24000:30000,1]
+        y13 = a[24000:30000,2]
+        y14 = a[24000:30000,3]
+        y15 = a[24000:30000,4]
 
         h11 = self.ch3(refsig,y11)
         h12 = self.ch3(refsig,y12)
@@ -236,7 +236,7 @@ if __name__ == "__main__":
     for i in ABS:
         if i == "1":
             self.print_plots(ABS1, refsig, Fs_RX, "X = 64, Y = 40", 1)  
-        if i == "2":
+        """ if i == "2":
             self.print_plots(ABS2, refsig, Fs_RX, "X = 82, Y = 399", 2) 
         if i == "3":
             self.print_plots(ABS3, refsig, Fs_RX, "X = 109, Y = 76",3 ) 
@@ -255,3 +255,4 @@ if __name__ == "__main__":
         if i == "10":
             self.print_plots(ABS10, refsig, Fs_RX, "X = ?, Y = ?",10) 
 
+ """
