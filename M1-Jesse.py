@@ -55,7 +55,7 @@ class KITT:
             else:
                 self.serial.write(self.commands[0])
                 self.commands.pop(0)
-            await asyncio.sleep(0.01)
+            await asyncio.sleep(0.1)
 
     def read_command(self):
         start = time.time()
