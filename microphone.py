@@ -6,6 +6,11 @@ import pyaudio
 import time
 from scipy.io import wavfile
 
+"""
+eigenlijk zouden al deze functies nog in een Class moeten 
+zodat je de globals niet meer global hoeft te maken
+"""
+
 # globals?
 channelnumbers = 1
 Fs = 48000
