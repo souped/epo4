@@ -4,52 +4,60 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pyaudio
 import time
-import wave
 from scipy.io import wavfile
 
-from dynamicplotter import DynamicPlotter
-
+# globals?
 channelnumbers = 1
 Fs = 48000
-N = int(Fs * 2)
+seconds = 2
+N = int(Fs * seconds)
 
 def list_devices():
+    """Lists all audio devices and 
+    returns index if devicename == "AudioBox 1818 VSL" else 0
+    """
     pyaudio_handle = pyaudio.PyAudio()
 
     for i in range(pyaudio_handle.get_device_count()):
         device_info = pyaudio_handle.get_device_info_by_index(i)
         print(f"{i}, name: {device_info['name']}, inputchannels: {device_info['maxInputChannels']}")
-        if device_info['name'] == "AudioBox 1818 VSLLLLLL":
-            return i     
+        if device_info['name'] == "AudioBox 1818 VSL":
+            pyaudio_handle.terminate()
+            return i  
+    pyaudio_handle.terminate()
     return 0
 
-def record_audio(N, devidx, channels = 5, Fs = 48000):
-    print("recording...")
+def seperate(data, channels = channelnumbers):
+    """lists audio per channel
+    
+    returns -- list of channels
+    [[channel1],
+    [channel2],
+    [channel3], ...]"""
+    result = []
+    for i in range(channels):
+        channel = [k for i,k in enumerate(data[i:]) if i%channels == 0]
+        result.append(channel)
+    return np.array(result)
+
+def record_audio(N, devidx, channels = channelnumbers, Fs = Fs):
+    print(f"Recording for {(N / Fs):.2f} seconds")
     pyaudio_handle = pyaudio.PyAudio()
     stream = pyaudio_handle.open(input_device_index=devidx,
     channels=channels,
     format=pyaudio.paInt16,
     rate=Fs,
     input=True)
-
+    
     samples = stream.read(N)
     data = np.frombuffer(samples, dtype='int16')
-    return data
-
-def run_plotter(data, plotter):    
-    for i in range(channelnumbers):
-        channel = [k for i,k in enumerate(data[i:]) if i%channelnumbers == 0]
-        # note that its possible that i != microphone number 
-        plotter.on_running(np.arange(0,len(channel)), channel, i)
-
-def plot_single(data):
-    ax = plt.figure().subplots()
-    ax.plot(np.arange(0,len(data)), data)
-    # plt.show()
+    pyaudio_handle.terminate()
+    return seperate(data)
 
 def write_wavfile(audio, filename = "wavfile.wav"):
-    """writes multichannel audio in np.Array to .wav file
-    audio: numpy array in shape (Nframes, Nchannels)"""
+    """writes multichannel audio in np.Array to .wav file.
+
+    audio -- numpy array in shape (Nframes, Nchannels)"""
     audio = audio.T
     wavfile.write(filename, Fs, audio.astype(np.int16))
 
@@ -57,8 +65,11 @@ def read_wavfile(filename):
     """Reads and plots a wavefile. Requires plt.show() to be called seperately."""
     samplerate, audioBuffer = wavfile.read(filename)
     # audiobuffer of shape (Nsamples, Nchannels)
+    # set up time axis
     time = np.arange(0, len(audioBuffer)/samplerate , 1/samplerate)
     ax = plt.figure().subplots()
+    ax.set_xlabel("Time [s]")
+    ax.set_ylabel("magnitude [??]") # ???
     lines = ax.plot(time, audioBuffer)
     # add labels to each channel plot.
     for i, line in enumerate(lines):
@@ -66,39 +77,7 @@ def read_wavfile(filename):
     ax.legend()
 
 if __name__ == "__main__":
-    # plotter = DynamicPlotter()
-
-    dev_id = list_devices()
-    
-    for i in range(2):
-        t1 = time.time()
-        data = record_audio(N, dev_id, channelnumbers)
-        t2 = time.time()
-        print(f"time to record: {t2-t1}")
-
-        t1 = time.time()
-        write_wavfile(audio=data, filename=f"wavfile{i}.wav")
-        t2 = time.time()
-        print(f"time to write file: {t2-t1}")
-        time.sleep(2)
-    
-    # testdata = record_audio(Fs*1, 0)
-    # testdata2 = record_audio(Fs*1, 0)
-    # audio = np.array([testdata,testdata2])
-    
-    for i in range(2):
-        read_wavfile(f"wavfile{i}.wav")
-    plt.show()
-
-    # plot_single(testdata)
-    
-
-    # xdata = []
-    # ydata = []
-    # for x in np.arange(0,10,0.5):
-    #     xdata.append(x)
-    #     ydata.append(np.exp(-x**2)+10*np.exp(-(x-7)**2))
-    #     plotter.on_running(xdata, ydata, 0)
-    #     time.sleep(1)
-
-    
+    device_index = list_devices()
+    print(f"device index used: {device_index}")
+    audio = record_audio(N, device_index)
+    write_wavfile(audio)
