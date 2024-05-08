@@ -12,9 +12,9 @@ zodat je de globals niet meer global hoeft te maken
 """
 
 # globals?
-channelnumbers = 1
+channelnumbers = 8
 Fs = 48000
-seconds = 2
+seconds = 3
 N = int(Fs * seconds)
 
 def list_devices():
@@ -26,7 +26,8 @@ def list_devices():
     for i in range(pyaudio_handle.get_device_count()):
         device_info = pyaudio_handle.get_device_info_by_index(i)
         print(f"{i}, name: {device_info['name']}, inputchannels: {device_info['maxInputChannels']}")
-        if device_info['name'] == "AudioBox 1818 VSL":
+        if device_info['name'] == "AudioBox 1818 VSL ":
+            print("detected!")
             pyaudio_handle.terminate()
             return i  
     pyaudio_handle.terminate()
@@ -74,7 +75,7 @@ def read_wavfile(filename):
     time = np.arange(0, len(audioBuffer)/samplerate , 1/samplerate)
     ax = plt.figure().subplots()
     ax.set_xlabel("Time [s]")
-    ax.set_ylabel("magnitude [??]") # ???
+    ax.set_ylabel("Amplitude [??]") # ???
     lines = ax.plot(time, audioBuffer)
     # add labels to each channel plot.
     for i, line in enumerate(lines):
@@ -86,3 +87,5 @@ if __name__ == "__main__":
     print(f"device index used: {device_index}")
     audio = record_audio(N, device_index)
     write_wavfile(audio)
+    read_wavfile("wavfile.wav")
+    plt.show()
