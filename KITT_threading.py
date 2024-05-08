@@ -26,6 +26,7 @@ class KITT:
 
         # Initializing beacon specifications
         carrier_frequency = carrier_freq.to_bytes(2, byteorder='big')
+        print(b'F' + carrier_frequency + b'\n')
         self.serial.write(b'F' + carrier_frequency + b'\n')
         bit_frequency = bit_freq.to_bytes(2, byteorder='big')
         self.serial.write(b'B' + bit_frequency + b'\n')
@@ -51,28 +52,25 @@ class KITT:
     async def send_command(self):
         while True:
             if not len(self.commands):
-                self.read_command()
+                start=time.time()
+                self.serial.write(b'Sd\n')
+                message=self.serial.read_until(b'\x04')
+                stop=time.time()
+                message=message.decode()
+                message=message[:-2]
+                temp=message.replace("USL","")
+                temp=temp.replace("USR","")
+                temp=temp.split("\n")
+                temp=[int(i) for i in temp]
+                temp.append(round((stop - system_start),3))
+                temp.append(round((stop - start),3))
+                self.distances.append(temp)
+                print(self.distances[-1])
+                self.serial.flush()
             else:
                 self.serial.write(self.commands[0])
                 self.commands.pop(0)
-            await asyncio.sleep(0.1)
-
-    def read_command(self):
-        start = time.time()
-        self.serial.write(b'Sd\n')
-        message = self.serial.read_until(b'\x04')
-        stop = time.time()
-        message = message.decode()
-        message = message[:-2]
-        temp = message.replace("USL", "")
-        temp = temp.replace("USR", "")
-        temp = temp.split("\n")
-        temp = [int(i) for i in temp]
-        temp.append(round((stop - system_start), 3))
-        temp.append(round((stop - start), 3))
-        self.distances.append(temp)
-        print(self.distances[-1])
-        self.serial.flush()
+            await asyncio.sleep(0.01)
 
     def set_speed(self, speed):
         self.prev_speed = speed  # Update previous speed
@@ -185,8 +183,7 @@ async def collision_plotter(kitt):  # For the plotter to work with slowly drivin
             kitt.data.append(kitt.distances[-1])
             # plotter.on_running([j[2] for j in kitt.data], [j[0] for j in kitt.data], 0)
             # plotter.on_running([j[2] for j in kitt.data], [j[1] for j in kitt.data], 1)
-            print("Getting data...")
-            await asyncio.sleep(0.01)
+            await asyncio.sleep(0.07)
         elif kitt.prev_speed == 150 and (kitt.distances[-1][0] < 250 or kitt.distances[-1][1] < 250):
             # np.savetxt('distance_data.csv', kitt.data, delimiter=',')
             # kitt.data.clear()
@@ -195,7 +192,7 @@ async def collision_plotter(kitt):  # For the plotter to work with slowly drivin
             await asyncio.sleep(0.1)
 
 
-async def main():
+async def kitt_main():
     kitt = KITT(sys_port)   # Create KITT instance
 
     try:  # Error handling
@@ -212,4 +209,4 @@ async def main():
     while not keyboard.is_pressed('esc'):
         pass
 
-asyncio.run(main())
+asyncio.run(kitt_main())
