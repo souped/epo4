@@ -6,7 +6,7 @@ class KITTMODEL():
         self.m = 5.6 # mass, [kg]
         self.b = 5 # viscous friction, [N m^-1 s]
         self.c = 0.1 # air drag, [N m^-2 s^2]
-        self.Famax = 10 # Max acc force, [N]
+        self.Famax = 400 # Max acc force, [N]
         self.Fbmax = 14 # max brake force, [N]
 
         #state params
@@ -14,8 +14,9 @@ class KITTMODEL():
         self.v = 0
         self.a = 0
 
-    def velocity(self, dt):
+    def velocity(self, dt, decel = False):
         temp0 = ((self.Famax / self.m) * np.square(dt))
+        if decel: temp0 = -((self.Fbmax / self.m) * np.square(dt))
         temp1 = ((self.calcdrag() / self.m) * np.square(dt))
         return self.v + temp0 - temp1
 
@@ -42,26 +43,41 @@ class KITTMODEL():
 
         # plot z, v
         t = np.arange(0,8.02,dt)
-        ax = plt.Figure().subplots(2)
-        v, = ax[0].plot(t, velocity)
-        z, = ax[1].plot(t, position)
-        print(velocity) 
+        ax = plt.figure().subplots(2)
+        plt.title("acceleration")
+        vv, = ax[0].plot(t, velocity)
+        ax[0].set_title("Velocity [m/s]")
+        zz, = ax[1].plot(t, position)
+        ax[1].set_title("Postion")
+
+# SIMULATING DECELERATION
+        self.v = 4
+        self.z = 0
+        time = 0
+        velocity = [4]
+        position = [0]
+        while time < 8:
+            self.v = self.velocity(dt, True)
+            velocity.append(self.v)
+            self.z = self.det_z(dt)
+            position.append(self.z)
+            time += dt
+
+        t = np.arange(0,8.02,dt)
+        ax = plt.figure().subplots(2)
+        plt.title("Deceleration")
+        vv, = ax[0].plot(t, velocity)
+        ax[0].set_title("Velocity [km/h]")
+        zz, = ax[1].plot(t, position)
+        ax[1].set_title("Postion")
+
         plt.show()
         
 
 if __name__ == "__main__":
     md = KITTMODEL()
     md.simulate()
+    plt.show()
             
 
 
-m = 5.6 # mass, [kg]
-self.b = 5 # viscous friction, [N m^-1 s]
-self.c = 0.1 # air drag, [N m^-2 s^2]
-self.Famax = 10 # Max acc force, [N]
-self.Fbmax = 14 # max brake force, [N]
-
-#state params
-self.z = 0
-self.v = 0
-self.a = 0
