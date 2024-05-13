@@ -7,16 +7,36 @@ import numpy as np
 # driving from and towards the wall
 # Data for showing time delay and 70ms cycle
 
-df = np.loadtxt("C:/Users/Jesse/OneDrive/epo4/Plots/Data for showing time delay and 70ms cycle.csv", delimiter=',')
-
+df = np.loadtxt("C:/Users/Jesse/OneDrive/epo4/Plots/driving_from_wall.csv", delimiter=',')
+print(np.shape(df))
+limit=64
 # For one axis
-plt.title("Delay estimation")
-plt.plot(df[:,2],df[:,0], label='Left sensor distance')
-plt.plot(df[:,2],df[:,1], label='Right sensor distance')
-plt.grid()
-plt.legend()
-plt.show()
+fig, ax = plt.subplots(1,3, figsize = (10,6))
 
+ax[0].set_title("Delay estimation")
+ax[0].plot(df[:limit:4, 2], df[:limit:4, 0], label='Left sensor distance')
+ax[0].plot(df[:limit:4, 2], df[:limit:4, 1], label='Right sensor distance')
+ax[0].grid()
+ax[0].legend()
+
+velocityL = np.gradient(df[:limit:4, 0], df[:limit:4, 2])
+velocityR = np.gradient(df[:limit:4, 1], df[:limit:4, 2])
+ax[1].set_title("Velocity estimation")
+ax[1].plot(df[:limit:4, 2], velocityL, label='Left sensor distance')
+ax[1].plot(df[:limit:4, 2], velocityR, label='Right sensor distance')
+ax[1].grid()
+ax[1].legend()
+
+accelerationL = np.gradient(velocityL, df[:limit:4, 2])
+accelerationR = np.gradient(velocityR, df[:limit:4, 2])
+ax[2].set_title("Acceleration estimation")
+ax[2].plot(df[:limit:4, 2], accelerationL, label='Left sensor distance')
+ax[2].plot(df[:limit:4, 2], accelerationR, label='Right sensor distance')
+ax[2].grid()
+ax[2].legend()
+
+plt.tight_layout()
+plt.show()
 # # For two axes
 # fig = plt.figure()
 # ax = fig.add_subplot(111)
