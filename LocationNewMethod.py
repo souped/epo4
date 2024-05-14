@@ -26,45 +26,52 @@ class localization:
         audio_channel3 = audiowav[:,2]
         audio_channel4 = audiowav[:,3]
         audio_channel5 = audiowav[:,4]
-        Fs, ref_signal = wavfile.read("opnames/reference.wav")
+        Fref, ref_signal = wavfile.read("opnames/reference.wav")
         ref_signal =  ref_signal[:,0]
-        
-        
-        # fig, ax = plt.subplots(2, 1, figsize=(20,10))
-        # ax[0].plot(audio_channel1, color='C0')
-        # ax[0].set_title("ref")
-        # ax[0].set_xlabel("Time [s]")
-        # ax[0].set_ylabel("Amplitude")
-        # fig.tight_layout()
-        # #plt.show()
-        # plt.savefig('channel1', dpi=300)
-        # plt.close()
         
         
         #segments
         segments_channel1 = localization.detect_segments(audio_channel1)
-        segments_channel2 = localization.detect_segments(audio_channel2)
-        segments_channel3 = localization.detect_segments(audio_channel3)
+        #segments_channel2 = localization.detect_segments(audio_channel2)
+        #segments_channel3 = localization.detect_segments(audio_channel3)
         segments_channel4 = localization.detect_segments(audio_channel4)
-        segments_channel5 = localization.detect_segments(audio_channel5)
+        #segments_channel5 = localization.detect_segments(audio_channel5)
         refsig = localization.detect_segments(ref_signal)
         ref = refsig[12]
+        ref = ref[750:1500]
 
-        plt.figure(figsize=(20,10))
-        plt.plot(segments_channel1[5], color='C0')
-        plt.title("ref")
+        plt.figure(figsize=(10,5))
+        plt.plot(audio_channel1, color='C0')
+        plt.title("Input audio")
         plt.xlabel("Time [s]")
         plt.ylabel("Amplitude")
         plt.grid(True)
         plt.show()
 
-        plt.figure(figsize=(20,10))
+        plt.figure(figsize=(10,5))
+        plt.plot(abs(segments_channel1[5]), color='C0')
+        plt.title("Input segment 5")
+        plt.xlabel("Time [s]")
+        plt.ylabel("Amplitude")
+        plt.grid(True)
+        plt.show()
+
+        plt.figure(figsize=(10,5))
+        plt.plot(abs(ref_signal), color='C0')
+        plt.title("Ref signal")
+        plt.xlabel("Time [s]")
+        plt.ylabel("Amplitude")
+        plt.grid(True)
+        plt.show()
+
+        plt.figure(figsize=(10,5))
         plt.plot(abs(ref), color='C0')
-        plt.title("ref")
+        plt.title("Ref signal small part")
         plt.xlabel("Time [s]")
         plt.ylabel("Amplitude")
         plt.grid(True)
         plt.show()
+
         
         #channel estimation
         
@@ -74,7 +81,7 @@ class localization:
         #TOT HIER IS OUTPUT!!! gaat dus iets mis in ch3
         
         
-        # ch_audio_channel1 = localization.ch3(segments_channel1[5], refsig[12])
+        # ch_audio_channel1 = localization.ch3(segments_channel1[5], ref)
         # ch_audio_channel2 = localization.ch3(segments_channel2[5], refsig[12])
         # ch_audio_channel3 = localization.ch3(segments_channel3[5], refsig[12])
         # ch_audio_channel4 = localization.ch3(segments_channel4[5], refsig[12])
@@ -86,8 +93,8 @@ class localization:
         channel_responses_4 = [localization.ch3(segment, ref) for segment in segments_channel4]
         channel_responses_array_4 = np.array(channel_responses_4)
         
-        plt.figure(figsize=(20,10))
-        plt.plot(channel_responses_array_1[1], color='C0')
+        plt.figure(figsize=(10,5))
+        plt.plot(channel_responses_array_1[5], color='C0')
         plt.title("ref")
         plt.xlabel("Time [s]")
         plt.ylabel("Amplitude")
@@ -102,10 +109,10 @@ class localization:
         peaks_channel4 = localization.find_segment_peaks(channel_responses_array_4)
         # peaks_channel5 = localization.find_segment_peaks(ch_audio_channel5, peak_threshold = 0.9*np.max(segments_channel5))   
         
-        #print(peaks_channel1)
+        print(peaks_channel1)
         # print(peaks_channel2)
         # print(peaks_channel3)
-        # print(peaks_channel4)
+        print(peaks_channel4)
         # print(peaks_channel5)
 
         sorted_peaks_1 = np.sort(peaks_channel1)
@@ -138,10 +145,7 @@ class localization:
         segments = []
         num_segments = 40
         segment_length = len(audio_signal) // num_segments
-        #print(len(audio_signal))
-        #print(segment_length)
         segments = [audio_signal[i*segment_length : (i+1)*segment_length] for i in range(num_segments)]
-
         return segments    
 
     def find_segment_peaks(segment_signal):
@@ -178,46 +182,23 @@ class localization:
 
         # Force x to be the same length as y
         reference_signal = np.append(reference_signal, [0]* (L-1))     # Make x same length as y
+        print(len(reference_signal))
+
+
 
         # Deconvolution in frequency domain
         fft_signal_1 = fft(signal_1)
         fft_reference_signal = fft(reference_signal)
 
         # Threshold to avoid blow ups of noise during inversion
-        ii = np.abs(fft_reference_signal) < epsi*np.max(np.abs(fft_reference_signal))
-        fft_reference_signal=fft_reference_signal[:len(fft_signal_1)]
-        fft_signal_1=fft_signal_1[:len(fft_reference_signal)]
-        H = np.divide(fft_signal_1,fft_reference_signal)
+        ii = (np.abs(fft_reference_signal)) < (np.max(np.abs(fft_reference_signal))*epsi)
 
-        plt.figure(figsize=(20,10))
-        plt.plot(H, color='C0')
-        plt.title("Hnozero")
-        plt.xlabel("Time [s]")
-        plt.ylabel("Amplitude")
-        plt.grid(True)
-        plt.savefig('Hnozero', dpi=300)
+        H = np.divide(fft_signal_1, fft_reference_signal)
+        H[ii] = 0
 
-        H = [0 if condition else reference_signal for reference_signal, condition in zip(fft_signal_1, ii)]
-
-        plt.figure(figsize=(20,10))
-        plt.plot(H, color='C0')
-        plt.title("H")
-        plt.xlabel("Time [s]")
-        plt.ylabel("Amplitude")
-        plt.grid(True)
-        plt.savefig('Hfft', dpi=300)
-        
-
+        #H = [0 if condition else reference_signal for reference_signal, condition in zip(fft_signal_1, ii)]
         h = np.real(ifft(H))    
         h = h[0:Lhat]
-
-        plt.figure(figsize=(20,10))
-        plt.plot(h, color='C0')
-        plt.title("h")
-        plt.xlabel("Time [s]")
-        plt.ylabel("Amplitude")
-        plt.grid(True)
-        plt.savefig('hifft', dpi=300)      
 
         return abs(h)
 
