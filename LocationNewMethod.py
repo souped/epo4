@@ -188,9 +188,37 @@ class localization:
         fft_reference_signal=fft_reference_signal[:len(fft_signal_1)]
         fft_signal_1=fft_signal_1[:len(fft_reference_signal)]
         H = np.divide(fft_signal_1,fft_reference_signal)
+
+        plt.figure(figsize=(20,10))
+        plt.plot(H, color='C0')
+        plt.title("Hnozero")
+        plt.xlabel("Time [s]")
+        plt.ylabel("Amplitude")
+        plt.grid(True)
+        plt.savefig('Hnozero', dpi=300)
+
         H = [0 if condition else reference_signal for reference_signal, condition in zip(fft_signal_1, ii)]
+
+        plt.figure(figsize=(20,10))
+        plt.plot(H, color='C0')
+        plt.title("H")
+        plt.xlabel("Time [s]")
+        plt.ylabel("Amplitude")
+        plt.grid(True)
+        plt.savefig('Hfft', dpi=300)
+        
+
         h = np.real(ifft(H))    
-        h = h[0:Lhat]      
+        h = h[0:Lhat]
+
+        plt.figure(figsize=(20,10))
+        plt.plot(h, color='C0')
+        plt.title("h")
+        plt.xlabel("Time [s]")
+        plt.ylabel("Amplitude")
+        plt.grid(True)
+        plt.savefig('hifft', dpi=300)      
+
         return abs(h)
 
     def coordinate_2d(D14, D23, D12, D43):
