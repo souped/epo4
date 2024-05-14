@@ -13,7 +13,7 @@ limit=64
 # For one axis
 fig, ax = plt.subplots(1,3, figsize = (10,6))
 
-ax[0].set_title("Delay estimation")
+ax[0].set_title("Distance estimation")
 ax[0].plot(df[:limit:4, 2], df[:limit:4, 0], label='Left sensor distance')
 ax[0].plot(df[:limit:4, 2], df[:limit:4, 1], label='Right sensor distance')
 ax[0].grid()
