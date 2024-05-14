@@ -112,7 +112,7 @@ class KITT:
             self.set_speed(150)  # Stop the car
         elif not self.distances:
             pass
-        elif (((100 > self.distances[-1][0] > 0) or (100 > self.distances[-1][1] > 0)) and from_speed==0
+        elif (((125 > self.distances[-1][0] > 0) or (125 > self.distances[-1][1] > 0)) and from_speed==0
               and self.prev_speed > 150):  # Brake because too close to an object
             print('Distance emergency Brake')
             self.set_speed(135)     # Set speed to move backwards
@@ -187,7 +187,8 @@ async def collision_plotter(kitt):  # For the plotter to work with slowly drivin
             print("Cleaning data...")
             kitt.data.clear()
         # REMOVE '=' IN FIRST COMPARISON!!!
-        elif (kitt.prev_speed >= 150 or kitt.prev_speed < 150) and (kitt.distances[-1][0] < 250 or kitt.distances[-1][1] < 250):
+        elif (kitt.prev_speed >= 150 or kitt.prev_speed < 150) and (kitt.distances[-1][0] < 250 or
+                                                                    kitt.distances[-1][1] < 250):
             kitt.data.append(kitt.distances[-1])
             # plotter.on_running([j[2] for j in kitt.data], [j[0] for j in kitt.data], 0)
             # plotter.on_running([j[2] for j in kitt.data], [j[1] for j in kitt.data], 1)
