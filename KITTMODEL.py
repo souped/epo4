@@ -15,7 +15,8 @@ class KITTMODEL():
         self.z = 0
         self.v = 0
         self.a = 0
-        self.pos = [0, 0]
+        self.phi = 0
+        self.pos = (0, 0)
         self.direction = [0, 0]
 
         self.dt = 100
@@ -25,6 +26,10 @@ class KITTMODEL():
         speed2, force2 = 165, self.Famax
         self.slope = (force2 - force1) / (speed2 - speed1)
         self.intercept = force1 - self.slope * speed1
+
+        self.angledict = {'D150': 0, 'D100': 25, 'D200': -25}
+        self.phi = self.angledict['D100'] # d100 => kitt turns to the right
+
 
     def determine_starting_angle(self):
         sp_string = input("Enter starting position:")
@@ -44,43 +49,13 @@ class KITTMODEL():
             self.determine_starting_angle()
 
     # This whole function is not correct.
-    def change_rotation(self, theta, dt):
-        phi = 0  # ???
-        dtheta = self.v*np.sin(phi)/self.L
+    # nu wel?
+    def change_rotation(self, dt):
+        dtheta = self.v*np.sin(self.phi)/self.L
 
-        rotation_matrix = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
+        rotation_matrix = np.array([[np.cos(dtheta), -np.sin(dtheta)], [np.sin(dtheta), np.cos(dtheta)]])
         direction = np.matmul(rotation_matrix, self.direction)
         return direction
-
-    def command_input(self):
-        cmd_string = input("Enter commands:")
-        # Example input:    D150 M165 0.5      Program just loops this function? Or give all commands in bulk?
-        cmd_string = cmd_string.split(" ")
-        speed = 0
-        direction = 0
-        time = 0
-        for string in cmd_string:
-            if "D" in string:
-                print("Set direction:", string)
-                direction = int(string)
-            if "M" in string:
-                print("Set speed:", string)
-                speed = int(string)
-            else:
-                pass
-        print("Time:", cmd_string[-1])
-
-        positions = []
-        velocities = []
-        directions = []
-        while time < float(cmd_string[-1]):
-            self.v = self.change_velocity(self.speed_to_force_linear(speed), self.dt)
-            velocities.append(self.v)
-            self.direction = self.change_rotation(direction, self.dt)
-            directions.append(self.direction)
-            self.pos = self.change_position(self.dt)
-            positions.append(self.pos)
-            time += self.dt
 
     def change_position(self, dt):
         return self.pos + self.v * dt * self.direction
@@ -109,54 +84,117 @@ class KITTMODEL():
         v = v0 + a*t
         z = z + v*t"""
         return self.z + self.v * dt
+    
+    def det_xy(self, dt):
+        """
+        x,y = x0 + dirx, y0 + diry"""
+        return self.pos[0] + self.direction[0] * self.v * dt, self.pos[1] + self.direction[1] * self.v * dt
+    
+    def reset_sim(self):
+        # state params
+        self.z = 0
+        self.v = 0
+        self.a = 0
+        self.pos = [0, 0]
+        self.direction = [1, 0]
 
     def simulate(self, dt=0.01):
-        time = 0
-        velocity = [0]
-        position = [0]
-        while time < 8:
-            self.v = self.velocity(dt)
-            velocity.append(self.v)
-            self.z = self.det_z(dt)
-            position.append(self.z)
-            time += dt
+        # time = 0
+        # velocity = [0]
+        # position = [0]
+        # while time < 8:
+        #     self.v = self.velocity(dt)
+        #     velocity.append(self.v)
+        #     self.z = self.det_z(dt)
+        #     position.append(self.z)
+        #     time += dt
 
-        # plot z, v
-        t = np.arange(0, 8.02, dt)
-        ax = plt.figure().subplots(2)
-        plt.title("acceleration")
-        vv, = ax[0].plot(t, velocity)
-        ax[0].set_title("Velocity [m/s]")
-        zz, = ax[1].plot(t, position)
-        ax[1].set_title("Postion")
+        # # plot z, v
+        # t = np.arange(0, 8.02, dt)
+        # ax = plt.figure().subplots(2)
+        # plt.title("acceleration")
+        # vv, = ax[0].plot(t, velocity)
+        # ax[0].set_title("Velocity [m/s]")
+        # zz, = ax[1].plot(t, position)
+        # ax[1].set_title("Postion")
 
         # SIMULATING DECELERATION
-        self.v = 4
+        # self.v = 4
+        # self.z = 0
+        # time = 0
+        # velocity = [4]
+        # position = [0]
+        # while time < 8:
+        #     self.v = self.velocity(dt, True)
+        #     velocity.append(self.v)
+        #     self.z = self.det_z(dt)
+        #     position.append(self.z)
+        #     time += dt
+
+        # t = np.arange(0, 8.02, dt)
+        # ax = plt.figure().subplots(2)
+        # plt.title("Deceleration")
+        # vv, = ax[0].plot(t, velocity)
+        # ax[0].set_title("Velocity [km/h]")
+        # zz, = ax[1].plot(t, position)
+        # ax[1].set_title("Postion")
+
+
+        ### steering anlge plot
+        self.reset_sim()
+        self.v = 5
         self.z = 0
         time = 0
-        velocity = [4]
-        position = [0]
+        position = [(0,0)]
+        dd = [[1,0]]
+        angle = [0]
+        r = 0
         while time < 8:
-            self.v = self.velocity(dt, True)
-            velocity.append(self.v)
-            self.z = self.det_z(dt)
-            position.append(self.z)
+            self.direction = self.change_rotation(dt)
+            dd.append(self.direction)
+            angle.append(self.phi)
+            self.pos = self.det_xy(dt)
+            position.append(self.pos)
+
+            if time <= 4.5 and time >= 3.5:
+                self.phi = 0
+            
             time += dt
 
         t = np.arange(0, 8.02, dt)
-        ax = plt.figure().subplots(2)
-        plt.title("Deceleration")
-        vv, = ax[0].plot(t, velocity)
-        ax[0].set_title("Velocity [km/h]")
-        zz, = ax[1].plot(t, position)
-        ax[1].set_title("Postion")
+        ax = plt.figure().subplots(3)
+        plt.title("Steering angle drive circle")
+        lineangle, = ax[0].plot(t, angle)
+        ax[1].plot(t, dd)
+        ax[2].plot(*zip(*position))
 
         plt.show()
+
+def take_input():
+    cmd_string = input("Enter commands: ")
+    # Example input: D150 M165 0.5      Program just loops this function? Or give all commands in bulk?
+    cmd_string = cmd_string.split(" ")
+    speed = 0
+    direction = 0
+    time = 0
+    for string in cmd_string:
+        if "d" in string.lower():
+            print("Set direction:", string)
+            direction = int(string[1:])
+            print(direction)
+        if "m" in string.lower():
+            print("Set speed:", string)
+            speed = int(string[1:])
+        else:
+            pass
+    print("Time:", cmd_string[-1])
+
+
+    return
 
 
 if __name__ == "__main__":
     md = KITTMODEL()
-    md.determine_starting_angle()
-    md.command_input()
+    take_input()
     md.simulate()
     plt.show()
