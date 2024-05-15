@@ -10,6 +10,8 @@ from wavaudioread import wavaudioread
 from recording_tool import recording_tool
 from sympy import symbols, solve
 import numpy as np
+import math
+
 
 
 class localization:
@@ -32,114 +34,108 @@ class localization:
         
         #segments
         segments_channel1 = localization.detect_segments(audio_channel1)
-        #segments_channel2 = localization.detect_segments(audio_channel2)
-        #segments_channel3 = localization.detect_segments(audio_channel3)
+        segments_channel2 = localization.detect_segments(audio_channel2)
+        segments_channel3 = localization.detect_segments(audio_channel3)
         segments_channel4 = localization.detect_segments(audio_channel4)
-        #segments_channel5 = localization.detect_segments(audio_channel5)
+        segments_channel5 = localization.detect_segments(audio_channel5)
         refsig = localization.detect_segments(ref_signal)
         ref = refsig[12]
         ref = ref[750:1500]
 
-        plt.figure(figsize=(10,5))
-        plt.plot(audio_channel1, color='C0')
-        plt.title("Input audio")
-        plt.xlabel("Time [s]")
-        plt.ylabel("Amplitude")
-        plt.grid(True)
-        plt.show()
+        # plt.figure(figsize=(10,5))
+        # plt.plot(audio_channel1, color='C0')
+        # plt.title("Input audio")
+        # plt.xlabel("Time [s]")
+        # plt.ylabel("Amplitude")
+        # plt.grid(True)
+        # plt.show()
 
-        plt.figure(figsize=(10,5))
-        plt.plot(abs(segments_channel1[5]), color='C0')
-        plt.title("Input segment 5")
-        plt.xlabel("Time [s]")
-        plt.ylabel("Amplitude")
-        plt.grid(True)
-        plt.show()
+        # plt.figure(figsize=(10,5))
+        # plt.plot(abs(segments_channel1[5]), color='C0')
+        # plt.title("Input segment 5")
+        # plt.xlabel("Time [s]")
+        # plt.ylabel("Amplitude")
+        # plt.grid(True)
+        # plt.show()
 
-        plt.figure(figsize=(10,5))
-        plt.plot(abs(ref_signal), color='C0')
-        plt.title("Ref signal")
-        plt.xlabel("Time [s]")
-        plt.ylabel("Amplitude")
-        plt.grid(True)
-        plt.show()
+        # plt.figure(figsize=(10,5))
+        # plt.plot(abs(ref_signal), color='C0')
+        # plt.title("Ref signal")
+        # plt.xlabel("Time [s]")
+        # plt.ylabel("Amplitude")
+        # plt.grid(True)
+        # plt.show()
 
-        plt.figure(figsize=(10,5))
-        plt.plot(abs(ref), color='C0')
-        plt.title("Ref signal small part")
-        plt.xlabel("Time [s]")
-        plt.ylabel("Amplitude")
-        plt.grid(True)
-        plt.show()
+        # plt.figure(figsize=(10,5))
+        # plt.plot(abs(ref), color='C0')
+        # plt.title("Ref signal small part")
+        # plt.xlabel("Time [s]")
+        # plt.ylabel("Amplitude")
+        # plt.grid(True)
+        # plt.show()
 
         
         #channel estimation
-        
-        
-        #TOT HIER IS OUTPUT!!! gaat dus iets mis in ch3
-        #TOT HIER IS OUTPUT!!! gaat dus iets mis in ch3
-        #TOT HIER IS OUTPUT!!! gaat dus iets mis in ch3
-        
-        
-        # ch_audio_channel1 = localization.ch3(segments_channel1[5], ref)
-        # ch_audio_channel2 = localization.ch3(segments_channel2[5], refsig[12])
-        # ch_audio_channel3 = localization.ch3(segments_channel3[5], refsig[12])
-        # ch_audio_channel4 = localization.ch3(segments_channel4[5], refsig[12])
-        # ch_audio_channel5 = localization.ch3(segments_channel5[5], refsig[12])
-
         channel_responses_1 = [localization.ch3(segment, ref) for segment in segments_channel1]
         channel_responses_array_1 = np.array(channel_responses_1)
-
+        channel_responses_2 = [localization.ch3(segment, ref) for segment in segments_channel2]
+        channel_responses_array_2 = np.array(channel_responses_2)
+        channel_responses_3 = [localization.ch3(segment, ref) for segment in segments_channel3]
+        channel_responses_array_3 = np.array(channel_responses_3)
         channel_responses_4 = [localization.ch3(segment, ref) for segment in segments_channel4]
         channel_responses_array_4 = np.array(channel_responses_4)
-        
-        plt.figure(figsize=(10,5))
-        plt.plot(channel_responses_array_1[5], color='C0')
-        plt.title("ref")
-        plt.xlabel("Time [s]")
-        plt.ylabel("Amplitude")
-        plt.grid(True)
-        plt.show()
+        channel_responses_5 = [localization.ch3(segment, ref) for segment in segments_channel5]
+        channel_responses_array_5 = np.array(channel_responses_5)
         
         
         #peaks
         peaks_channel1 = localization.find_segment_peaks(channel_responses_array_1)
-        # peaks_channel2 = localization.find_segment_peaks(ch_audio_channel2, peak_threshold = 0.9*np.max(segments_channel2))
-        # peaks_channel3 = localization.find_segment_peaks(ch_audio_channel3, peak_threshold = 0.9*np.max(segments_channel3))
+        peaks_channel2 = localization.find_segment_peaks(channel_responses_array_2)
+        peaks_channel3 = localization.find_segment_peaks(channel_responses_array_3)
         peaks_channel4 = localization.find_segment_peaks(channel_responses_array_4)
-        # peaks_channel5 = localization.find_segment_peaks(ch_audio_channel5, peak_threshold = 0.9*np.max(segments_channel5))   
+        peaks_channel5 = localization.find_segment_peaks(channel_responses_array_5) 
         
         print(peaks_channel1)
-        # print(peaks_channel2)
-        # print(peaks_channel3)
+        print(peaks_channel2)
+        print(peaks_channel3)
         print(peaks_channel4)
-        # print(peaks_channel5)
+        print(peaks_channel5)
 
         sorted_peaks_1 = np.sort(peaks_channel1)
         trimmed_peaks_1 = sorted_peaks_1[10:-10]
         mean_peak_1 = np.mean(trimmed_peaks_1)
-
-        print(mean_peak_1)
+        
+        sorted_peaks_2 = np.sort(peaks_channel2)
+        trimmed_peaks_2 = sorted_peaks_2[10:-10]
+        mean_peak_2 = np.mean(trimmed_peaks_2)
+        
+        sorted_peaks_3 = np.sort(peaks_channel3)
+        trimmed_peaks_3 = sorted_peaks_3[10:-10]
+        mean_peak_3 = np.mean(trimmed_peaks_3)
 
         sorted_peaks_4 = np.sort(peaks_channel4)
         trimmed_peaks_4 = sorted_peaks_4[10:-10]
         mean_peak_4 = np.mean(trimmed_peaks_4)
-
-        print(mean_peak_4)
-         
-        # print("Number of segments with peaks:", len(peaks_channel1))
-        # print("Number of segments with peaks:", len(peaks_channel4))
+        
+        sorted_peaks_5 = np.sort(peaks_channel5)
+        trimmed_peaks_5 = sorted_peaks_5[10:-10]
+        mean_peak_5 = np.mean(trimmed_peaks_5)
 
         # Calculate TDOA between different microphone pairs
+        TDOA12 = localization.TDOA(mean_peak_1, mean_peak_2)
+        TDOA13 = localization.TDOA(mean_peak_1, mean_peak_3)
         TDOA14 = localization.TDOA(mean_peak_1, mean_peak_4)
+        TDOA23 = localization.TDOA(mean_peak_2, mean_peak_3)
+        TDOA24 = localization.TDOA(mean_peak_2, mean_peak_4)
+        TDOA34 = localization.TDOA(mean_peak_3, mean_peak_4)
         
+        print(TDOA12)
+        print(TDOA13)
         print(TDOA14)
         
+        x, y = localization.coordinate_2d(TDOA12, TDOA13, TDOA14, TDOA23, TDOA24, TDOA34)
         
-        # x=5
-        # y=5
-        
-        # return x, y
+        return x, y
     
     def detect_segments(audio_signal):
         segments = []
@@ -157,15 +153,6 @@ class localization:
         return peaks_list
     
     def TDOA(peak1, peak2):
-        # tdoa_values = []
-        # for peak1, peak2 in zip(segment_peaks1, segment_peaks2):
-        #     # Calculate TDOA for the current segment
-        #     tdoa = (peak2 - peak1) / Fs_RX *343
-        #     tdoa_values.append(tdoa)
-        # print(tdoa_values)
-    
-        # mean_tdoa = np.mean(tdoa_values)
-
         mean_tdoa = (peak2 - peak1)/Fs * 343
         return mean_tdoa
 
@@ -202,23 +189,64 @@ class localization:
 
         return abs(h)
 
-    def coordinate_2d(D14, D23, D12, D43):
-        # Calculate 2D coordinates based on TDOA measurements
-        mic1 = [0, 0, 50]
-        mic2 = [0, 480, 50]
-        mic3 = [480, 480, 50]
-        mic4 = [480, 0, 50]
-        mic5 = [0, 240, 80]
-        x, y = symbols('x, y')	
+    def coordinate_2d(D12, D13, D14, D23, D24, D34):
         
-        cirkel1 = (x - mic1[0])**2 + (y - mic1[1])**2 - D14**2
-        cirkel2 = (x - mic2[0])**2 + (y - mic2[1])**2 - D23**2
-        cirkel3 = (x - mic1[0])**2 + (y - mic1[1])**2 - D12**2
-        cirkel4 = (x - mic4[0])**2 + (y - mic4[1])**2 - D43**2
-        # using the linear algebra given before
-        snijpunten = solve((cirkel1, cirkel2, cirkel3, cirkel4), (x, y))
+        D23= D13-D12
+        D24= D14-D12
+        D34= 14-D13
+        
+        # Calculate 2D coordinates based on TDOA measurements
+        X1 = np.array([0, 0])
+        X2 = np.array([0, 4.8])
+        X3 = np.array([4.8, 4.8])
+        X4 = np.array([4.8, 0])
+        X5 = np.array([0, 2.4])
+        
+        norm_X1 = np.linalg.norm(X1)
+        norm_X2 = np.linalg.norm(X2)
+        norm_X3 = np.linalg.norm(X3)
+        norm_X4 = np.linalg.norm(X4)
+       
+        
+        B = np.array([
+        [D12**2 - norm_X1**2 + norm_X2**2],
+        [D13**2 - norm_X1**2 + norm_X3**2],
+        [D14**2 - norm_X1**2 + norm_X4**2],
+        [D23**2 - norm_X2**2 + norm_X3**2],
+        [D24**2 - norm_X2**2 + norm_X4**2],
+        [D34**2 - norm_X3**2 + norm_X4**2]
+        ])
+        
+        X21=(X2-X1)
+        X31=(X3-X1)
+        X41=(X4-X1)
+        X32=(X3-X2)
+        X42=(X4-X2)
+        X43=(X4-X3)
+        
 
-        return (snijpunten)
+        
+        A = np.array([
+        [2*X21[0], 2*X21[1], -2 * D12, 0, 0],
+        [2*X31[0], 2*X31[1], 0, -2 * D13, 0],
+        [2*X41[0], 2*X41[1], 0, 0, -2 * D14],
+        [2*X32[0], 2*X32[1], 0, -2 * D23, 0],
+        [2*X42[0], 2*X42[1], 0, 0, -2 * D24],
+        [2*X43[0], 2*X43[1], 0, 0, -2 * D34]
+        ])
+    
+        
+        
+      
+        y=np.linalg.pinv(A) @ B
+        print(y)
+        coordinate = y[:2]
+        print(coordinate)
+                
+
+        
+
+        return x, y
 
     # def print_plots(a, refsig, Fs_RX, title, index, h1_index, h1_peak, h0_index, h0_peak):
     #     y11 = a[20000:40000,0]
