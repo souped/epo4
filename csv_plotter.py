@@ -7,9 +7,10 @@ import numpy as np
 # driving from and towards the wall
 # Data for showing time delay and 70ms cycle
 
-df = np.loadtxt("C:/Users/Jesse/OneDrive/epo4/Plots/driving_from_wall.csv", delimiter=',')
+# df = np.loadtxt("C:/Users/Jesse/OneDrive/epo4/Plots/driving_to_wall.csv", delimiter=',')
+df = np.loadtxt("distance_data.csv", delimiter=',')
 print(np.shape(df))
-limit=64
+limit=-1
 # For one axis
 fig, ax = plt.subplots(1,3, figsize = (10,6))
 
