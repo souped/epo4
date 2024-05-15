@@ -95,11 +95,11 @@ class localization:
         peaks_channel4 = localization.find_segment_peaks(channel_responses_array_4)
         peaks_channel5 = localization.find_segment_peaks(channel_responses_array_5) 
         
-        print(peaks_channel1)
-        print(peaks_channel2)
-        print(peaks_channel3)
-        print(peaks_channel4)
-        print(peaks_channel5)
+        # print(peaks_channel1)
+        # print(peaks_channel2)
+        # print(peaks_channel3)
+        # print(peaks_channel4)
+        # print(peaks_channel5)
 
         sorted_peaks_1 = np.sort(peaks_channel1)
         trimmed_peaks_1 = sorted_peaks_1[10:-10]
@@ -117,23 +117,24 @@ class localization:
         trimmed_peaks_4 = sorted_peaks_4[10:-10]
         mean_peak_4 = np.mean(trimmed_peaks_4)
         
-        sorted_peaks_5 = np.sort(peaks_channel5)
-        trimmed_peaks_5 = sorted_peaks_5[10:-10]
-        mean_peak_5 = np.mean(trimmed_peaks_5)
+        # sorted_peaks_5 = np.sort(peaks_channel5)
+        # trimmed_peaks_5 = sorted_peaks_5[10:-10]
+        # mean_peak_5 = np.mean(trimmed_peaks_5)
+
 
         # Calculate TDOA between different microphone pairs
         TDOA12 = localization.TDOA(mean_peak_1, mean_peak_2)
         TDOA13 = localization.TDOA(mean_peak_1, mean_peak_3)
         TDOA14 = localization.TDOA(mean_peak_1, mean_peak_4)
-        TDOA23 = localization.TDOA(mean_peak_2, mean_peak_3)
-        TDOA24 = localization.TDOA(mean_peak_2, mean_peak_4)
-        TDOA34 = localization.TDOA(mean_peak_3, mean_peak_4)
+        # TDOA23 = localization.TDOA(mean_peak_2, mean_peak_3)
+        # TDOA24 = localization.TDOA(mean_peak_2, mean_peak_4)
+        # TDOA34 = localization.TDOA(mean_peak_3, mean_peak_4)
         
-        print(TDOA12)
-        print(TDOA13)
-        print(TDOA14)
+        print("D12 = ", TDOA12)
+        print("D13 = ", TDOA13)
+        print("D14 = ", TDOA14)
         
-        x, y = localization.coordinate_2d(TDOA12, TDOA13, TDOA14, TDOA23, TDOA24, TDOA34)
+        x, y = localization.coordinate_2d(TDOA12, TDOA13, TDOA14)
         
         return x, y
     
@@ -169,7 +170,7 @@ class localization:
 
         # Force x to be the same length as y
         reference_signal = np.append(reference_signal, [0]* (L-1))     # Make x same length as y
-        print(len(reference_signal))
+        #print(len(reference_signal))
 
 
 
@@ -189,23 +190,24 @@ class localization:
 
         return abs(h)
 
-    def coordinate_2d(D12, D13, D14, D23, D24, D34):
+    def coordinate_2d(D12, D13, D14):
         
         D23= D13-D12
         D24= D14-D12
-        D34= 14-D13
+        D34= D14-D13
         
         # Calculate 2D coordinates based on TDOA measurements
         X1 = np.array([0, 0])
         X2 = np.array([0, 4.8])
         X3 = np.array([4.8, 4.8])
         X4 = np.array([4.8, 0])
-        X5 = np.array([0, 2.4])
+        #X5 = np.array([0, 2.4])
         
         norm_X1 = np.linalg.norm(X1)
         norm_X2 = np.linalg.norm(X2)
         norm_X3 = np.linalg.norm(X3)
         norm_X4 = np.linalg.norm(X4)
+    
        
         
         B = np.array([
@@ -234,18 +236,12 @@ class localization:
         [2*X42[0], 2*X42[1], 0, 0, -2 * D24],
         [2*X43[0], 2*X43[1], 0, 0, -2 * D34]
         ])
-    
-        
-        
-      
-        y=np.linalg.pinv(A) @ B
-        print(y)
-        coordinate = y[:2]
-        print(coordinate)
-                
 
-        
-
+        A_inv = np.linalg.pinv(A)
+        result = np.dot(A_inv, B)
+        x = result[0,0]
+        y = result[1,0]
+            
         return x, y
 
     # def print_plots(a, refsig, Fs_RX, title, index, h1_index, h1_peak, h0_index, h0_peak):
@@ -400,7 +396,7 @@ if __name__ == "__main__":
 
 
 
-    #print(x_car1, y_car1)
+    print("Coordinates: x = ", x_car1,", y = ", y_car1)
     #print(x_car2, y_car2)
     #print(x_car3, y_car3)
     #print(x_car4, y_car4)
