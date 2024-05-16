@@ -2,75 +2,75 @@ import serial
 import time
 
 # beacon specs
-carrier_freq=10000  # Carrier frequency, min = 5 kHz & max = 30 kHz
-bit_freq=5000  # The bit frequency, min = 1 kHz & max = 5 kHz
-repetition_cnt=2500  # = bit_freq/repetition_freq, sets the time between transmissions, with repetition_freq 1-10 Hz.
-codeword=0xFEEDBACC  # Code word in hexadecimal
+carrier_freq = 10000  # Carrier frequency, min = 5 kHz & max = 30 kHz
+bit_freq = 5000  # The bit frequency, min = 1 kHz & max = 5 kHz
+repetition_cnt = 2500  # = bit_freq/repetition_freq, sets the time between transmissions, with repetition_freq 1-10 Hz.
+codeword = 0xFEEDBACC  # Code word in hexadecimal
 
-max_speed=10  # speed specs
+max_speed = 10  # speed specs
 
-system_start=time.time()  # initialize time
+system_start = time.time()  # initialize time
 
 
 class KITT:
-    def __init__(self,port,baudrate=115200):
-        self.serial=serial.Serial(port,baudrate,rtscts=True)  # Open the comport
+    def __init__(self, port, baudrate=115200):
+        self.serial = serial.Serial(port, baudrate, rtscts=True)  # Open the comport
 
         # Initializing beacon specifications
-        carrier_frequency=carrier_freq.to_bytes(2,byteorder='big')
+        carrier_frequency = carrier_freq.to_bytes(2, byteorder='big')
         print(b'F' + carrier_frequency + b'\n')
         self.serial.write(b'F' + carrier_frequency + b'\n')
-        bit_frequency=bit_freq.to_bytes(2,byteorder='big')
+        bit_frequency = bit_freq.to_bytes(2, byteorder='big')
         self.serial.write(b'B' + bit_frequency + b'\n')
-        repetition_count=repetition_cnt.to_bytes(2,byteorder='big')
+        repetition_count = repetition_cnt.to_bytes(2, byteorder='big')
         self.serial.write(b'R' + repetition_count + b'\n')
-        code=codeword.to_bytes(4,byteorder='big')
+        code = codeword.to_bytes(4, byteorder='big')
         self.serial.write(b'C' + code + b'\n')
 
         # state variables such as speed, angle are defined here
-        self.prev_speed=150  # No speed
+        self.prev_speed = 150  # No speed
 
-        self.distances=[]  # left, right, system time, data age since command is send
-        self.commands=[]  # List where commands are stored that need to be sent to KITT
-        self.data=[]
+        self.distances = []  # left, right, system time, data age since command is send
+        self.commands = []  # List where commands are stored that need to be sent to KITT
+        self.data = []
 
-        self.last_event={'type': None,'name': None}
+        self.last_event = {'type': None, 'name': None}
 
-    def encode_command(self,command):
-        if isinstance(command,str):
-            command=command.encode()
+    def encode_command(self, command):
+        if isinstance(command, str):
+            command = command.encode()
         self.commands.append(command)
 
     def send_command(self):
         while True:
             if not len(self.commands):
-                start=time.time()
+                start = time.time()
                 self.serial.write(b'Sd\n')
                 # time.sleep(0.07)
-                message=self.serial.read_until(b'\x04')
-                stop=time.time()
-                message=message.decode()
-                message=message[:-2]
-                temp=message.replace("USL","")
-                temp=temp.replace("USR","")
-                temp=temp.split("\n")
-                temp=[int(i) for i in temp]
-                temp.append(round((stop - system_start),3))
-                temp.append(round((stop - start),3))
+                message = self.serial.read_until(b'\x04')
+                stop = time.time()
+                message = message.decode()
+                message = message[:-2]
+                temp = message.replace("USL", "")
+                temp = temp.replace("USR", "")
+                temp = temp.split("\n")
+                temp = [int(i) for i in temp]
+                temp.append(round((stop - system_start), 3))
+                temp.append(round((stop - start), 3))
                 self.distances.append(temp)
                 print(self.distances[-1])
                 self.serial.flush()
-                time.sleep(0.05)
+                time.sleep(0.07)
             else:
                 self.serial.write(self.commands[0])
                 self.commands.pop(0)
                 time.sleep(0.05)
 
-    def set_speed(self,speed):
-        self.prev_speed=speed  # Update previous speed
+    def set_speed(self, speed):
+        self.prev_speed = speed  # Update previous speed
         self.encode_command(f'M{speed}\n')
 
-    def set_angle(self,angle):
+    def set_angle(self, angle):
         self.encode_command(f'D{angle}\n')
 
     def stop(self):
@@ -83,7 +83,7 @@ class KITT:
     def stop_beacon(self):
         self.encode_command(b'A0\n')
 
-    def emergency_brake(self,from_speed):  # STILL NEEDS TUNING!
+    def emergency_brake(self, from_speed):  # STILL NEEDS TUNING!
         # if self.prev_speed > 153 and from_speed==1:
         #     print('Emergency Brake')
         #     # If previous speed > standstill, apply emergency brake
@@ -108,5 +108,5 @@ class KITT:
         pass
 
     def __del__(self):
-        self.stop()  # In case the car was still moving, stop the car.
+        self.set_speed(150)
         self.serial.close()  # Safely closes the comport

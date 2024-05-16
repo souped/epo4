@@ -5,7 +5,7 @@ from KITT_class_only import KITT
 from Collision_plotter import collision_plotter
 from Keyboard import wasd
 
-sys_port = 'COM5'
+sys_port = 'COM2'
 
 if __name__ == '__main__':
     kitt = KITT(sys_port)   # Create KITT instance
@@ -24,4 +24,3 @@ if __name__ == '__main__':
     # # When 'ESC' is pressed, exit. DOES NOT WORK!
     # while not keyboard.is_pressed('esc'):
     #     pass
-
