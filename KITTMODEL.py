@@ -31,15 +31,22 @@ class KITTMODEL():
         # self.phi = self.angledict['D100'] # d100 => kitt turns to the right
 
         # constant data tracking for sim()
-        self.positions = []
+        self.positions = [(0,0)]
         self.velocities = []
         self.simtime = 0
         self.t0 = 0
+
         self.figure = plt.figure()
         self.ax = self.figure.subplots()
-        # plt.draw()
-        # self.background = self.figure.canvas.copy_from_bbox(self.ax.bbox)
-        # self.points = self.ax.plot(self.t0, *self.pos)
+        self.ax.grid()
+        plt.show(block=False)
+        self.lines, = self.ax.plot(*zip(*self.positions))
+        
+        print(self.lines)
+
+        
+        self.figure.canvas.draw()
+        self.figure.canvas.flush_events()
 
 
     def determine_starting_angle(self):
@@ -191,29 +198,32 @@ class KITTMODEL():
         while timer <= endpoint:
             self.simhelper(dt)
             self.t0+=dt
-            print(self.t0, self.v)
             timer+= dt
-
-        # t = np.arange(self.t0, endpoint, dt)
-        # self.points.add_data(t, *zip(*self.positions))
-        # self.figure.canvas.restore_region(self.background)
-        # self.ax.draw_artist(self.points)
-        # self.figure.canvas.blit(self.ax.bbox)
         
 
     def simhelper(self, dt=0.01):
         self.v = self.velocity(dt)
         self.velocities.append(self.v)
+        print(f"self.dir {self.direction}")
+
         self.direction = self.det_rotation()
         self.pos = self.det_xy(dt)
+        print(f"pos: {self.pos}")
         self.positions.append(self.pos)
-        self.ax.plot(self.t0, *self.pos)
+        self.update_line()
         
     def cmds_to_sim(self, cmds):
         speed, direction, time = cmds
-        speed = self.speed_to_force_linear(speed)
+        speed = self.change_velocity(self.speed_to_force_linear(speed), 0.01)
         direction = self.det_rotation(self.angledict[direction])
         return speed, direction, time
+    
+    def update_line(self):
+        self.lines.set_data(*zip(*self.positions))
+        self.ax.relim()
+        self.ax.autoscale_view()
+        self.figure.canvas.draw()
+        self.figure.canvas.flush_events()
 
 def parse_input(cmds: str):
     # Example input: D150 M165 0.5
@@ -228,11 +238,9 @@ def parse_input(cmds: str):
     return speed, direction, time
 
 def siminput():
-    return "D150 M165 0.5"
+    return "D150 M165 .5"
 
 if __name__ == "__main__":
     md = KITTMODEL()
     md.sim(md.cmds_to_sim(parse_input(siminput())))
-    print(222)
-    md.sim(md.cmds_to_sim(parse_input(siminput())))
-    plt.show()
+    # md.simulate()
