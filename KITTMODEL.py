@@ -27,15 +27,19 @@ class KITTMODEL():
         self.slope = (force2 - force1) / (speed2 - speed1)
         self.intercept = force1 - self.slope * speed1
 
-        self.angledict = {'D150': 0, 'D100': 25, 'D200': -25}
+        self.angledict = {150: 0, 100: 25, 200: -25}
         # self.phi = self.angledict['D100'] # d100 => kitt turns to the right
 
         # constant data tracking for sim()
         self.positions = []
-        self.directions = []
         self.velocities = []
         self.simtime = 0
         self.t0 = 0
+        self.figure = plt.figure()
+        self.ax = self.figure.subplots()
+        # plt.draw()
+        # self.background = self.figure.canvas.copy_from_bbox(self.ax.bbox)
+        # self.points = self.ax.plot(self.t0, *self.pos)
 
 
     def determine_starting_angle(self):
@@ -57,9 +61,10 @@ class KITTMODEL():
 
     # This whole function is not correct.
     # nu wel?
-    def change_rotation(self, dt):
+    def det_rotation(self, phi = None):
         """determines a direction vector derived from phi"""
-        dtheta = self.v*np.sin(self.phi)/self.L
+        if phi is None: phi = self.phi
+        dtheta = self.v*np.sin(phi)/self.L
 
         rotation_matrix = np.array([[np.cos(dtheta), -np.sin(dtheta)], [np.sin(dtheta), np.cos(dtheta)]])
         direction = np.matmul(rotation_matrix, self.direction)
@@ -158,7 +163,7 @@ class KITTMODEL():
         angle = [0]
         r = 0
         while time < 8:
-            self.direction = self.change_rotation(dt)
+            self.direction = self.det_rotation()
             dd.append(self.direction)
             angle.append(self.phi)
             self.pos = self.det_xy(dt)
@@ -180,20 +185,35 @@ class KITTMODEL():
 
     def sim(self, cmds, dt=0.01):
         speed, direction, endpoint = cmds
-        self.v = self.linear(speed)
+        self.v = speed
+        self.direction = direction
+        timer = 0
+        while timer <= endpoint:
+            self.simhelper(dt)
+            self.t0+=dt
+            print(self.t0, self.v)
+            timer+= dt
 
-        t = np.arange(self.t0, endpoint + 0.02, dt)
-        ax = plt.gca()
+        # t = np.arange(self.t0, endpoint, dt)
+        # self.points.add_data(t, *zip(*self.positions))
+        # self.figure.canvas.restore_region(self.background)
+        # self.ax.draw_artist(self.points)
+        # self.figure.canvas.blit(self.ax.bbox)
         
 
     def simhelper(self, dt=0.01):
         self.v = self.velocity(dt)
         self.velocities.append(self.v)
-        self.direction = self.change_rotation(dt)
-        self.directions.append(self.direction)
+        self.direction = self.det_rotation()
         self.pos = self.det_xy(dt)
         self.positions.append(self.pos)
+        self.ax.plot(self.t0, *self.pos)
         
+    def cmds_to_sim(self, cmds):
+        speed, direction, time = cmds
+        speed = self.speed_to_force_linear(speed)
+        direction = self.det_rotation(self.angledict[direction])
+        return speed, direction, time
 
 def parse_input(cmds: str):
     # Example input: D150 M165 0.5
@@ -212,6 +232,7 @@ def siminput():
 
 if __name__ == "__main__":
     md = KITTMODEL()
-    print(parse_input(siminput()))
-    md.simulate()
+    md.sim(md.cmds_to_sim(parse_input(siminput())))
+    print(222)
+    md.sim(md.cmds_to_sim(parse_input(siminput())))
     plt.show()
