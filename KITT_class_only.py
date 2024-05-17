@@ -7,7 +7,7 @@ bit_freq = 5000  # The bit frequency, min = 1 kHz & max = 5 kHz
 repetition_cnt = 2500  # = bit_freq/repetition_freq, sets the time between transmissions, with repetition_freq 1-10 Hz.
 codeword = 0xFEEDBACC  # Code word in hexadecimal
 
-max_speed = 10  # speed specs
+max_speed = 8  # speed specs
 
 system_start = time.time()  # initialize time
 
@@ -58,7 +58,7 @@ class KITT:
                 temp.append(round((stop - system_start), 3))
                 temp.append(round((stop - start), 3))
                 self.distances.append(temp)
-                print(self.distances[-1])
+                # print(self.distances[-1])
                 self.serial.flush()
                 time.sleep(0.07)
             else:
@@ -84,28 +84,28 @@ class KITT:
         self.encode_command(b'A0\n')
 
     def emergency_brake(self, from_speed):  # STILL NEEDS TUNING!
-        # if self.prev_speed > 153 and from_speed==1:
-        #     print('Emergency Brake')
-        #     # If previous speed > standstill, apply emergency brake
-        #     self.set_speed(140)  # Set speed to move backwards
-        #     time.sleep(0.4)  # Reverse for a short period.
-        #     self.set_speed(150)  # Stop the car
-        # elif self.prev_speed < 147 and from_speed==1:
-        #     print('Emergency Brake')
-        #     # If previous speed < standstill, apply emergency brake
-        #     self.set_speed(160)  # Set speed to move backwards
-        #     time.sleep(0.4)  # Reverse for a short period.
-        #     self.set_speed(150)  # Stop the car
-        # elif not self.distances:
-        #     pass
-        # elif (((100 > self.distances[-1][0] > 0) or (100 > self.distances[-1][1] > 0)) and from_speed==0
-        #       and self.prev_speed > 150):  # Brake because too close to an object
-        #     print('Distance emergency Brake')
-        #     self.set_speed(135)  # Set speed to move backwards
-        #     time.sleep(0.3)  # Reverse for a short period.
-        #     self.set_speed(150)  # Stop the car
-        # else:
-        pass
+        if self.prev_speed > 153 and from_speed==1:
+            print('Emergency Brake')
+            # If previous speed > standstill, apply emergency brake
+            self.set_speed(140)  # Set speed to move backwards
+            time.sleep(0.4)  # Reverse for a short period.
+            self.set_speed(150)  # Stop the car
+        elif self.prev_speed < 147 and from_speed==1:
+            print('Emergency Brake')
+            # If previous speed < standstill, apply emergency brake
+            self.set_speed(160)  # Set speed to move backwards
+            time.sleep(0.4)  # Reverse for a short period.
+            self.set_speed(150)  # Stop the car
+        elif not self.distances:
+            pass
+        elif (((100 > self.distances[-1][0] > 0) or (100 > self.distances[-1][1] > 0)) and from_speed==0
+              and self.prev_speed > 150):  # Brake because too close to an object
+            print('Distance emergency Brake')
+            self.set_speed(135)  # Set speed to move backwards
+            time.sleep(0.3)  # Reverse for a short period.
+            self.set_speed(150)  # Stop the car
+        else:
+            pass
 
     def __del__(self):
         self.set_speed(150)
