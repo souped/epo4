@@ -35,8 +35,8 @@ speed_converter_lut = {
     11: self.m * 26.25,
     12: self.m * 27.5,
     13: self.m * 28.75,
-    14: self.m * 30
-    15: self.m * 31.25
+    14: self.m * 30,
+    15: self.m * 31.25,
 }
 
 
