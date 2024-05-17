@@ -74,5 +74,6 @@ def car_model_input(kitt):
     print("Time:", ctime)
     time.sleep(ctime)
     print("Stop the car")
+    kitt.emergency_brake(1)
     kitt.set_speed(150)
     kitt.set_angle(150)

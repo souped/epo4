@@ -30,7 +30,6 @@ class KITT:
 
         self.distances = []  # left, right, system time, data age since command is send
         self.commands = []  # List where commands are stored that need to be sent to KITT
-        self.data = []
 
         self.last_event = {'type': None, 'name': None}
 
