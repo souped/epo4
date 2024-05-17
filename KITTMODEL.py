@@ -28,7 +28,14 @@ class KITTMODEL():
         self.intercept = force1 - self.slope * speed1
 
         self.angledict = {'D150': 0, 'D100': 25, 'D200': -25}
-        self.phi = self.angledict['D100'] # d100 => kitt turns to the right
+        # self.phi = self.angledict['D100'] # d100 => kitt turns to the right
+
+        # constant data tracking for sim()
+        self.positions = []
+        self.directions = []
+        self.velocities = []
+        self.simtime = 0
+        self.t0 = 0
 
 
     def determine_starting_angle(self):
@@ -51,6 +58,7 @@ class KITTMODEL():
     # This whole function is not correct.
     # nu wel?
     def change_rotation(self, dt):
+        """determines a direction vector derived from phi"""
         dtheta = self.v*np.sin(self.phi)/self.L
 
         rotation_matrix = np.array([[np.cos(dtheta), -np.sin(dtheta)], [np.sin(dtheta), np.cos(dtheta)]])
@@ -87,10 +95,10 @@ class KITTMODEL():
     
     def det_xy(self, dt):
         """
-        x,y = x0 + dirx, y0 + diry"""
+        x,y = x0 + dirx * v * dt, y0 + diry * v * dt"""
         return self.pos[0] + self.direction[0] * self.v * dt, self.pos[1] + self.direction[1] * self.v * dt
     
-    def reset_sim(self):
+    def reset_state(self):
         # state params
         self.z = 0
         self.v = 0
@@ -140,8 +148,8 @@ class KITTMODEL():
         # ax[1].set_title("Postion")
 
 
-        ### steering anlge plot
-        self.reset_sim()
+        # steering angle plot
+        self.reset_state()
         self.v = 5
         self.z = 0
         time = 0
@@ -156,45 +164,54 @@ class KITTMODEL():
             self.pos = self.det_xy(dt)
             position.append(self.pos)
 
-            if time <= 4.5 and time >= 3.5:
-                self.phi = 0
+            if time <= 4.5 and time >= 3.5: self.phi = 0
+            else: self.phi = 25
             
             time += dt
 
         t = np.arange(0, 8.02, dt)
         ax = plt.figure().subplots(3)
         plt.title("Steering angle drive circle")
-        lineangle, = ax[0].plot(t, angle)
+        ax[0].plot(t, angle)
         ax[1].plot(t, dd)
         ax[2].plot(*zip(*position))
 
         plt.show()
 
-def take_input():
-    cmd_string = input("Enter commands: ")
-    # Example input: D150 M165 0.5      Program just loops this function? Or give all commands in bulk?
-    cmd_string = cmd_string.split(" ")
+    def sim(self, cmds, dt=0.01):
+        speed, direction, endpoint = cmds
+        self.v = self.linear(speed)
+
+        t = np.arange(self.t0, endpoint + 0.02, dt)
+        ax = plt.gca()
+        
+
+    def simhelper(self, dt=0.01):
+        self.v = self.velocity(dt)
+        self.velocities.append(self.v)
+        self.direction = self.change_rotation(dt)
+        self.directions.append(self.direction)
+        self.pos = self.det_xy(dt)
+        self.positions.append(self.pos)
+        
+
+def parse_input(cmds: str):
+    # Example input: D150 M165 0.5
     speed = 0
     direction = 0
     time = 0
-    for string in cmd_string:
-        if "d" in string.lower():
-            print("Set direction:", string)
-            direction = int(string[1:])
-            print(direction)
-        if "m" in string.lower():
-            print("Set speed:", string)
-            speed = int(string[1:])
-        else:
-            pass
-    print("Time:", cmd_string[-1])
+    for cmd in cmds.split(" "):
+        if 'd' in cmd.lower(): direction = int(cmd[1:])
+        elif 'm' in cmd.lower(): speed = int(cmd[1:])
+        else: time = float(cmd)
 
+    return speed, direction, time
 
-    return
-
+def siminput():
+    return "D150 M165 0.5"
 
 if __name__ == "__main__":
     md = KITTMODEL()
-    take_input()
+    print(parse_input(siminput()))
     md.simulate()
     plt.show()
