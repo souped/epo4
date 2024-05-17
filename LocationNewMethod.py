@@ -38,28 +38,38 @@ class localization:
         segments_channel3 = localization.detect_segments(audio_channel3)
         segments_channel4 = localization.detect_segments(audio_channel4)
         segments_channel5 = localization.detect_segments(audio_channel5)
+        
+        segments_channel1 = segments_channel1[5:35]
+        segments_channel2 = segments_channel2[5:35]
+        segments_channel3 = segments_channel3[5:35]
+        segments_channel4 = segments_channel4[5:35]
+        segments_channel5 = segments_channel5[5:35]
+        
         refsig = localization.detect_segments(ref_signal)
         ref = refsig[12]
         ref = ref[750:1500]
 
-        # plt.figure(figsize=(10,5))
-        # plt.plot(audio_channel1, color='C0')
-        # plt.title("Input audio")
-        # plt.xlabel("Time [s]")
-        # plt.ylabel("Amplitude")
-        # plt.grid(True)
-        # plt.show()
+        plt.figure(figsize=(10,5))
+        plt.plot(abs(audio_channel1), color='C0')
+        plt.title("Input audio")
+        plt.xlabel("Time [s]")
+        plt.ylabel("Amplitude")
+        plt.grid(True)
+        plt.savefig("audio")
+        plt.close()
+
+        plt.figure(figsize=(10,5))
+        plt.plot(segments_channel1[5], color='C0')
+        plt.title("Input segment 5")
+        plt.xlabel("Time [s]")
+        plt.ylabel("Amplitude")
+        plt.grid(True)
+        plt.savefig("seg 5")
+        plt.close()
+
 
         # plt.figure(figsize=(10,5))
-        # plt.plot(abs(segments_channel1[5]), color='C0')
-        # plt.title("Input segment 5")
-        # plt.xlabel("Time [s]")
-        # plt.ylabel("Amplitude")
-        # plt.grid(True)
-        # plt.show()
-
-        # plt.figure(figsize=(10,5))
-        # plt.plot(abs(ref_signal), color='C0')
+        # plt.plot(ref_signal, color='C0')
         # plt.title("Ref signal")
         # plt.xlabel("Time [s]")
         # plt.ylabel("Amplitude")
@@ -67,7 +77,7 @@ class localization:
         # plt.show()
 
         # plt.figure(figsize=(10,5))
-        # plt.plot(abs(ref), color='C0')
+        # plt.plot(ref, color='C0')
         # plt.title("Ref signal small part")
         # plt.xlabel("Time [s]")
         # plt.ylabel("Amplitude")
@@ -86,6 +96,16 @@ class localization:
         channel_responses_array_4 = np.array(channel_responses_4)
         channel_responses_5 = [localization.ch3(segment, ref) for segment in segments_channel5]
         channel_responses_array_5 = np.array(channel_responses_5)
+        
+        
+        plt.figure(figsize=(10,5))
+        plt.plot(channel_responses_2[5], color='C0')
+        plt.title("ch1")
+        plt.xlabel("Time [s]")
+        plt.ylabel("Amplitude")
+        plt.grid(True)
+        plt.savefig("ch1_5")
+        plt.close()
         
         
         #peaks
@@ -121,6 +141,7 @@ class localization:
         # trimmed_peaks_5 = sorted_peaks_5[10:-10]
         # mean_peak_5 = np.mean(trimmed_peaks_5)
 
+    
 
         # Calculate TDOA between different microphone pairs
         TDOA12 = localization.TDOA(mean_peak_1, mean_peak_2)
@@ -130,9 +151,9 @@ class localization:
         # TDOA24 = localization.TDOA(mean_peak_2, mean_peak_4)
         # TDOA34 = localization.TDOA(mean_peak_3, mean_peak_4)
         
-        print("D12 = ", TDOA12)
-        print("D13 = ", TDOA13)
-        print("D14 = ", TDOA14)
+        # print("D12 = ", TDOA12)
+        # print("D13 = ", TDOA13)
+        # print("D14 = ", TDOA14)
         
         x, y = localization.coordinate_2d(TDOA12, TDOA13, TDOA14)
         
@@ -142,8 +163,8 @@ class localization:
         segments = []
         num_segments = 40
         segment_length = len(audio_signal) // num_segments
-        segments = [audio_signal[i*segment_length : (i+1)*segment_length] for i in range(num_segments)]
-        return segments    
+        segments = [abs(audio_signal[i*segment_length : (i+1)*segment_length]) for i in range(num_segments)]
+        return segments
 
     def find_segment_peaks(segment_signal):
         peaks_list = []
@@ -192,6 +213,13 @@ class localization:
 
     def coordinate_2d(D12, D13, D14):
         
+        # epsilon=0.14
+        # D12 = D12 if abs(D12) !=0 else epsilon
+        # D13 = D13 if abs(D13) !=0 else epsilon
+        # D14 = D14 if abs(D14) !=0 else epsilon
+        
+       
+        
         D23= D13-D12
         D24= D14-D12
         D34= D14-D13
@@ -208,7 +236,7 @@ class localization:
         norm_X3 = np.linalg.norm(X3)
         norm_X4 = np.linalg.norm(X4)
     
-       
+    
         
         B = np.array([
         [D12**2 - norm_X1**2 + norm_X2**2],
@@ -241,7 +269,10 @@ class localization:
         result = np.dot(A_inv, B)
         x = result[0,0]
         y = result[1,0]
-            
+        
+        # print(A)
+        # print(A_inv)
+        
         return x, y
 
     # def print_plots(a, refsig, Fs_RX, title, index, h1_index, h1_peak, h0_index, h0_peak):
@@ -371,40 +402,36 @@ if __name__ == "__main__":
 # Present the results
     localizer = localization()
     Fs, ABS1 = wavfile.read("opnames/record_x64_y40.wav")
-    # ABS2 = wavaudioread("opnames/record_x82_y399.wav", Fs_RX)
-    # ABS3 = wavaudioread("opnames/record_x109_y76.wav", Fs_RX)
-    # ABS4 = wavaudioread("opnames/record_x143_y296.wav", Fs_RX)
-    # ABS5 = wavaudioread("opnames/record_x150_y185.wav", Fs_RX)
-    # ABS6 = wavaudioread("opnames/record_x178_y439.wav", Fs_RX)
-    # ABS7 = wavaudioread("opnames/record_x232_y275.wav", Fs_RX)
-    # ABS8 = wavaudioread("opnames/record_x4_y_hidden_1.wav", Fs_RX)
-    # ABS9 = wavaudioread("opnames/record_x_y_hidden_2.wav", Fs_RX)
-    # ABS10 = wavaudioread("opnames/record_x_y_hidden_3.wav", Fs_RX)
-    #refsig = wavaudioread("opnames/reference.wav", Fs_RX)
-    #FTrefsig = fft(refsig)
+    Fs, ABS2 = wavfile.read("opnames/record_x82_y399.wav")
+    Fs, ABS3 = wavfile.read("opnames/record_x109_y76.wav")
+    Fs, ABS4 = wavfile.read("opnames/record_x143_y296.wav")
+    Fs, ABS5 = wavfile.read("opnames/record_x150_y185.wav")
+    Fs, ABS6 = wavfile.read("opnames/record_x178_y439.wav")
+    Fs, ABS7 = wavfile.read("opnames/record_x232_y275.wav")
+    Fs, ABS8 = wavfile.read("opnames/record_x4_y_hidden_1.wav")
+    Fs, ABS9 = wavfile.read("opnames/record_x_y_hidden_2.wav")
+    Fs, ABS10 = wavfile.read("opnames/record_x_y_hidden_3.wav")
 
     x_car1, y_car1 = localization.localization(ABS1)
-    #x_car2, y_car2 = localization.localization(ABS2)
-    #x_car3, y_car3 = localization.localization(ABS3)
-    #x_car4, y_car4 = localization.localization(ABS4)
-    #x_car5, y_car5 = localization.localization(ABS5)
-    #x_car6, y_car6 = localization.localization(ABS6)
-    #x_car7, y_car7 = localization.localization(ABS7)
-    #x_car8, y_car8 = localization.localization(ABS8)
-    #x_car9, y_car9 = localization.localization(ABS9)
-    #x_car10, y_car10 = localization.localization(ABS10)
+    print("Coordinates_x64_y40 : x = ", x_car1, ", y = ", y_car1)
+    x_car2, y_car2 = localization.localization(ABS2)
+    print("Coordinates_x82_y399 : x = ", x_car2, ", y = ", y_car2)
+    x_car3, y_car3 = localization.localization(ABS3)
+    print("Coordinates_x109_y76 : x = ", x_car3, ", y = ", y_car3)
+    x_car4, y_car4 = localization.localization(ABS4)
+    print("Coordinates_x143_y296 : x = ", x_car4, ", y = ", y_car4)
+    x_car5, y_car5 = localization.localization(ABS5)
+    print("Coordinates_x150_y185 : x = ", x_car5, ", y = ", y_car5)
+    x_car6, y_car6 = localization.localization(ABS6)
+    print("Coordinates_x178_y439 : x = ", x_car6, ", y = ", y_car6)
+    x_car7, y_car7 = localization.localization(ABS7)
+    print("Coordinates_x232_y275 : x = ", x_car7, ", y = ", y_car7)
+    x_car8, y_car8 = localization.localization(ABS8)
+    print("Coordinates_x4_y_hidden_1 : x = ", x_car8, ", y = ", y_car8)
+    x_car9, y_car9 = localization.localization(ABS9)
+    print("Coordinates_x_y_hidden_2 : x = ", x_car9, ", y = ", y_car9)
+    x_car10, y_car10 = localization.localization(ABS10)
+    print("Coordinates_x_y_hidden_3 : x = ", x_car10, ", y = ", y_car10)
 
-
-
-    print("Coordinates: x = ", x_car1,", y = ", y_car1)
-    #print(x_car2, y_car2)
-    #print(x_car3, y_car3)
-    #print(x_car4, y_car4)
-    #print(x_car5, y_car5)
-    #print(x_car6, y_car6)
-    #print(x_car7, y_car7)
-    #print(x_car8, y_car8)
-    #print(x_car9, y_car9)
-    #print(x_car10, y_car10)
-
+   
         
