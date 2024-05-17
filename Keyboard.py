@@ -4,7 +4,7 @@ import time
 import msvcrt
 
 
-def wasd(kitt, max_speed=10):
+def wasd(kitt, max_speed):
     # Checks for any keypress and what key is pressed.
     def on_key_event(event):
         if event.event_type == kitt.last_event['type'] and event.name == kitt.last_event['name']:

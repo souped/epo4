@@ -7,8 +7,6 @@ bit_freq = 5000  # The bit frequency, min = 1 kHz & max = 5 kHz
 repetition_cnt = 2500  # = bit_freq/repetition_freq, sets the time between transmissions, with repetition_freq 1-10 Hz.
 codeword = 0xFEEDBACC  # Code word in hexadecimal
 
-max_speed = 8  # speed specs
-
 system_start = time.time()  # initialize time
 
 
@@ -98,7 +96,7 @@ class KITT:
             self.set_speed(150)  # Stop the car
         elif not self.distances:
             pass
-        elif (((100 > self.distances[-1][0] > 0) or (100 > self.distances[-1][1] > 0)) and from_speed==0
+        elif (((50 > self.distances[-1][0] > 0) or (50 > self.distances[-1][1] > 0)) and from_speed==0
               and self.prev_speed > 150):  # Brake because too close to an object
             print('Distance emergency Brake')
             self.set_speed(135)  # Set speed to move backwards

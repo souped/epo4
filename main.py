@@ -11,7 +11,7 @@ if __name__ == '__main__':
     kitt = KITT(sys_port)   # Create KITT instance
 
     try:  # Error handling
-        wasd(kitt)  # Keyboard function
+        wasd(kitt, max_speed=15)  # Keyboard function
     except Exception as e:
         print(e)
 
