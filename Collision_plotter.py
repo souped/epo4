@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
+import time
 
 def collision_plotter(kitt):  # For the plotter to work with slowly driving towards the wall / stopping
     # the car in between, the emergency_brake from distance should be turned off.
@@ -25,51 +25,36 @@ def collision_plotter(kitt):  # For the plotter to work with slowly driving towa
             pass
 
 
-def speed_converter(self, speed):
-    if speed == 5:
-        return self.m*12.5
-    elif speed == 6:
-        return self.m*15
-    elif speed == 7:
-        return self.m*17.5
-    elif speed == 8:
-        return self.m*20
-    elif speed == 9:
-        return self.m*22.5
-    elif speed == 10:
-        return self.m*25
-    elif speed == 11:
-        return self.m*26.25
-    elif speed == 12:
-        return self.m*27.50
-    elif speed == 13:
-        return self.m*28.75
-    elif speed == 14:
-        return self.m*30
-    elif speed == 15:
-        return self.m*31.25
+speed_converter_lut = {
+    5: self.m * 12.5,
+    6: self.m * 15,
+    7: self.m * 17.5,
+    8: self.m * 20,
+    9: self.m * 22.5,
+    10: self.m * 25,
+    11: self.m * 26.25,
+    12: self.m * 27.5,
+    13: self.m * 28.75,
+    14: self.m * 30
+    15: self.m * 31.25
+}
 
 
-def angle_converter(self, angle):
-    if 100 <= angle <= 105:
-        return -25
-    elif 105 < angle <= 115:
-        return -22
-    elif 115 < angle <= 125:
-        return -19
-    elif 125 < angle <= 135:
-        return -11
-    elif 135 < angle <= 145:
-        return -9
-    elif 145 < angle <= 155:
-        return 0
-    elif 155 < angle <= 165:
-        return 5
-    elif 165 < angle <= 175:
-        return 7
-    elif 175 < angle <= 185:
-        return 10
-    elif 185 < angle <= 195:
-        return 17
-    else:
-        return 20
+def angle_converter_lut(angle):
+    lut=[
+        ((100,105),-25),
+        ((105,115),-22),
+        ((115,125),-19),
+        ((125,135),-11),
+        ((135,145),-9),
+        ((145,155),0),
+        ((155,165),5),
+        ((165,175),7),
+        ((175,185),10),
+        ((185,195),17),
+        ((195,200),20),
+    ]
+
+    for (start,end),value in lut:
+        if start <= angle <= end:
+            return value
