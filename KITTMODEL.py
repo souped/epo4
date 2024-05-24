@@ -89,8 +89,9 @@ class KITTMODEL():
         force = self.slope * speed + self.intercept
         return force
 
-    def velocity(self, dt, decel=False):
-        temp0 = ((self.Famax / self.m) * np.square(dt))
+    def velocity(self, dt, decel=False, f=None):
+        if f is None: f = self.Famax
+        temp0 = ((f / self.m) * np.square(dt))
         if decel: temp0 = -((self.Fbmax / self.m) * np.square(dt))
         temp1 = ((self.calcdrag() / self.m) * np.square(dt))
         return self.v + temp0 - temp1
@@ -161,34 +162,35 @@ class KITTMODEL():
 
 
         # steering angle plot
-        # self.reset_state()
-        # self.v = 5
-        # self.z = 0
-        # time = 0
-        # position = [(0,0)]
-        # dd = [[1,0]]
-        # angle = [0]
-        # r = 0
-        # while time < 8:
-        #     self.direction = self.det_rotation()
-        #     dd.append(self.direction)
-        #     angle.append(self.phi)
-        #     self.pos = self.det_xy(dt)
-        #     position.append(self.pos)
+        self.reset_state()
+        self.v = 5
+        self.z = 0
+        time = 0
+        position = [(0,0)]
+        dd = [[1,0]]
+        angle = [0]
+        r = 0
+        while time < 8:
+            self.direction = self.det_rotation()
+            dd.append(self.direction)
+            angle.append(self.phi)
+            print(self.phi)
+            self.pos = self.det_xy(dt)
+            position.append(self.pos)
 
-        #     if time <= 4.5 and time >= 3.5: self.phi = 0
-        #     else: self.phi = 25
+            if time <= 4.5 and time >= 3.5: self.phi = 0
+            else: self.phi = 25
             
-        #     time += dt
+            time += dt
 
-        # t = np.arange(0, 8.02, dt)
-        # ax = plt.figure().subplots(3)
-        # plt.title("Steering angle drive circle")
-        # ax[0].plot(t, angle)
-        # ax[1].plot(t, dd)
-        # ax[2].plot(*zip(*position))
+        t = np.arange(0, 8.02, dt)
+        ax = plt.figure().subplots(3)
+        plt.title("Steering angle drive circle")
+        ax[0].plot(t, angle)
+        ax[1].plot(t, dd)
+        ax[2].plot(*zip(*position))
 
-        # plt.show()
+        plt.show()
 
     def sim(self, cmds, dt=0.01):
         speed, direction, endpoint = cmds

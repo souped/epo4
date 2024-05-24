@@ -21,6 +21,7 @@ class TEST:
 
 		# data
 		self.positions = [(0,0)]
+		self.velocities = [0]
 
 		# self.xy = [(0,0), (1,1), (2,2), (4,4), (6,7), (9,0)]
 
@@ -31,7 +32,10 @@ class TEST:
 		self.a = 0
 		self.phi = 0
 		self.direction = [1, 0]
+		self.pos = (0, 0)
 		self.t = 0
+		self.dt = 0.01
+		self.f = None
 
 		
 
@@ -39,6 +43,7 @@ class TEST:
 		self.lines.set_data(*zip(*self.positions))
 		self.ax.relim()
 		self.ax.autoscale_view()
+		self.ax.set_aspect('equal')
 		self.figure.canvas.draw()
 		self.figure.canvas.flush_events()
 		
@@ -46,16 +51,24 @@ class TEST:
 		i = 0
 		for x in inputs:
 			# process input
-			self.proc_cmd(x)
+			time = self.proc_cmd(x)
 
 			# simulate input
-			
+			for t in np.arange(0, time, self.dt):
+				self.v = self.velocity(self.dt, self.f)
+				self.velocities.append(self.v)
+				self.direction = self.det_rotation()
+				self.pos = self.det_xy(self.dt)
+				self.positions.append(self.pos)
+				if self.phi != 0:
+					print(self.phi)
 
 			# update plot
 			self.update_line()
 			i+=1
 
 	def proc_cmd(self, cmd):
+		time = 1
 		for c in cmd.split(" "):
 			if "D" in c:
 				self.cmd_angle(c)
@@ -63,7 +76,7 @@ class TEST:
 				self.cmd_speed(c)
 			else:
 				time = float(re.findall(r"\d*.\d*", c)[0])
-
+		return time
 			
 
 	def det_rotation(self, phi = None):
@@ -74,28 +87,82 @@ class TEST:
 		rotation_matrix = np.array([[np.cos(dtheta), -np.sin(dtheta)], [np.sin(dtheta), np.cos(dtheta)]])
 		direction = np.matmul(rotation_matrix, self.direction)
 		return direction
+	
+	def velocity(self, dt, f=None, decel=False,):
+		if f is None: f = self.Famax
+		temp0 = ((f / self.m) * np.square(dt))
+		# if decel: temp0 = -((self.Fbmax / self.m) * np.square(dt))
+		temp1 = ((self.calcdrag() / self.m) * np.square(dt))
+		return self.v + temp0 - temp1
+	
+	def calcdrag(self) -> float:
+		return (self.b * np.abs(self.v) + self.c * np.square(self.v))
 
 	def cmd_angle(self, cmd):
 		"""D200 | D150 | D100
 		turn a kit instruction into model values
 		phi = 25 | phi = 0 | phi = -25
-		LEFT | MID | RIGHT"""
+		LEFT | MID | RIGHT
+		SETS STATE VALUE self.direction"""
 		match cmd:
 			case "D200":
 				self.direction = self.det_rotation(25)
+				self.phi = 25
+				return
+			case "D170":
+				self.direction = self.det_rotation(7)
+				self.phi = 7
 				return
 			case "D150":
 				self.direction = self.det_rotation(0)
+				self.phi = 0
+				return
+			case "D130":
+				self.direction = self.det_rotation(-11)
+				self.phi = -11
 				return
 			case "D100":
 				self.direction = self.det_rotation(-25)
+				self.phi = -25
 				return
 			
 	def cmd_speed(self, cmd):
-		self.v
+		""" 135 - 150: backwards
+		150: standstill
+		150-165: forwards
+		SETS STATE VALUE self.velocity"""
+		c = int(re.findall(r"\d{3}",cmd)[0])
+		if (c < 150):
+			self.f = -self.Fbmax
+		else:
+			match c:
+				case 157:
+					f = self.m * 17.5
+				case 158:
+					f = self.m * 20
+				case 159:
+					f = self.m * 22.5
+				case 160:
+					f = self.m * 25
+				case 161:
+					f = self.m * 26.25
+				case 162:
+					f = self.m * 27.5
+				case 163:
+					f = self.m * 28.75
+				case 164:
+					f = self.m * 30
+				case _: f = None
+			self.f = f
+	
+	def det_xy(self, dt):
+		"""
+		x,y = x0 + dirx * v * dt, y0 + diry * v * dt"""
+		return self.pos[0] + self.direction[0] * self.v * dt, self.pos[1] + self.direction[1] * self.v * dt
 		
     
-commands= ["D150 M165 0.5", "M160", "D200", "M170", "M180", "D100", "M160", "M170"]
+commands= ["D130 M160 2"]
+		   # "M160 D200 4", "D200 M150 2.1", "M170 D150 5", "M180 D150 4", "D100 M180 2", "M160 D150 0.3", "M170 D200 1.2"]
 t= TEST()
 t.sim(commands)
 plt.show(block=True)
