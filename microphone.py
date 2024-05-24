@@ -14,7 +14,8 @@ zodat je de globals niet meer global hoeft te maken
 # globals?
 channelnumbers = 8
 Fs = 48000
-seconds = 3
+seconds = 6
+
 N = int(Fs * seconds)
 
 def list_devices():
@@ -33,7 +34,7 @@ def list_devices():
     pyaudio_handle.terminate()
     return 0
 
-def seperate(data, channels = channelnumbers):
+def separate(data, channels = channelnumbers):
     """lists audio per channel
     
     returns -- list of channels
@@ -58,7 +59,7 @@ def record_audio(N, devidx, channels = channelnumbers, Fs = Fs):
     samples = stream.read(N)
     data = np.frombuffer(samples, dtype='int16')
     pyaudio_handle.terminate()
-    return seperate(data)
+    return separate(data)
 
 def write_wavfile(audio, filename = "wavfile.wav"):
     """writes multichannel audio in np.Array to .wav file.
