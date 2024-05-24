@@ -15,9 +15,9 @@ class KITTMODEL():
         self.z = 0
         self.v = 0
         self.a = 0
-        self.phi = 0
+        self.phi = 25
         self.pos = (0, 0)
-        self.direction = [0, 0]
+        self.direction = [1, 0]
 
         self.dt = 100
 
@@ -119,76 +119,76 @@ class KITTMODEL():
         self.direction = [1, 0]
 
     def simulate(self, dt=0.01):
-        # time = 0
-        # velocity = [0]
-        # position = [0]
-        # while time < 8:
-        #     self.v = self.velocity(dt)
-        #     velocity.append(self.v)
-        #     self.z = self.det_z(dt)
-        #     position.append(self.z)
-        #     time += dt
+        time = 0
+        velocity = [0]
+        position = [0]
+        while time < 8:
+            self.v = self.velocity(dt)
+            velocity.append(self.v)
+            self.z = self.det_z(dt)
+            position.append(self.z)
+            time += dt
 
-        # # plot z, v
-        # t = np.arange(0, 8.02, dt)
-        # ax = plt.figure().subplots(2)
-        # plt.title("acceleration")
-        # vv, = ax[0].plot(t, velocity)
-        # ax[0].set_title("Velocity [m/s]")
-        # zz, = ax[1].plot(t, position)
-        # ax[1].set_title("Postion")
+        # plot z, v
+        t = np.arange(0, 8.02, dt)
+        ax = plt.figure().subplots(2)
+        plt.title("acceleration")
+        vv, = ax[0].plot(t, velocity)
+        ax[0].set_title("Velocity [m/s]")
+        zz, = ax[1].plot(t, position)
+        ax[1].set_title("Postion")
 
         # SIMULATING DECELERATION
-        # self.v = 4
-        # self.z = 0
-        # time = 0
-        # velocity = [4]
-        # position = [0]
-        # while time < 8:
-        #     self.v = self.velocity(dt, True)
-        #     velocity.append(self.v)
-        #     self.z = self.det_z(dt)
-        #     position.append(self.z)
-        #     time += dt
-
-        # t = np.arange(0, 8.02, dt)
-        # ax = plt.figure().subplots(2)
-        # plt.title("Deceleration")
-        # vv, = ax[0].plot(t, velocity)
-        # ax[0].set_title("Velocity [km/h]")
-        # zz, = ax[1].plot(t, position)
-        # ax[1].set_title("Postion")
-
-
-        # steering angle plot
-        self.reset_state()
-        self.v = 5
+        self.v = 4
         self.z = 0
         time = 0
-        position = [(0,0)]
-        dd = [[1,0]]
-        angle = [0]
-        r = 0
+        velocity = [4]
+        position = [0]
         while time < 8:
-            self.direction = self.det_rotation()
-            dd.append(self.direction)
-            angle.append(self.phi)
-            self.pos = self.det_xy(dt)
-            position.append(self.pos)
-
-            if time <= 4.5 and time >= 3.5: self.phi = 0
-            else: self.phi = 25
-            
+            self.v = self.velocity(dt, True)
+            velocity.append(self.v)
+            self.z = self.det_z(dt)
+            position.append(self.z)
             time += dt
 
         t = np.arange(0, 8.02, dt)
-        ax = plt.figure().subplots(3)
-        plt.title("Steering angle drive circle")
-        ax[0].plot(t, angle)
-        ax[1].plot(t, dd)
-        ax[2].plot(*zip(*position))
+        ax = plt.figure().subplots(2)
+        plt.title("Deceleration")
+        vv, = ax[0].plot(t, velocity)
+        ax[0].set_title("Velocity [km/h]")
+        zz, = ax[1].plot(t, position)
+        ax[1].set_title("Postion")
 
-        plt.show()
+
+        # steering angle plot
+        # self.reset_state()
+        # self.v = 5
+        # self.z = 0
+        # time = 0
+        # position = [(0,0)]
+        # dd = [[1,0]]
+        # angle = [0]
+        # r = 0
+        # while time < 8:
+        #     self.direction = self.det_rotation()
+        #     dd.append(self.direction)
+        #     angle.append(self.phi)
+        #     self.pos = self.det_xy(dt)
+        #     position.append(self.pos)
+
+        #     if time <= 4.5 and time >= 3.5: self.phi = 0
+        #     else: self.phi = 25
+            
+        #     time += dt
+
+        # t = np.arange(0, 8.02, dt)
+        # ax = plt.figure().subplots(3)
+        # plt.title("Steering angle drive circle")
+        # ax[0].plot(t, angle)
+        # ax[1].plot(t, dd)
+        # ax[2].plot(*zip(*position))
+
+        # plt.show()
 
     def sim(self, cmds, dt=0.01):
         speed, direction, endpoint = cmds
@@ -204,11 +204,8 @@ class KITTMODEL():
     def simhelper(self, dt=0.01):
         self.v = self.velocity(dt)
         self.velocities.append(self.v)
-        print(f"self.dir {self.direction}")
-
         self.direction = self.det_rotation()
         self.pos = self.det_xy(dt)
-        print(f"pos: {self.pos}")
         self.positions.append(self.pos)
         self.update_line()
         
@@ -216,6 +213,7 @@ class KITTMODEL():
         speed, direction, time = cmds
         speed = self.change_velocity(self.speed_to_force_linear(speed), 0.01)
         direction = self.det_rotation(self.angledict[direction])
+        print(direction)
         return speed, direction, time
     
     def update_line(self):
@@ -238,9 +236,13 @@ def parse_input(cmds: str):
     return speed, direction, time
 
 def siminput():
-    return "D150 M165 .5"
+    return ["D150 M165 .5"]
+#, "D100 M165 .5", "D200 M165 2"
 
 if __name__ == "__main__":
     md = KITTMODEL()
-    md.sim(md.cmds_to_sim(parse_input(siminput())))
-    # md.simulate()
+    # for cm in siminput():
+    #     print(cm)
+    #     md.sim(md.cmds_to_sim(parse_input(cm)))
+    md.simulate()
+    plt.show(block=True)
