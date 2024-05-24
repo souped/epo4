@@ -10,22 +10,27 @@ class TEST:
 		self.b = 5  # viscous friction, [N m^-1 s]
 		self.c = 0.1  # air drag, [N m^-2 s^2]
 		self.Famax = 400  # Max acc force, [N]
-		self.Fbmax = 500  # max brake force, [N]\
+		self.Fbmax = 500  # max brake force, [N]
 		self.L = 33.5  # Length of wheelbase
 
 
 		self.figure = plt.figure()
 		self.ax = self.figure.subplots()
+		self.figure2 = plt.figure()
+		self.ax2 = self.figure2.subplots()
 		self.ax.grid()
 		plt.show(block=False)
 
 		# data
 		self.positions = [(0,0)]
 		self.velocities = [0]
+		self.times = [0]
 
 		# self.xy = [(0,0), (1,1), (2,2), (4,4), (6,7), (9,0)]
 
 		self.lines, = self.ax.plot(*zip(*self.positions))
+		self.vellines, = self.ax2.plot(self.times, self.velocities)
+		# self.lines, = self.ax.plot(self.velocities)
 
 		# state variables
 		self.v = 0
@@ -41,11 +46,18 @@ class TEST:
 
 	def update_line(self):
 		self.lines.set_data(*zip(*self.positions))
+		self.vellines.set_ydata(self.velocities)
+		self.vellines.set_xdata(self.times)
+		# self.lines.set_data(self.velocities)
 		self.ax.relim()
 		self.ax.autoscale_view()
 		self.ax.set_aspect('equal')
 		self.figure.canvas.draw()
 		self.figure.canvas.flush_events()
+		self.ax2.relim()
+		self.ax2.autoscale_view()
+		self.figure2.canvas.draw()
+		self.figure2.canvas.flush_events()
 		
 	def sim(self, inputs):
 		i = 0
@@ -55,13 +67,15 @@ class TEST:
 
 			# simulate input
 			for t in np.arange(0, time, self.dt):
+				print("F:", self.f)
 				self.v = self.velocity(self.dt, self.f)
+				print("V: ", self.v)
 				self.velocities.append(self.v)
 				self.direction = self.det_rotation()
 				self.pos = self.det_xy(self.dt)
 				self.positions.append(self.pos)
-				if self.phi != 0:
-					print(self.phi)
+				self.t += self.dt
+				self.times.append(self.t)
 
 			# update plot
 			self.update_line()
@@ -76,14 +90,14 @@ class TEST:
 				self.cmd_speed(c)
 			else:
 				time = float(re.findall(r"\d*.\d*", c)[0])
-		return time
+		return time *1.25 
 			
 
 	def det_rotation(self, phi = None):
 		"""determines a direction vector derived from phi"""
-		if phi is None: phi = self.phi
+		if phi is None: phi = self.phi 
+		phi = phi / 360 * np.pi * 2
 		dtheta = self.v*np.sin(phi)/self.L
-
 		rotation_matrix = np.array([[np.cos(dtheta), -np.sin(dtheta)], [np.sin(dtheta), np.cos(dtheta)]])
 		direction = np.matmul(rotation_matrix, self.direction)
 		return direction
@@ -107,15 +121,15 @@ class TEST:
 		match cmd:
 			case "D200":
 				self.direction = self.det_rotation(25)
-				self.phi = 25
+				self.phi = 25 
 				return
 			case "D170":
 				self.direction = self.det_rotation(7)
-				self.phi = 7
+				self.phi = 7 
 				return
 			case "D150":
 				self.direction = self.det_rotation(0)
-				self.phi = 0
+				self.phi = 0 
 				return
 			case "D130":
 				self.direction = self.det_rotation(-11)
@@ -123,7 +137,7 @@ class TEST:
 				return
 			case "D100":
 				self.direction = self.det_rotation(-25)
-				self.phi = -25
+				self.phi = -25 
 				return
 			
 	def cmd_speed(self, cmd):
@@ -160,9 +174,9 @@ class TEST:
 		x,y = x0 + dirx * v * dt, y0 + diry * v * dt"""
 		return self.pos[0] + self.direction[0] * self.v * dt, self.pos[1] + self.direction[1] * self.v * dt
 		
-    
-commands= ["D130 M160 2"]
-		   # "M160 D200 4", "D200 M150 2.1", "M170 D150 5", "M180 D150 4", "D100 M180 2", "M160 D150 0.3", "M170 D200 1.2"]
+commands= ["D200 M160 2"]
+		#    , "D100 M165 1.5"]
+		#    , "M160 D200 4", "D200 M150 2.1", "M180 D150 1", "D100 M180 2", "M160 D150 0.3", "M170 D200 1.2"]
 t= TEST()
 t.sim(commands)
 plt.show(block=True)
