@@ -168,48 +168,45 @@ class localization:
         
         return x, y """
     
-    def TDOA_calc(xyz):
-        allTDOA = []
+    def TDOA_grid(grid_dimensions):
+        gridTDOA = []
         mic_locs = np.array([[0,0,50],[0,480,50],[480,480,50],[480,0,50],[0,240,80]])
-        for row in xyz:
+        for row in grid_dimensions:
             distances = []
             for loc in mic_locs:
                 dist = np.linalg.norm(loc-row)
                 distances.append(dist)
-            times =  np.array(distances)/34120
+            times =  np.array(distances)/34300
             TDOA = []
             for i in range(0,len(times)):
                 for j in range(i+1,len(times)):
                     TDOA = np.append(TDOA,(times[i]-times[j]))
-            allTDOA = np.concatenate((allTDOA,TDOA))
-        allTDOA = np.reshape(allTDOA,(-1,10))
-        return(allTDOA)
+            gridTDOA = np.concatenate((gridTDOA,TDOA))
+        gridTDOA = np.reshape(gridTDOA,(-1,10))
+        return(gridTDOA)
     
-    def coordinates_2d(tdoa,size=10,min_x=0,max_x=480,min_y=0,max_y=480,iteration=0,cont_count=4): 
-        xgrid = np.tile(np.linspace(min_x,max_x,size+2)[1:-1],size)
-        ygrid = np.repeat(np.linspace(min_y,max_y,size+2)[1:-1],size)
-        zgrid = np.repeat(30,size**2)
-        grid = np.stack((xgrid,ygrid,zgrid),axis=1)
+    def coordinates_2d(tdoa,size=10,min_x=0,max_x=480,min_y=0,max_y=480,finetuning=5): 
+        for i in range(5):
+            xgrid = np.tile(np.linspace(min_x,max_x,size+2)[1:-1],size)
+            ygrid = np.repeat(np.linspace(min_y,max_y,size+2)[1:-1],size)
+            zgrid = np.repeat(30,size**2)
+            grid_dimensions = np.stack((xgrid,ygrid,zgrid),axis=1)
 
-        gridTDOA = localization.TDOA_calc(grid)
+            gridTDOA = localization.TDOA_grid(grid_dimensions)
 
-        errors = np.array([])
-        for row in gridTDOA:
-            error = np.linalg.norm(row-tdoa)
-            errors = np.append(errors,error)
-        best = grid[np.argmin(errors)]
+            error_list = np.array([])
+            for row in gridTDOA:
+                error = np.linalg.norm(row-tdoa)
+                error_list = np.append(error_list,error)
+            best = grid_dimensions[np.argmin(error_list)]
 
-        if iteration<cont_count:
-            padding = 480/(size**(iteration+1))/2
-            min_x = best[0] - padding
-            max_x = best[0] + padding
-            min_y = best[1] - padding
-            max_y = best[1] + padding
-            
-            iteration += 1
-            best = localization.coordinates_2d(tdoa,size,min_x,max_x,min_y,max_y,iteration,cont_count)
-            return(best)
-        else: return(best)
+            if i<finetuning:
+                padding = 480/(size**(i+1))/2
+                min_x = best[0] - padding
+                max_x = best[0] + padding
+                min_y = best[1] - padding
+                max_y = best[1] + padding
+        return best
 
 
 if __name__ == "__main__":
