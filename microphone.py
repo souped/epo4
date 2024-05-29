@@ -12,7 +12,7 @@ class Microphone:
         # self.N = int(self.Fs * seconds)
         self.handle = pyaudio.PyAudio()
 
-    def list_devices(self):
+    def list_devices():
         """Lists all audio devices and 
             returns index if devicename == "AudioBox 1818 VSL" else 0
         """
@@ -82,9 +82,8 @@ class Microphone:
 
 if __name__ == "__main__":
     mic = Microphone(channelnumbers=1)
-    device_index = mic.list_devices()
+    device_index = Microphone.list_devices()
     print(f"device index used: {device_index}")
     seconds = 4
     audio = mic.record_audio(seconds, device_index)
     mic.write_wavfile(audio)
-    
