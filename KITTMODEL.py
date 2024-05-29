@@ -1,5 +1,6 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+import regex as re
 
 
 class KITTMODEL():
@@ -8,243 +9,166 @@ class KITTMODEL():
         self.b = 5  # viscous friction, [N m^-1 s]
         self.c = 0.1  # air drag, [N m^-2 s^2]
         self.Famax = 400  # Max acc force, [N]
-        self.Fbmax = 500  # max brake force, [N]\
+        self.Fbmax = 500  # max brake force, [N]
         self.L = 33.5  # Length of wheelbase
 
-        # state params
-        self.z = 0
-        self.v = 0
-        self.a = 0
-        self.phi = 25
-        self.pos = (0, 0)
-        self.direction = [1, 0]
-
-        self.dt = 100
-
-        # Assuming linearity
-        speed1, force1 = 135, -self.Fbmax
-        speed2, force2 = 165, self.Famax
-        self.slope = (force2 - force1) / (speed2 - speed1)
-        self.intercept = force1 - self.slope * speed1
-
-        self.angledict = {150: 0, 100: 25, 200: -25}
-        # self.phi = self.angledict['D100'] # d100 => kitt turns to the right
-
-        # constant data tracking for sim()
-        self.positions = [(0,0)]
-        self.velocities = []
-        self.simtime = 0
-        self.t0 = 0
 
         self.figure = plt.figure()
         self.ax = self.figure.subplots()
+        self.figure2 = plt.figure()
+        self.ax2 = self.figure2.subplots()
         self.ax.grid()
         plt.show(block=False)
+
+        # data
+        self.positions = [(0,0)]
+        self.velocities = [0]
+        self.times = [0]
+
+        # self.xy = [(0,0), (1,1), (2,2), (4,4), (6,7), (9,0)]
+
         self.lines, = self.ax.plot(*zip(*self.positions))
-        
-        print(self.lines)
+        self.vellines, = self.ax2.plot(self.times, self.velocities)
+        # self.lines, = self.ax.plot(self.velocities)
+
+        # state variables
+        self.v = 0
+        self.a = 0
+        self.phi = 0
+        self.direction = [1, 0]
+        self.pos = (0, 0)
+        self.t = 0
+        self.dt = 0.01
+        self.f = None
 
         
+
+    def update_line(self):
+        self.lines.set_data(*zip(*self.positions))
+        self.vellines.set_ydata(self.velocities)
+        self.vellines.set_xdata(self.times)
+        # self.lines.set_data(self.velocities)
+        self.ax.relim()
+        self.ax.autoscale_view()
+        self.ax.set_aspect('equal')
         self.figure.canvas.draw()
         self.figure.canvas.flush_events()
+        self.ax2.relim()
+        self.ax2.autoscale_view()
+        self.figure2.canvas.draw()
+        self.figure2.canvas.flush_events()
+        
+    def sim(self, inputs):
+        i = 0
+        for x in inputs:
+            # process input
+            time = self.proc_cmd(x)
 
+            # simulate input
+            for t in np.arange(0, time, self.dt):
+                print("F:", self.f)
+                self.v = self.velocity(self.dt, self.f)
+                print("V: ", self.v)
+                self.velocities.append(self.v)
+                self.direction = self.det_rotation()
+                self.pos = self.det_xy(self.dt)
+                self.positions.append(self.pos)
+                self.t += self.dt
+                self.times.append(self.t)
 
-    def determine_starting_angle(self):
-        sp_string = input("Enter starting position:")
-        sp_string = sp_string.split(" ")
-        starting_pos = [int(sp_string[0]), int(sp_string[1])]
-        self.pos = starting_pos
-        if self.pos[0] == 0:
-            self.direction = [1, 0]
-        elif self.pos[1] == 0:
-            self.direction = [0, 1]
-        elif self.pos[0] == 480:
-            self.direction = [0, -1]
-        elif self.pos[1] == 480:
-            self.direction = [-1, 0]
-        else:
-            print("Not a valid starting position! Try again.")
-            self.determine_starting_angle()
+            # update plot
+            self.update_line()
+            i+=1
 
-    # This whole function is not correct.
-    # nu wel?
+    def proc_cmd(self, cmd):
+        time = 1
+        for c in cmd.split(" "):
+            if "D" in c:
+                self.cmd_angle(c)
+            elif "M" in c:
+                self.cmd_speed(c)
+            else:
+                time = float(re.findall(r"\d*.\d*", c)[0])
+        return time *1.25 
+            
+
     def det_rotation(self, phi = None):
         """determines a direction vector derived from phi"""
-        if phi is None: phi = self.phi
+        if phi is None: phi = self.phi 
+        phi = phi / 360 * np.pi * 2
         dtheta = self.v*np.sin(phi)/self.L
-
         rotation_matrix = np.array([[np.cos(dtheta), -np.sin(dtheta)], [np.sin(dtheta), np.cos(dtheta)]])
         direction = np.matmul(rotation_matrix, self.direction)
         return direction
 
-    def change_position(self, dt):
-        return self.pos + self.v * dt * self.direction
-
-    def change_velocity(self, force, dt):
-        temp0 = ((force / self.m) * np.square(dt))
-        temp1 = ((self.calcdrag() / self.m) * np.square(dt))
-        return self.v + temp0 - temp1
-
-    def speed_to_force_linear(self, speed):
-        force = self.slope * speed + self.intercept
-        return force
-
-    def velocity(self, dt, decel=False, f=None):
+    def velocity(self, dt, f=None, decel=False,):
         if f is None: f = self.Famax
         temp0 = ((f / self.m) * np.square(dt))
-        if decel: temp0 = -((self.Fbmax / self.m) * np.square(dt))
+        # if decel: temp0 = -((self.Fbmax / self.m) * np.square(dt))
         temp1 = ((self.calcdrag() / self.m) * np.square(dt))
         return self.v + temp0 - temp1
 
     def calcdrag(self) -> float:
         return (self.b * np.abs(self.v) + self.c * np.square(self.v))
 
-    def det_z(self, dt):
-        """
-        a = v'
-        v = v0 + a*t
-        z = z + v*t"""
-        return self.z + self.v * dt
-    
+    def cmd_angle(self, cmd):
+        """D200 | D150 | D100
+        turn a kit instruction into model values
+        phi = 25 | phi = 0 | phi = -25
+        LEFT | MID | RIGHT
+        SETS STATE VALUE self.direction"""
+        match cmd:
+            case "D200":
+                self.direction = self.det_rotation(25)
+                self.phi = 25 
+                return
+            case "D170":
+                self.direction = self.det_rotation(7)
+                self.phi = 7 
+                return
+            case "D150":
+                self.direction = self.det_rotation(0)
+                self.phi = 0 
+                return
+            case "D130":
+                self.direction = self.det_rotation(-11)
+                self.phi = -11
+                return
+            case "D100":
+                self.direction = self.det_rotation(-25)
+                self.phi = -25 
+                return
+            
+    def cmd_speed(self, cmd):
+        """ 135 - 150: backwards
+        150: standstill
+        150-165: forwards
+        SETS STATE VALUE self.velocity"""
+        c = int(re.findall(r"\d{3}",cmd)[0])
+        if (c < 150):
+            self.f = -self.Fbmax
+        else:
+            match c:
+                case 157:
+                    f = self.m * 17.5
+                case 158:
+                    f = self.m * 20
+                case 159:
+                    f = self.m * 22.5
+                case 160:
+                    f = self.m * 25
+                case 161:
+                    f = self.m * 26.25
+                case 162:
+                    f = self.m * 27.5
+                case 163:
+                    f = self.m * 28.75
+                case 164:
+                    f = self.m * 30
+                case _: f = None
+            self.f = f
+
     def det_xy(self, dt):
         """
         x,y = x0 + dirx * v * dt, y0 + diry * v * dt"""
         return self.pos[0] + self.direction[0] * self.v * dt, self.pos[1] + self.direction[1] * self.v * dt
-    
-    def reset_state(self):
-        # state params
-        self.z = 0
-        self.v = 0
-        self.a = 0
-        self.pos = [0, 0]
-        self.direction = [1, 0]
-
-    def simulate(self, dt=0.01):
-        time = 0
-        velocity = [0]
-        position = [0]
-        while time < 8:
-            self.v = self.velocity(dt)
-            velocity.append(self.v)
-            self.z = self.det_z(dt)
-            position.append(self.z)
-            time += dt
-
-        # plot z, v
-        t = np.arange(0, 8.02, dt)
-        ax = plt.figure().subplots(2)
-        plt.title("acceleration")
-        vv, = ax[0].plot(t, velocity)
-        ax[0].set_title("Velocity [m/s]")
-        zz, = ax[1].plot(t, position)
-        ax[1].set_title("Postion")
-
-        # SIMULATING DECELERATION
-        self.v = 4
-        self.z = 0
-        time = 0
-        velocity = [4]
-        position = [0]
-        while time < 8:
-            self.v = self.velocity(dt, True)
-            velocity.append(self.v)
-            self.z = self.det_z(dt)
-            position.append(self.z)
-            time += dt
-
-        t = np.arange(0, 8.02, dt)
-        ax = plt.figure().subplots(2)
-        plt.title("Deceleration")
-        vv, = ax[0].plot(t, velocity)
-        ax[0].set_title("Velocity [km/h]")
-        zz, = ax[1].plot(t, position)
-        ax[1].set_title("Postion")
-
-
-        # steering angle plot
-        self.reset_state()
-        self.v = 5
-        self.z = 0
-        time = 0
-        position = [(0,0)]
-        dd = [[1,0]]
-        angle = [0]
-        r = 0
-        while time < 8:
-            self.direction = self.det_rotation()
-            dd.append(self.direction)
-            angle.append(self.phi)
-            print(self.phi)
-            self.pos = self.det_xy(dt)
-            position.append(self.pos)
-
-            if time <= 4.5 and time >= 3.5: self.phi = 0
-            else: self.phi = 25
-            
-            time += dt
-
-        t = np.arange(0, 8.02, dt)
-        ax = plt.figure().subplots(3)
-        plt.title("Steering angle drive circle")
-        ax[0].plot(t, angle)
-        ax[1].plot(t, dd)
-        ax[2].plot(*zip(*position))
-
-        plt.show()
-
-    def sim(self, cmds, dt=0.01):
-        speed, direction, endpoint = cmds
-        self.v = speed
-        self.direction = direction
-        timer = 0
-        while timer <= endpoint:
-            self.simhelper(dt)
-            self.t0+=dt
-            timer+= dt
-        
-
-    def simhelper(self, dt=0.01):
-        self.v = self.velocity(dt)
-        self.velocities.append(self.v)
-        self.direction = self.det_rotation()
-        self.pos = self.det_xy(dt)
-        self.positions.append(self.pos)
-        self.update_line()
-        
-    def cmds_to_sim(self, cmds):
-        speed, direction, time = cmds
-        speed = self.change_velocity(self.speed_to_force_linear(speed), 0.01)
-        direction = self.det_rotation(self.angledict[direction])
-        print(direction)
-        return speed, direction, time
-    
-    def update_line(self):
-        self.lines.set_data(*zip(*self.positions))
-        self.ax.relim()
-        self.ax.autoscale_view()
-        self.figure.canvas.draw()
-        self.figure.canvas.flush_events()
-
-def parse_input(cmds: str):
-    # Example input: D150 M165 0.5
-    speed = 0
-    direction = 0
-    time = 0
-    for cmd in cmds.split(" "):
-        if 'd' in cmd.lower(): direction = int(cmd[1:])
-        elif 'm' in cmd.lower(): speed = int(cmd[1:])
-        else: time = float(cmd)
-
-    return speed, direction, time
-
-def siminput():
-    return ["D150 M165 .5"]
-#, "D100 M165 .5", "D200 M165 2"
-
-if __name__ == "__main__":
-    md = KITTMODEL()
-    # for cm in siminput():
-    #     print(cm)
-    #     md.sim(md.cmds_to_sim(parse_input(cm)))
-    md.simulate()
-    plt.show(block=True)
