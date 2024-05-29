@@ -63,3 +63,11 @@ serial_port.write(b'C' + code + b'\n')
 om data uit te lezen dan die data verder te processen en wanneer dit klaar is kan er weer nieuwe data in, vanwege asynchrone natuur van het programma kan dat misschien een oplossing / probleem zijn?
 
 # TODO: schrijf microfoon data naar een bestand (CSV?) en dan dat bestand plotten. IPV live plotting zodat mijn ram niet vol raakt?
+# TODO: maak microphone lees 
+
+# links voor dingen
+gui realtime plotting? https://stackoverflow.com/questions/11874767/how-do-i-plot-in-real-time-in-a-while-loop
+
+# programma structuur:
+main programma waarin o.a. de GUI wordt geinstantieerd en wordt gerendered, verder gebeurt hierin het regelen van 
+Niuewe toevoeging als idee: voor alle data die we plotten, die kan je updaten met de update_line functie, mbv np.append(line.get_xdata(), new_xdata) dan hoef je geen Tkinter ofzo te gebruiken en je roept elke keer update_line op voor de plot die jewilt updaten op basis van een return / callback van de data functie in kwestie zoals de muur sensor of de audio sensor en dan kan je ook de positie van de auto zelf plotten (x,y)

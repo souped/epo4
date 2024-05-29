@@ -12,7 +12,7 @@ class KITTMODEL():
         self.Fbmax = 500  # max brake force, [N]
         self.L = 33.5  # Length of wheelbase
 
-
+        # create figures & axes
         self.figure = plt.figure()
         self.ax = self.figure.subplots()
         self.figure2 = plt.figure()
@@ -27,6 +27,7 @@ class KITTMODEL():
 
         # self.xy = [(0,0), (1,1), (2,2), (4,4), (6,7), (9,0)]
 
+        # initialise plots
         self.lines, = self.ax.plot(*zip(*self.positions))
         self.vellines, = self.ax2.plot(self.times, self.velocities)
         # self.lines, = self.ax.plot(self.velocities)
@@ -44,10 +45,10 @@ class KITTMODEL():
         
 
     def update_line(self):
+        """updates the initialised figures with new data generated after running a command string"""
         self.lines.set_data(*zip(*self.positions))
         self.vellines.set_ydata(self.velocities)
         self.vellines.set_xdata(self.times)
-        # self.lines.set_data(self.velocities)
         self.ax.relim()
         self.ax.autoscale_view()
         self.ax.set_aspect('equal')
@@ -59,6 +60,7 @@ class KITTMODEL():
         self.figure2.canvas.flush_events()
         
     def sim(self, inputs):
+        """simulates a list of command strings"""
         i = 0
         for x in inputs:
             # process input
@@ -81,6 +83,9 @@ class KITTMODEL():
             i+=1
 
     def proc_cmd(self, cmd):
+        """process a single commandline e.g. \"D200 M160 2\"
+        
+        If no time is given, 1 second is used."""
         time = 1
         for c in cmd.split(" "):
             if "D" in c:
@@ -95,13 +100,18 @@ class KITTMODEL():
     def det_rotation(self, phi = None):
         """determines a direction vector derived from phi"""
         if phi is None: phi = self.phi 
+        # convert phi to radians
         phi = phi / 360 * np.pi * 2
+        
+        # determine rotation matrix
         dtheta = self.v*np.sin(phi)/self.L
         rotation_matrix = np.array([[np.cos(dtheta), -np.sin(dtheta)], [np.sin(dtheta), np.cos(dtheta)]])
+        
         direction = np.matmul(rotation_matrix, self.direction)
         return direction
 
-    def velocity(self, dt, f=None, decel=False,):
+    def velocity(self, dt, f=None):
+        """calculates the new velocity of the car for time interval dt"""
         if f is None: f = self.Famax
         temp0 = ((f / self.m) * np.square(dt))
         # if decel: temp0 = -((self.Fbmax / self.m) * np.square(dt))
@@ -109,13 +119,18 @@ class KITTMODEL():
         return self.v + temp0 - temp1
 
     def calcdrag(self) -> float:
+        """Determines the air drag the car experiences at its current velocity"""
         return (self.b * np.abs(self.v) + self.c * np.square(self.v))
 
     def cmd_angle(self, cmd):
         """D200 | D150 | D100
+
         turn a kit instruction into model values
+
         phi = 25 | phi = 0 | phi = -25
+
         LEFT | MID | RIGHT
+
         SETS STATE VALUE self.direction"""
         match cmd:
             case "D200":
@@ -143,6 +158,7 @@ class KITTMODEL():
         """ 135 - 150: backwards
         150: standstill
         150-165: forwards
+
         SETS STATE VALUE self.velocity"""
         c = int(re.findall(r"\d{3}",cmd)[0])
         if (c < 150):
@@ -169,6 +185,6 @@ class KITTMODEL():
             self.f = f
 
     def det_xy(self, dt):
-        """
+        """ determines x,y position of the KITT car following 
         x,y = x0 + dirx * v * dt, y0 + diry * v * dt"""
         return self.pos[0] + self.direction[0] * self.v * dt, self.pos[1] + self.direction[1] * self.v * dt
