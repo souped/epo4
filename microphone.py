@@ -87,4 +87,4 @@ if __name__ == "__main__":
     seconds = 4
     audio = mic.record_audio(seconds, device_index)
     mic.write_wavfile(audio)
-    plt.show()
+    
