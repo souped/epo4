@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 """
 Inputs:
@@ -14,7 +15,7 @@ speed=0.1
 
 class RoutePlanner:
     def __init__(self,max_angle=28.6):
-        self.max_angle=speed * np.sin(max_angle * np.pi / 180) / 33.5
+        self.max_angle=speed * np.sin(math.radians(max_angle)) / 33.5
         print("Max angle is ", self.max_angle)
 
     def angle_check(self,startX,startY,carT,endX,endY):
@@ -40,6 +41,14 @@ class RoutePlanner:
 
         direction=np.matmul(rotation_matrix,cardirection)
         return direction
+
+    def calculate_circle_radius(self, points):
+        if len(points) == 3:
+            (x1, y1), (x2, y2), (x3, y3) = points
+
+        elif len(points) == 2:
+            (x1, y1), (x2, y2) = points
+            distance
 
 
 rp=RoutePlanner()
