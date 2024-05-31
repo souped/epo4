@@ -1,0 +1,64 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.fft import fft, ifft
+
+# beacon specs
+carrier_freqs = range(10000, 11000, 1000)  # Carrier frequencies from 1 kHz to 20 kHz in steps of 1000 Hz
+bit_freq = 5000  # The bit frequency, min = 1 kHz & max = 5 kHz
+repetition_cnt = 2500  # = bit_freq/repetition_freq, sets the time between transmissions, with repetition_freq 1-10 Hz.
+duration = 0.01  # Duration of the signal (s)
+
+def generate_signal(carrier_freq, bit_freq, repetition_cnt, duration):
+    num_samples = int(bit_freq * repetition_cnt * duration)
+    time_points = np.linspace(0, duration, num_samples)
+
+    # Generate the signal
+    signal = np.sin(2 * np.pi * carrier_freq * time_points)
+
+    return time_points, signal
+
+def ch3(signal_1, reference_signal):
+    Nsignal_1 = len(signal_1)           # Length of x
+    Nreference_signal = len(reference_signal)             # Length of y
+    L = Nsignal_1 - Nreference_signal + 1          # Length of h
+    Lhat = max(len(reference_signal), len(signal_1)) 
+    epsi = 0.005
+
+    # Force x to be the same length as y
+    reference_signal = np.append(reference_signal, [0]* (L-1))     # Make x same length as y
+    
+    # Deconvolution in frequency domain
+    fft_signal_1 = fft(signal_1)
+    fft_reference_signal = fft(reference_signal)
+
+    # Threshold to avoid blow ups of noise during inversion
+    ii = (np.abs(fft_reference_signal)) < (np.max(np.abs(fft_reference_signal))*epsi)
+
+    H = np.divide(fft_signal_1, fft_reference_signal)
+    H[ii] = 0
+
+    h = np.real(ifft(H))    
+    h = h[0:Lhat]
+
+    return h
+
+def plot_channel_estimations(carrier_freqs, bit_freq, repetition_cnt, duration):
+    plt.figure(figsize=(12, 8))
+    time_points = np.linspace(0, duration, int(bit_freq * repetition_cnt * duration))
+
+    for carrier_freq in carrier_freqs:
+        _, signal = generate_signal(carrier_freq, bit_freq, repetition_cnt, duration)
+        reference_signal = np.sin(2 * np.pi * carrier_freq * time_points)
+        channel_estimation = ch3(signal, reference_signal)
+        plt.plot(channel_estimation, label=f'{carrier_freq} Hz')
+
+    plt.xlabel('Sample')
+    plt.ylabel('Amplitude')
+    plt.title('Channel Estimation for Different Frequencies')
+    plt.legend(loc='upper right')
+    plt.grid(True)
+    plt.show()
+
+# Example usage
+if __name__ == "__main__":
+    plot_channel_estimations(carrier_freqs, bit_freq, repetition_cnt, duration)
