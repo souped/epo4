@@ -30,10 +30,21 @@ class Controller():
 
     def run_loop(self):
         while self.running is True:
+            # record audio
+            pass
+
             # assuming beacon freq of 5 hz
             Fs, audio = wavfile.read("vanafxy-244-234.wav")
             print(audio.shape, self.ref.shape)
+
+            # apply localisation algorithm
             self.x, self.y = self.localiser.localization(audio, self.ref)
+
+            # apply route planning algorithm?
+            # track data?
+            # send commands ?
+
+            # temporary end
             self.running = False
 
 
