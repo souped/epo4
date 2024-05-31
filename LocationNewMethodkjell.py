@@ -11,6 +11,7 @@ from recording_tool import recording_tool
 from sympy import symbols, solve
 import numpy as np
 import math
+import time
 
 
 
@@ -22,36 +23,29 @@ class localization:
     def localization(audiowav):
         # Split each recording into individual pulses
         Fref, ref_signal = wavfile.read("opnames/reference.wav")
-        ref_signal =  ref_signal[:,0]
-        refsig = localization.detect_segments(ref_signal)
-        ref = refsig[12]
-        ref = ref[750:1500]
+        n=16
+        ref =  ref_signal[755+22050*n:1470+22050*n,0]
 
-
-    
         TDOA_list = []
         # Calculate TDOA between different microphone pairs
+        num = 10
+        cut = num*882000//40
+        max_peaks = 40-num
+
+
         for i in range(5):
             for j in range(i+1, 5):
-                audio_channel_i = audiowav[:,i]
-                segments_channel_i = localization.detect_segments(audio_channel_i)
-                segments_channel_i = segments_channel_i[5:35]
-                channel_responses_i = [localization.ch3(segment, ref) for segment in segments_channel_i]
-                channel_responses_array_i = np.array(channel_responses_i)
-                peaks_channel_i = localization.find_segment_peaks(channel_responses_array_i)
-                sorted_peaks_i = np.sort(peaks_channel_i)
-                trimmed_peaks_i = sorted_peaks_i[10:-10]
-                mean_peak_i = np.mean(trimmed_peaks_i)
+                audio_channel_i = audiowav[cut:,i]
+                channel_responses_i = localization.ch3(audio_channel_i, ref)
+                peaks_channel_i = localization.find_peaks(channel_responses_i, max_peaks)
+                mean_peak_i = np.mean(peaks_channel_i)
 
-                audio_channel_j = audiowav[:,j]
-                segments_channel_j = localization.detect_segments(audio_channel_j)
-                segments_channel_j = segments_channel_j[5:35]
-                channel_responses_j = [localization.ch3(segment, ref) for segment in segments_channel_j]
-                channel_responses_array_j = np.array(channel_responses_j)
-                peaks_channel_j = localization.find_segment_peaks(channel_responses_array_j)
-                sorted_peaks_j = np.sort(peaks_channel_j)
-                trimmed_peaks_j = sorted_peaks_j[10:-10]
-                mean_peak_j = np.mean(trimmed_peaks_j)
+                audio_channel_j = audiowav[cut:,j]
+                """ segments_channel_j = localization.detect_segments(audio_channel_j)
+                segments_channel_j = segments_channel_j[5:35] """
+                channel_responses_j = localization.ch3(audio_channel_j, ref)
+                peaks_channel_j = localization.find_peaks(channel_responses_j, max_peaks)
+                mean_peak_j = np.mean(peaks_channel_j)
 
                 TDOA = localization.TDOA(mean_peak_j, mean_peak_i)
                 TDOA_list.append(TDOA)
@@ -75,6 +69,31 @@ class localization:
               
         return peaks_list
     
+    def find_peaks(signal, max_peaks, threshold_ratio=0.8, skip_indices=22000):
+        peaks = []
+        current_index = 0
+        signal_length = len(signal)
+        
+        while current_index < signal_length and len(peaks) < max_peaks:
+            # Bereken de maximumwaarde van het resterende signaal
+            segment = signal[current_index:current_index + skip_indices]
+            max_value = np.max(segment)
+            
+            
+            # Bereken de drempelwaarde (70% van de maximumwaarde)
+            threshold_value = threshold_ratio * max_value
+            
+            # Vind de eerste index waar de waarde van het signaal de drempel overschrijdt
+            for i in range(current_index, signal_length):
+                if signal[i] >= threshold_value:
+                    peaks.append(i)
+                    current_index = i + skip_indices  # Skip de volgende 22000 indexen
+                    break
+            else:
+                    # Geen piek gevonden die aan de drempel voldoet
+                break
+        return peaks
+
     def TDOA(peak1, peak2):
         mean_tdoa = (peak2 - peak1)/Fs
         return mean_tdoa
@@ -226,7 +245,7 @@ if __name__ == "__main__":
     Fs, ABS9 = wavfile.read("opnames/record_x_y_hidden_2.wav")
     Fs, ABS10 = wavfile.read("opnames/record_x_y_hidden_3.wav")
 
-
+    start = time.time()
     x_car1, y_car1, z = localization.localization(ABS1)
     print("Coordinates_x64_y40 : x = ", x_car1, ", y = ", y_car1)
     x_car2, y_car2, z = localization.localization(ABS2)
@@ -247,3 +266,5 @@ if __name__ == "__main__":
     print("Coordinates_x_y_hidden_2 : x = ", x_car9, ", y = ", y_car9)
     x_car10, y_car10, z = localization.localization(ABS10)
     print("Coordinates_x_y_hidden_3 : x = ", x_car10, ", y = ", y_car10)
+    end= time.time()
+    print("time: ", end-start)

@@ -11,6 +11,7 @@ from recording_tool import recording_tool
 from sympy import symbols, solve
 import numpy as np
 import math
+import time
 
 
 
@@ -31,7 +32,7 @@ class localization:
         ref =  ref_signal[755+22050*n:1470+22050*n,0]
 
 
-        plt.figure(figsize=(10,5))
+        """ plt.figure(figsize=(10,5))
         plt.plot(audio_channel1, color='C0')
         plt.title("Input audio, with first 10 peaks deleted")
         plt.xlabel("Index")
@@ -65,7 +66,7 @@ class localization:
         plt.ylabel("Amplitude")
         plt.grid(True)
         plt.savefig("Ref")
-        plt.close()
+        plt.close() """
 
         
         #channel estimation
@@ -108,7 +109,7 @@ class localization:
         # #plt.legend(handles=legend_handles, loc='upper right')
         # plt.show()
 
-        plt.figure(figsize=(10,5))
+        """ plt.figure(figsize=(10,5))
         # plt.plot((audio_channel1/60000)[202000:206000], color='C1', label='Audio channel, normalized and divided by 100')
         
         plt.plot(channel_responses_1, color='C0', label ='Channel estimation')
@@ -120,7 +121,7 @@ class localization:
         plt.grid(True)
         # plt.legend()
         plt.savefig("ch1_5")
-        plt.close()
+        plt.close() """
 
         # plt.figure(figsize=(10,5))
         # plt.plot(channel_responses_1, color='C0')
@@ -163,6 +164,49 @@ class localization:
 
         return segments
 
+
+    def TDOA_grid(grid_dimensions):
+        gridTDOA = []
+        mic_locs = np.array([[0,0,50],[0,480,50],[480,480,50],[480,0,50],[0,240,80]])
+        for row in grid_dimensions:
+            distances = []
+            for loc in mic_locs:
+                dist = np.linalg.norm(loc-row)
+                distances.append(dist)
+            times =  np.array(distances)/34300
+            TDOA = []
+            for i in range(0,len(times)):
+                for j in range(i+1,len(times)):
+                    TDOA = np.append(TDOA,(times[i]-times[j]))
+            gridTDOA = np.concatenate((gridTDOA,TDOA))
+        gridTDOA = np.reshape(gridTDOA,(-1,10))
+        return(gridTDOA)
+    
+    def coordinates_2d(tdoa,size=10,min_x=0,max_x=480,min_y=0,max_y=480,finetuning=5): 
+        for i in range(5):
+            xgrid = np.tile(np.linspace(min_x,max_x,size+2)[1:-1],size)
+            ygrid = np.repeat(np.linspace(min_y,max_y,size+2)[1:-1],size)
+            zgrid = np.repeat(30,size**2)
+            grid_dimensions = np.stack((xgrid,ygrid,zgrid),axis=1)
+
+            gridTDOA = localization.TDOA_grid(grid_dimensions)
+
+            error_list = np.array([])
+            for row in gridTDOA:
+                error = np.linalg.norm(row-tdoa)
+                error_list = np.append(error_list,error)
+            best = grid_dimensions[np.argmin(error_list)]
+
+            if i<finetuning:
+                padding = 480/(size**(i+1))/2
+                min_x = best[0] - padding
+                max_x = best[0] + padding
+                min_y = best[1] - padding
+                max_y = best[1] + padding
+        return best
+
+
+
     @staticmethod 
     def find_segment_peaks(segment_signal):
         peaks_list = []
@@ -202,7 +246,6 @@ class localization:
             else:
                     # Geen piek gevonden die aan de drempel voldoet
                 break
-        print(peaks)
         return peaks
 
     @staticmethod 
@@ -338,26 +381,30 @@ if __name__ == "__main__":
     Fs, ABS9 = wavfile.read("opnames/record_x_y_hidden_2.wav")
     Fs, ABS10 = wavfile.read("opnames/record_x_y_hidden_3.wav")
 
+
+    start = time.time()
     x_car1, y_car1 = localization.localization(ABS1)
     print("Coordinates_x64_y40 : x = ", x_car1, ", y = ", y_car1)
-    # x_car2, y_car2 = localization.localization(ABS2)
-    # print("Coordinates_x82_y399 : x = ", x_car2, ", y = ", y_car2)
-    # x_car3, y_car3 = localization.localization(ABS3)
-    # print("Coordinates_x109_y76 : x = ", x_car3, ", y = ", y_car3)
-    # x_car4, y_car4 = localization.localization(ABS4)
-    # print("Coordinates_x143_y296 : x = ", x_car4, ", y = ", y_car4)
-    # x_car5, y_car5 = localization.localization(ABS5)
-    # print("Coordinates_x150_y185 : x = ", x_car5, ", y = ", y_car5)
-    # x_car6, y_car6 = localization.localization(ABS6)
-    # print("Coordinates_x178_y439 : x = ", x_car6, ", y = ", y_car6)
-    # x_car7, y_car7 = localization.localization(ABS7)
-    # print("Coordinates_x232_y275 : x = ", x_car7, ", y = ", y_car7)
-    # x_car8, y_car8 = localization.localization(ABS8)
-    # print("Coordinates_x4_y_hidden_1 : x = ", x_car8, ", y = ", y_car8)
-    # x_car9, y_car9 = localization.localization(ABS9)
-    # print("Coordinates_x_y_hidden_2 : x = ", x_car9, ", y = ", y_car9)
-    # x_car10, y_car10 = localization.localization(ABS10)
-    # print("Coordinates_x_y_hidden_3 : x = ", x_car10, ", y = ", y_car10)
+    x_car2, y_car2 = localization.localization(ABS2)
+    print("Coordinates_x82_y399 : x = ", x_car2, ", y = ", y_car2)
+    x_car3, y_car3 = localization.localization(ABS3)
+    print("Coordinates_x109_y76 : x = ", x_car3, ", y = ", y_car3)
+    x_car4, y_car4 = localization.localization(ABS4)
+    print("Coordinates_x143_y296 : x = ", x_car4, ", y = ", y_car4)
+    x_car5, y_car5 = localization.localization(ABS5)
+    print("Coordinates_x150_y185 : x = ", x_car5, ", y = ", y_car5)
+    x_car6, y_car6 = localization.localization(ABS6)
+    print("Coordinates_x178_y439 : x = ", x_car6, ", y = ", y_car6)
+    x_car7, y_car7 = localization.localization(ABS7)
+    print("Coordinates_x232_y275 : x = ", x_car7, ", y = ", y_car7)
+    x_car8, y_car8 = localization.localization(ABS8)
+    print("Coordinates_x4_y_hidden_1 : x = ", x_car8, ", y = ", y_car8)
+    x_car9, y_car9 = localization.localization(ABS9)
+    print("Coordinates_x_y_hidden_2 : x = ", x_car9, ", y = ", y_car9)
+    x_car10, y_car10 = localization.localization(ABS10)
+    print("Coordinates_x_y_hidden_3 : x = ", x_car10, ", y = ", y_car10)
+    end= time.time()
+    print("time= ", end-start)
 
    
         
