@@ -73,6 +73,7 @@ class KITTMODEL():
                 print("V: ", self.v)
                 self.velocities.append(self.v)
                 self.direction = self.det_rotation()
+                print(self.direction)
                 self.pos = self.det_xy(self.dt)
                 self.positions.append(self.pos)
                 self.t += self.dt
@@ -188,3 +189,10 @@ class KITTMODEL():
         """ determines x,y position of the KITT car following 
         x,y = x0 + dirx * v * dt, y0 + diry * v * dt"""
         return self.pos[0] + self.direction[0] * self.v * dt, self.pos[1] + self.direction[1] * self.v * dt
+
+
+if __name__ == "__main__":
+    md = KITTMODEL()
+    inputs = ["D170 M160 1"]
+    md.sim(inputs)
+    plt.show(block=True)
