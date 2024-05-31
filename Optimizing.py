@@ -92,7 +92,7 @@ class localization:
         h = np.real(ifft(H))    
         h = h[0:Lhat]
 
-        return abs(h)
+        return h
 
 
         #old way of coordinate derivation (Matrix), turned out to be too inaccurate
@@ -197,12 +197,14 @@ if __name__ == "__main__":
 # Present the results
     localizer = localization()
 
+
+    start=time.time()
     Fref, ref_signal = wavfile.read("opnames/reference.wav")
     ref_signal =  ref_signal[:,0]
     refsig = localization.detect_segments(ref_signal)
     ref = refsig[12][750:1500]
 
-    start=time.time()
+    
     audio_files = [
         "opnames/record_x64_y40.wav",
         "opnames/record_x82_y399.wav",
