@@ -137,6 +137,12 @@ class localization:
         trimmed_peaks_4 = sorted_peaks_4[10:-10]
         mean_peak_4 = np.mean(trimmed_peaks_4)
         
+
+        print(trimmed_peaks_1)
+        print(trimmed_peaks_2)
+        print(trimmed_peaks_3)
+        print(trimmed_peaks_4)
+
         # sorted_peaks_5 = np.sort(peaks_channel5)
         # trimmed_peaks_5 = sorted_peaks_5[10:-10]
         # mean_peak_5 = np.mean(trimmed_peaks_5)
