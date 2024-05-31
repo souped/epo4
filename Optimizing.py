@@ -204,15 +204,15 @@ if __name__ == "__main__":
 
     start=time.time()
     audio_files = [
-        "opnames/record_x64_y40.wav",
-        "opnames/record_x82_y399.wav",
-        "opnames/record_x109_y76.wav",
-        "opnames/record_x143_y296.wav",
-        "opnames/record_x150_y185.wav",
-        "opnames/record_x178_y439.wav",
-        "opnames/record_x232_y275.wav",
-        "opnames/record_x4_y_hidden_1.wav",
-        "opnames/record_x_y_hidden_2.wav",
+        # "opnames/record_x64_y40.wav",
+        # "opnames/record_x82_y399.wav",
+        # "opnames/record_x109_y76.wav",
+        # "opnames/record_x143_y296.wav",
+        # "opnames/record_x150_y185.wav",
+        # "opnames/record_x178_y439.wav",
+        # "opnames/record_x232_y275.wav",
+        # "opnames/record_x4_y_hidden_1.wav",
+        # "opnames/record_x_y_hidden_2.wav",
         "opnames/record_x_y_hidden_3.wav"
     ]
 
