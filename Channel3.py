@@ -61,27 +61,36 @@ ax[0].set_ylabel("Amplitude")
 
 #plt.tight_layout()
 
-def ch3(x,y,Lhat,epsi):
-    Nx = len(x)           # Length of x
-    Ny = len(y)             # Length of y
-    L = Ny - Nx + 1          # Length of h
+def ch3(y, x, epsi):
 
-    # Force x to be the same length as y
-    x = np.append(x, [0]* (L-1))     # Make x same length as y
+        Nx = len(x)           # Length of x
+        Ny = len(y)           # Length of y
+        L = Ny - Nx + 1          # Length of h
+        Lhat = max(len(y), len(x)) 
 
-    # Deconvolution in frequency domain
-    Y = fft(y)
-    X = fft(x)
 
-    # Threshold to avoid blow ups of noise during inversion
-    ii = np.abs(X) < epsi*np.max(np.abs(X))
-    X=X[:len(Y)]
-    Y=Y[:len(X)]
-    H = np.divide(Y,X)
-    H = [0 if condition else x for x, condition in zip(Y, ii)]
-    h = np.real(ifft(H))    # ensure the result is real
-    h = h[0:Lhat]      # optional: truncate to length Lhat (L is not reliable?)
-    return h
+        # Force x to be the same length as y
+        x0 = np.concatenate((x, np.zeros(L-1)))   # Make x same length as y
+        #print(len(reference_signal))
+
+
+
+        # Deconvolution in frequency domain
+        X = fft(x0)
+        Y = fft(y)
+
+        # Threshold to avoid blow ups of noise during inversion
+        ii = (np.abs(X)) < (np.max(np.abs(X))*epsi)
+
+        H = np.divide(Y, X)
+        H[ii] = 0
+
+        #H = [0 if condition else reference_signal for reference_signal, condition in zip(fft_signal_1, ii)]
+        h = np.real(ifft(H))    
+        #h = h[0:Lhat]
+
+        return abs(h)
+
 
 # Channel estimation via ch3
 # suitable epsi: try values between 0.001 and 0.05
