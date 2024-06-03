@@ -4,8 +4,8 @@ import time
 # beacon specs
 carrier_freq = 10000  # Carrier frequency, min = 5 kHz & max = 30 kHz
 bit_freq = 5000  # The bit frequency, min = 1 kHz & max = 5 kHz
-repetition_cnt = 2500  # = bit_freq/repetition_freq, sets the time between transmissions, with repetition_freq 1-10 Hz.
-codeword = 0xFEEDBACC  # Code word in hexadecimal
+repetition_cnt = 1250  # = bit_freq/repetition_freq, sets the time between transmissions, with repetition_freq 1-10 Hz.
+codeword = 0x03DCD41E  # Code word in hexadecimal
 
 system_start = time.time()  # initialize time
 

@@ -82,6 +82,8 @@ class KITTMODEL():
             self.update_line()
             i+=1
 
+        return self.positions[-1], self.direction
+
     def proc_cmd(self, cmd):
         """process a single commandline e.g. \"D200 M160 2\"
         
@@ -188,3 +190,38 @@ class KITTMODEL():
         """ determines x,y position of the KITT car following 
         x,y = x0 + dirx * v * dt, y0 + diry * v * dt"""
         return self.pos[0] + self.direction[0] * self.v * dt, self.pos[1] + self.direction[1] * self.v * dt
+
+    def generate_commands(self, carloc, cart_rad, dest):
+        # Get the desired vector, and check if it lies on the left or right of the car.
+        _, desired_rad = self.desired_vector(carloc, dest)
+        desired_vec = [np.cos(desired_rad), np.sin(desired_rad)]
+
+        if desired_rad < cart_rad:
+            # Go right
+            input = 'M157 D100 1'
+        else:
+            # Go left
+            input = 'M157 D200 1'
+
+        time = self.proc_cmd(input)
+
+        # simulate input
+        for t in np.arange(0, time, self.dt):
+            if np.subtract(desired_vec, self.direction) < something
+                print("F:", self.f)
+                self.v = self.velocity(self.dt, self.f)
+                print("V: ", self.v)
+                self.velocities.append(self.v)
+                self.direction = self.det_rotation()
+                self.pos = self.det_xy(self.dt)
+                self.positions.append(self.pos)
+                self.t += self.dt
+                self.times.append(self.t)
+
+
+    def desired_vector(self, carloc, dest):  # carloc = location of car, des = destination coords
+        # calculate the vector pointing from the car to the endpoint using current location
+        vector=[dest[0] - carloc[0],dest[1] - carloc[1]]
+        length=np.sqrt(np.square(vector[0] + np.square(vector[1])))
+        direction=np.arccos(vector[0] / vector[1])
+        return length,direction
