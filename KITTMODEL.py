@@ -73,6 +73,7 @@ class KITTMODEL():
                 print("V: ", self.v)
                 self.velocities.append(self.v)
                 self.direction = self.det_rotation()
+                print(self.direction)
                 self.pos = self.det_xy(self.dt)
                 self.positions.append(self.pos)
                 self.t += self.dt
@@ -81,8 +82,6 @@ class KITTMODEL():
             # update plot
             self.update_line()
             i+=1
-
-        return self.positions[-1], self.direction
 
     def proc_cmd(self, cmd):
         """process a single commandline e.g. \"D200 M160 2\"
@@ -225,3 +224,10 @@ class KITTMODEL():
         length=np.sqrt(np.square(vector[0] + np.square(vector[1])))
         direction=np.arccos(vector[0] / vector[1])
         return length,direction
+
+
+if __name__ == "__main__":
+    md = KITTMODEL()
+    inputs = ["D170 M160 1"]
+    md.sim(inputs)
+    plt.show(block=True)
