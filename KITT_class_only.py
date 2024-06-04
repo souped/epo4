@@ -16,7 +16,7 @@ class KITT:
 
         # Initializing beacon specifications
         carrier_frequency = carrier_freq.to_bytes(2, byteorder='big')
-        print(b'F' + carrier_frequency + b'\n')
+        # print(b'F' + carrier_frequency + b'\n')
         self.serial.write(b'F' + carrier_frequency + b'\n')
         bit_frequency = bit_freq.to_bytes(2, byteorder='big')
         self.serial.write(b'B' + bit_frequency + b'\n')
@@ -32,6 +32,7 @@ class KITT:
         self.commands = []  # List where commands are stored that need to be sent to KITT
 
         self.last_event = {'type': None, 'name': None}
+        print("Connected to car!")
 
     def encode_command(self, command):
         if isinstance(command, str):
