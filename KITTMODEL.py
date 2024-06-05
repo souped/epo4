@@ -217,11 +217,11 @@ class KITTMODEL():
         if desired_rad < cart_rad:
             print("Go right")
             dir_com = 100
-            input_com = 'M157 D100 10'
+            input_com = 'M158 D100 10'
         else:
             print("Go left")
             dir_com = 200
-            input_com = 'M157 D200 10'
+            input_com = 'M158 D200 10'
 
         # Process the command, and set the starting parameters
         time = self.proc_cmd(input_com)
@@ -252,6 +252,7 @@ class KITTMODEL():
                 plt.xlim(0,4)
                 plt.ylim(0,4)
                 plt.grid()
+                plt.gca().set_aspect('equal')
                 plt.show()
                 return self.positions[-1], self.direction, dir_com, round(t,3)
         # If the model cannot find a curved path to the destination, e.g. when it lies too close to the car, return -1

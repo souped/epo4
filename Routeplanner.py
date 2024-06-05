@@ -6,7 +6,7 @@ from KITT_class_only import KITT
 from Keyboard import Keyboard
 from Optimizing import localization
 
-sysport = 'COM4'
+sysport = 'COM5'
 
 """"
 This class does not yet follow the right construction as made on the whiteboard.
@@ -24,14 +24,10 @@ List of KITT commands
 """
 
 
-class RoutePlanner(KITTMODEL, KITT, Keyboard, localization):
-    def __init__(self, max_angle_deg=25, tirewidth=5):
-        KITTMODEL.__init__(self)
-        KITT.__init__(self, sysport)
-
-        self.mod = KITTMODEL
-        self.kitt = KITT
-        self.loc = localization
+class RoutePlanner():
+    def __init__(self, kitt, mod, max_angle_deg=25, tirewidth=5):
+        self.kitt = kitt
+        self.mod = mod
 
         # Additional initialization
         self.max_angle_deg = max_angle_deg
@@ -62,18 +58,22 @@ class RoutePlanner(KITTMODEL, KITT, Keyboard, localization):
         :return: '1' if the car is on track, otherwise '0'
         """
         # Determine locations
+        self.kitt.start_beacon()
         x1, y1 = self.tdoafunc()
+        self.kitt.stop_beacon()
         print("Position 1: ", x1, y1)
-        desired_pos_dev, _, _ = self.desired_vector(model_endpos, (x1,y1))  # Calculate position deviation
+        desired_pos_dev, _, _ = self.mod.desired_vector(model_endpos, (x1,y1))  # Calculate position deviation
         print('Car is currently', desired_pos_dev, "m away from predicted position")
-        self.car_model_input(kitt=self.kitt, input_cmd=f"M157 D150 {fwd_time}")  # Drive the car forwards for 1 second
+        Keyboard.car_model_input(kitt=self.kitt, input_cmd=f"M158 D150 {fwd_time}")  # Drive the car forwards for 1 second
+        self.kitt.start_beacon()
         x2, y2 = self.tdoafunc()
+        self.kitt.stop_beacon()
         print("Position 2: ", x2, y2)
 
         # Calculations
-        _, actual_dir, _ = self.desired_vector((x1,y1), (x2,y2))  # Calculate the orientation deviation
+        _, actual_dir, _ = self.mod.desired_vector((x1,y1), (x2,y2))  # Calculate the orientation deviation
         print('Car is currently', actual_dir, "rad from predicted orientation")
-        length_to_dest, _, _ = self.desired_vector((x2,y2), dest)  # Calculate distance to endpoint
+        length_to_dest, _, _ = self.mod.desired_vector((x2,y2), dest)  # Calculate distance to endpoint
         # Are all three conditions necessary? Should these be altered?
         if (desired_pos_dev < threshold[0] and np.abs(desired_dir-actual_dir) < threshold[1] and
                 length_to_dest < threshold[2]):
@@ -98,27 +98,33 @@ class RoutePlanner(KITTMODEL, KITT, Keyboard, localization):
         :return:
         """
         # Generating commands
-        end_pos, end_dir, gen_com, t = self.generate_curve_command(carloc=carloc, cart_rad=cart_rad, dest=dest)
+        end_pos, end_dir, gen_com, t = self.mod.generate_curve_command(carloc=carloc, cart_rad=cart_rad, dest=dest)
         while end_pos is None:
-            self.car_model_input(kitt=self.kitt, input_cmd="D150 M157 1")
+            print("Driving forwards...")
+            Keyboard.car_model_input(kitt=self.kitt, input_cmd="D150 M158 1")
             x, y = self.tdoafunc()
-            end_pos, end_dir, gen_com, t = self.generate_curve_command(carloc=(x,y), cart_rad=cart_rad, dest=dest)
-        gen_cmd = f"M157 D{gen_com} {t}"
+            print("Recalculating...")
+            end_pos, end_dir, gen_com, t = self.mod.generate_curve_command(carloc=(x,y), cart_rad=cart_rad, dest=dest)
+        gen_cmd = f"M158 D{gen_com} {t*0.85}"
         print("Generated curve command:", gen_cmd)
 
         # Send the command and check deviation
-        self.car_model_input(kitt=self.kitt, input_cmd=gen_cmd)
+        # self.kitt.start_beacon()
+        Keyboard.car_model_input(kitt=self.kitt, input_cmd=gen_cmd)
+        # self.kitt.stop_beacon()
         end_dir_rad = math.atan2(end_dir[1], end_dir[0])  # Convert unit vector to radians
-        dev = self.standstill_deviation(model_endpos=end_pos,desired_dir=end_dir_rad, dest=dest)
-        if dev == 1:
-            print("Going straight.")
-            print("Still need to make this functionality :)")
-            # self.generate_straight_command()
-        else:
-            print("Recalculating commands.")
-            self.make_and_drive_route(carloc, cart_rad, dest)
+        # dev = self.standstill_deviation(model_endpos=end_pos,desired_dir=end_dir_rad, dest=dest)
+        # if dev == 1:
+        #     print("Going straight.")
+        #     print("Still need to make this functionality :)")
+        #     # self.generate_straight_command()
+        # else:
+        #     print("Recalculating commands.")
+        #     self.make_and_drive_route(carloc, cart_rad, dest)
 
 
 if __name__ == '__main__':
-    rp = RoutePlanner()
-    rp.make_and_drive_route(carloc=(1, 0), cart_rad=0 * np.pi, dest=(0, 1))
+    kitt = KITT(sysport)
+    mod = KITTMODEL()
+    rp = RoutePlanner(kitt,mod)
+    rp.make_and_drive_route(carloc=(1, 0), cart_rad=0 * np.pi, dest=(0, 3))

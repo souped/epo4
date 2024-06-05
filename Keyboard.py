@@ -3,9 +3,11 @@ import numpy as np
 import time
 import msvcrt
 
+from KITT_class_only import KITT
+
 
 class Keyboard:
-    def wasd(self, kitt, max_speed):
+    def wasd(kitt: KITT, max_speed):
         # Checks for any keypress and what key is pressed.
         def on_key_event(event):
             if event.event_type == kitt.last_event['type'] and event.name == kitt.last_event['name']:
@@ -37,7 +39,7 @@ class Keyboard:
                         kitt.data.clear()
                         print("Cleared data")
                     case "i":
-                        self.car_model_input(kitt)
+                        Keyboard.car_model_input(kitt)
                         return
             elif event.event_type == keyboard.KEY_UP:
                 match event.name:
@@ -51,7 +53,7 @@ class Keyboard:
 
         keyboard.hook(on_key_event)  # Check for any key status change
 
-    def car_model_input(self, kitt, input_cmd=None):
+    def car_model_input(kitt: KITT, input_cmd=None):
         """
         This function takes an input command and sends it to the car. If no input is given,
         it will ask the user to enter the command
@@ -72,12 +74,10 @@ class Keyboard:
         for string in cmd_string:
             if "d" in string.lower():
                 direction = int(string[-3:])
-                print(direction)
                 print("Set direction:", direction)
                 kitt.set_angle(direction)
             if "m" in string.lower():
                 speed = int(string[-3:])
-                print(speed)
                 print("Set speed:", speed)
                 kitt.set_speed(speed)
             else:

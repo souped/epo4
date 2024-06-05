@@ -8,10 +8,9 @@ sys_port = 'COM5'
 
 if __name__ == '__main__':
     kitt = KITT(sys_port)   # Create KITT instance
-    key = Keyboard()
 
     try:  # Error handling
-        key.wasd(kitt, max_speed=10)  # Keyboard function
+        Keyboard.wasd(kitt, max_speed=10)  # Keyboard function
     except Exception as e:
         print(e)
 
