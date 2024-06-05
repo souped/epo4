@@ -58,5 +58,9 @@ def refsignal(Ncodebits, Timer0, Timer1, Timer3, code, Fs):
 
     return x, last
 
+ref = refsignal(Ncodebits=32, Timer0=5, Timer1=50, Timer3=500, code=, Fs=44100)
+
+print(ref)
+
 
 

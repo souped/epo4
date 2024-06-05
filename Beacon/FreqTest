@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from scipy.fft import fft, ifft
 
 # beacon specs
-carrier_freqs = range(10000, 11000, 1000)  # Carrier frequencies from 1 kHz to 20 kHz in steps of 1000 Hz
+carrier_freqs = range(0, 20000, 1000)  # Carrier frequencies from 1 kHz to 20 kHz in steps of 1000 Hz
 bit_freq = 5000  # The bit frequency, min = 1 kHz & max = 5 kHz
 repetition_cnt = 2500  # = bit_freq/repetition_freq, sets the time between transmissions, with repetition_freq 1-10 Hz.
 duration = 0.01  # Duration of the signal (s)
@@ -13,7 +13,8 @@ def generate_signal(carrier_freq, bit_freq, repetition_cnt, duration):
     time_points = np.linspace(0, duration, num_samples)
 
     # Generate the signal
-    signal = np.sin(2 * np.pi * carrier_freq * time_points)
+    for i in enumerate(carrier_freqs):
+        
 
     return time_points, signal
 
