@@ -1,65 +1,80 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.fft import fft, ifft
+from scipy.io import wavfile
 
-# beacon specs
-carrier_freqs = range(0, 20000, 1000)  # Carrier frequencies from 1 kHz to 20 kHz in steps of 1000 Hz
-bit_freq = 5000  # The bit frequency, min = 1 kHz & max = 5 kHz
-repetition_cnt = 2500  # = bit_freq/repetition_freq, sets the time between transmissions, with repetition_freq 1-10 Hz.
-duration = 0.01  # Duration of the signal (s)
+def autocorrelation(seq):
+    n = len(seq)
+    result = np.correlate(seq, seq, mode='full')
+    return result[n-1:]
 
-def generate_signal(carrier_freq, bit_freq, repetition_cnt, duration):
-    num_samples = int(bit_freq * repetition_cnt * duration)
-    time_points = np.linspace(0, duration, num_samples)
+# Beacon specs
+audio_files = [
+    "Beacon/reference1.wav",
+    "Beacon/reference2.wav",
+    "Beacon/reference3.wav",
+    "Beacon/reference4.wav",
+    "Beacon/reference5.wav",
+    "Beacon/reference6.wav",
+    "Beacon/reference7.wav",
+    "Beacon/reference8.wav",
+    "Beacon/reference9.wav",
+    "Beacon/reference10.wav",
+    "Beacon/reference11.wav",
+    "Beacon/reference12.wav"
+]
 
-    # Generate the signal
-    for i in enumerate(carrier_freqs):
-        
 
-    return time_points, signal
-
-def ch3(signal_1, reference_signal):
-    Nsignal_1 = len(signal_1)           # Length of x
-    Nreference_signal = len(reference_signal)             # Length of y
-    L = Nsignal_1 - Nreference_signal + 1          # Length of h
-    Lhat = max(len(reference_signal), len(signal_1)) 
-    epsi = 0.005
-
-    # Force x to be the same length as y
-    reference_signal = np.append(reference_signal, [0]* (L-1))     # Make x same length as y
+for file in audio_files:
+    Fs, audio = wavfile.read(file)
+    audio = audio[:, 1]
     
-    # Deconvolution in frequency domain
-    fft_signal_1 = fft(signal_1)
-    fft_reference_signal = fft(reference_signal)
+    if file == "Beacon/reference1.wav":
+        segment = audio[10000:12500]
+    elif file == "Beacon/reference2.wav":
+        segment = audio[5000:7500]
+    elif file == "Beacon/reference3.wav":
+        segment = audio[10000:12500]
+    elif file == "Beacon/reference4.wav":
+        segment = audio[6000:8500]
+    elif file == "Beacon/reference5.wav":
+        segment = audio[1000:3500]
+    elif file == "Beacon/reference6.wav":
+        segment = audio[17500:20000]
+    elif file == "Beacon/reference7.wav":
+        segment = audio[2500:5000]
+    elif file == "Beacon/reference8.wav":
+        segment = audio[6500:9000]
+    elif file == "Beacon/reference9.wav":
+        segment = audio[0:2500]
+    elif file == "Beacon/reference10.wav":
+        segment = audio[11000:13500]
+    elif file == "Beacon/reference11.wav":
+        segment = audio[15000:17500]
+    elif file == "Beacon/reference12.wav":
+        segment = audio[17500:20000]
+    else:
+        segment = audio
+    
+   
+    plt.plot(segment)
+    plt.title(f"Reference signal for {file}")
+    
+    plot_filename = file.replace("Beacon/s", "").replace(".wav", ".png")
+    plt.savefig(plot_filename)
+    plt.close()
 
-    # Threshold to avoid blow ups of noise during inversion
-    ii = (np.abs(fft_reference_signal)) < (np.max(np.abs(fft_reference_signal))*epsi)
 
-    H = np.divide(fft_signal_1, fft_reference_signal)
-    H[ii] = 0
 
-    h = np.real(ifft(H))    
-    h = h[0:Lhat]
-
-    return h
-
-def plot_channel_estimations(carrier_freqs, bit_freq, repetition_cnt, duration):
-    plt.figure(figsize=(12, 8))
-    time_points = np.linspace(0, duration, int(bit_freq * repetition_cnt * duration))
-
-    for carrier_freq in carrier_freqs:
-        _, signal = generate_signal(carrier_freq, bit_freq, repetition_cnt, duration)
-        reference_signal = np.sin(2 * np.pi * carrier_freq * time_points)
-        channel_estimation = ch3(signal, reference_signal)
-        plt.plot(channel_estimation, label=f'{carrier_freq} Hz')
-
-    plt.xlabel('Sample')
-    plt.ylabel('Amplitude')
-    plt.title('Channel Estimation for Different Frequencies')
-    plt.legend(loc='upper right')
-    plt.grid(True)
-    plt.show()
-
-# Example usage
-if __name__ == "__main__":
-    plot_channel_estimations(carrier_freqs, bit_freq, repetition_cnt, duration)
+""" for file in audio_files:
+    Fs, audio = wavfile.read(file)
+    audio = audio[:, 1]
+    autocorr = autocorrelation(audio)
+    
+    plt.figure()
+    plt.plot(autocorr, marker='o', linestyle='-', color='b')
+    plt.title(f'Autocorrelation of {file}')
+    plt.xlabel('Lag')
+    plt.ylabel('Autocorrelation')
+    autocorr_filename = file.replace("Beacon/s", "").replace(".wav", "_autocorr.png")
+    plt.savefig(autocorr_filename)
+    plt.close() """

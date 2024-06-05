@@ -17,19 +17,8 @@ import time
 
 class localization:
     #def __init__(recording, debug=False):
-        # Store the recordings
-        #x_car, y_car = self.localization()
-        
-    def localization(audiowav):
+    def localization(audiowav, ref):
         # Split each recording into individual pulses
-        Fref, ref_signal = wavfile.read("opnames/reference.wav")
-        ref_signal =  ref_signal[:,0]
-        refsig = localization.detect_segments(ref_signal)
-        ref = refsig[12]
-        ref = ref[750:1500]
-
-
-    
         TDOA_list = []
         # Calculate TDOA between different microphone pairs
         for i in range(5):
@@ -40,10 +29,10 @@ class localization:
                 mean_peak_j = localization.process_channel(audio_channel_j, ref)
                 TDOA = localization.TDOA(mean_peak_j, mean_peak_i)
                 TDOA_list.append(TDOA)
-
         location = localization.coordinates_2d(TDOA_list)
-
-        return location
+        x_car = location[0]
+        y_car = location[1]
+        return x_car, y_car
     
     def process_channel(channel_data, ref):
         segments = localization.detect_segments(channel_data)
@@ -72,8 +61,7 @@ class localization:
         return peaks_list
     
     def TDOA(peak1, peak2):
-        mean_tdoa = (peak2 - peak1)/Fs
-        return mean_tdoa
+        return (peak2 - peak1)/Fs
 
             
         
@@ -104,7 +92,7 @@ class localization:
         h = np.real(ifft(H))    
         h = h[0:Lhat]
 
-        return abs(h)
+        return h
 
 
         #old way of coordinate derivation (Matrix), turned out to be too inaccurate
@@ -190,10 +178,7 @@ class localization:
 
             gridTDOA = localization.TDOA_grid(grid_dimensions)
 
-            error_list = np.array([])
-            for row in gridTDOA:
-                error = np.linalg.norm(row-tdoa)
-                error_list = np.append(error_list,error)
+            error_list = np.linalg.norm(gridTDOA - tdoa, axis=1)
             best = grid_dimensions[np.argmin(error_list)]
 
             if i<finetuning:
@@ -211,37 +196,33 @@ if __name__ == "__main__":
 # Localize the sound source
 # Present the results
     localizer = localization()
-    Fs, ABS1 = wavfile.read("opnames/record_x64_y40.wav")
-    Fs, ABS2 = wavfile.read("opnames/record_x82_y399.wav")
-    Fs, ABS3 = wavfile.read("opnames/record_x109_y76.wav")
-    Fs, ABS4 = wavfile.read("opnames/record_x143_y296.wav")
-    Fs, ABS5 = wavfile.read("opnames/record_x150_y185.wav")
-    Fs, ABS6 = wavfile.read("opnames/record_x178_y439.wav")
-    Fs, ABS7 = wavfile.read("opnames/record_x232_y275.wav")
-    Fs, ABS8 = wavfile.read("opnames/record_x4_y_hidden_1.wav")
-    Fs, ABS9 = wavfile.read("opnames/record_x_y_hidden_2.wav")
-    Fs, ABS10 = wavfile.read("opnames/record_x_y_hidden_3.wav")
+
 
     start=time.time()
-    x_car1, y_car1, z = localization.localization(ABS1)
-    print("Coordinates_x64_y40 : x = ", x_car1, ", y = ", y_car1)
-    x_car2, y_car2, z = localization.localization(ABS2)
-    print("Coordinates_x82_y399 : x = ", x_car2, ", y = ", y_car2)
-    x_car3, y_car3, z = localization.localization(ABS3)
-    print("Coordinates_x109_y76 : x = ", x_car3, ", y = ", y_car3)
-    x_car4, y_car4, z = localization.localization(ABS4)
-    print("Coordinates_x143_y296 : x = ", x_car4, ", y = ", y_car4)
-    x_car5, y_car5, z = localization.localization(ABS5)
-    print("Coordinates_x150_y185 : x = ", x_car5, ", y = ", y_car5)
-    x_car6, y_car6, z = localization.localization(ABS6)
-    print("Coordinates_x178_y439 : x = ", x_car6, ", y = ", y_car6)
-    x_car7, y_car7, z = localization.localization(ABS7)
-    print("Coordinates_x232_y275 : x = ", x_car7, ", y = ", y_car7)
-    x_car8, y_car8, z = localization.localization(ABS8)
-    print("Coordinates_x4_y_hidden_1 : x = ", x_car8, ", y = ", y_car8)
-    x_car9, y_car9, z = localization.localization(ABS9)
-    print("Coordinates_x_y_hidden_2 : x = ", x_car9, ", y = ", y_car9)
-    x_car10, y_car10, z = localization.localization(ABS10)
-    print("Coordinates_x_y_hidden_3 : x = ", x_car10, ", y = ", y_car10)
-    end=time.time()
-    print("time= ", end-start)
+    Fref, ref_signal = wavfile.read("opnames/reference.wav")
+    ref_signal =  ref_signal[:,0]
+    refsig = localization.detect_segments(ref_signal)
+    ref = refsig[12][750:1500]
+
+    
+    audio_files = [
+        # "opnames/record_x64_y40.wav",
+        # "opnames/record_x82_y399.wav",
+        # "opnames/record_x109_y76.wav",
+        # "opnames/record_x143_y296.wav",
+        # "opnames/record_x150_y185.wav",
+        # "opnames/record_x178_y439.wav",
+        # "opnames/record_x232_y275.wav",
+        # "opnames/record_x4_y_hidden_1.wav",
+        # "opnames/record_x_y_hidden_2.wav",
+        "opnames/record_x_y_hidden_3.wav"
+    ]
+
+    start = time.time()
+    for file in audio_files:
+        Fs, audio = wavfile.read(file)
+        x_car, y_car = localization.localization(audio, ref)
+        print(f"{file}: x = {x_car}, y = {y_car}")
+
+    end = time.time()
+    print("Total time:", end - start)
