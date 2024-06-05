@@ -36,18 +36,17 @@ class localization:
     
     def process_channel(channel_data, ref):
         segments = localization.detect_segments(channel_data)
-        segments = segments[5:35]
         channel_responses = [localization.ch3(segment, ref) for segment in segments]
         channel_responses_array = np.array(channel_responses)
         peaks = localization.find_segment_peaks(channel_responses_array)
         sorted_peaks = np.sort(peaks)
-        trimmed_peaks = sorted_peaks[10:-10]
+        trimmed_peaks = sorted_peaks[1:-1]
         mean_peak = np.mean(trimmed_peaks)
         return mean_peak
 
     def detect_segments(audio_signal):
         segments = []
-        num_segments = 40
+        num_segments = 6
         segment_length = len(audio_signal) // num_segments
         segments = [abs(audio_signal[i*segment_length : (i+1)*segment_length]) for i in range(num_segments)]
         return segments
@@ -199,27 +198,30 @@ if __name__ == "__main__":
 
 
     start=time.time()
-    Fref, ref_signal = wavfile.read("Beacon/reference3.wav")
+    Fref, ref_signal = wavfile.read("Beacon/reference6.wav")
     ref_signal =  ref_signal[:,1]
-    ref = ref_signal[10000:12500]
+    ref = ref_signal[18800:19396]
+    
+    plt.plot(ref)
+    plt.savefig("refsignalhuidig")
+    plt.close()
 
     
     audio_files = [
-        # "opnames/record_x64_y40.wav",
-        # "opnames/record_x82_y399.wav",
-        # "opnames/record_x109_y76.wav",
-        # "opnames/record_x143_y296.wav",
-        # "opnames/record_x150_y185.wav",
-        # "opnames/record_x178_y439.wav",
-        # "opnames/record_x232_y275.wav",
-        # "opnames/record_x4_y_hidden_1.wav",
-        # "opnames/record_x_y_hidden_2.wav",
-        # "opnames/record_x_y_hidden_3.wav"
+        "opnames/vanafxy-20-230.wav",
+        "opnames/vanafx-y-66-60.wav"
     ]
 
     start = time.time()
     for file in audio_files:
         Fs, audio = wavfile.read(file)
+        
+        plt.plot(audio)
+        plt.title(f"Reference signal for {file}")
+        plot_filename = file.replace("Beacon/", "").replace(".wav", ".png")
+        plt.savefig(plot_filename)
+        plt.close()
+        
         x_car, y_car = localization.localization(audio, ref)
         print(f"{file}: x = {x_car}, y = {y_car}")
 
