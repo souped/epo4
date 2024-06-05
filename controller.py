@@ -3,6 +3,8 @@ from KITTMODEL import KITTMODEL
 from microphone import Microphone
 from Optimizing import localization
 from scipy.io import wavfile
+from routeplanner import RoutePlanner
+from kittfile import KITT
 
 def main():
     """setup audio connection"""
@@ -12,8 +14,12 @@ class Controller():
     def __init__(self) -> None:
         self.running = True
 
+        self.md = KITTMODEL()
+        self.kitt = KITT()
+        self.rp = RoutePlanner(self.md)
+
         # microphone
-        self.recording_time = 4 # seconds
+        self.recording_time = 2 # seconds
         self.mic = Microphone(channelnumbers = 8, Fs= 48000)
         self.stream = []
 
@@ -38,11 +44,16 @@ class Controller():
             print(audio.shape, self.ref.shape)
 
             # apply localisation algorithm
-            self.x, self.y = self.localiser.localization(audio, self.ref)
+            # self.x, self.y = self.localiser.localization(audio, self.ref)
 
             # apply route planning algorithm?
+            self.rp.make_and_drive_route()
+            
             # track data?
-            # send commands ?
+            # do this inside the KITT Class or a separate other class i.e. DrivingHistory 
+
+            # send commands 
+            self.kitt.send_cmd("cmd")
 
             # temporary end
             self.running = False
@@ -51,4 +62,3 @@ class Controller():
 if __name__ == "__main__":
     controller = Controller()
     controller.run_loop()
-

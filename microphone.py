@@ -5,7 +5,7 @@ import time
 from scipy.io import wavfile
 
 class Microphone:
-    def __init__(self, channelnumbers=8, Fs=48000):
+    def __init__(self, channelnumbers: int=8, Fs: int=48000):
         #, seconds=6
         self.channelnumbers = channelnumbers
         self.Fs = Fs
@@ -79,11 +79,19 @@ class Microphone:
             line.set_label(f"channel {i+1}")
         ax.legend()
 
+    def read_stream_callback_mode():
+        pass
+
+    def callback(in_data, frame_count, time_info, status):
+        pass
+
 
 if __name__ == "__main__":
-    mic = Microphone(channelnumbers=1)
+    mic = Microphone(channelnumbers=8)
     device_index = Microphone.list_devices()
     print(f"device index used: {device_index}")
-    seconds = 4
+    seconds = 2
     audio = mic.record_audio(seconds, device_index)
     mic.write_wavfile(audio)
+    Microphone.read_wavfile("wavfile.wav")
+    plt.show()

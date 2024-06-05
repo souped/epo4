@@ -54,6 +54,7 @@ class KITTMODEL():
         self.ax.set_aspect('equal')
         self.figure.canvas.draw()
         self.figure.canvas.flush_events()
+        # plot speed
         self.ax2.relim()
         self.ax2.autoscale_view()
         self.figure2.canvas.draw()
@@ -68,15 +69,15 @@ class KITTMODEL():
 
             # simulate input
             for t in np.arange(0, time, self.dt):
-                print("F:", self.f)
                 self.v = self.velocity(self.dt, self.f)
-                print("V: ", self.v)
                 self.velocities.append(self.v)
                 self.direction = self.det_rotation()
                 self.pos = self.det_xy(self.dt)
                 self.positions.append(self.pos)
                 self.t += self.dt
                 self.times.append(self.t)
+
+                print(self.f, self.v)
 
             # update plot
             self.update_line()
@@ -94,7 +95,7 @@ class KITTMODEL():
                 self.cmd_speed(c)
             else:
                 time = float(re.findall(r"\d*.\d*", c)[0])
-        return time *1.25 
+        return time
             
 
     def det_rotation(self, phi = None):
@@ -121,6 +122,9 @@ class KITTMODEL():
     def calcdrag(self) -> float:
         """Determines the air drag the car experiences at its current velocity"""
         return (self.b * np.abs(self.v) + self.c * np.square(self.v))
+    
+    def steering_angle(self, directionnr):
+        return (directionnr / 50) * 19.4
 
     def cmd_angle(self, cmd):
         """D200 | D150 | D100
@@ -134,8 +138,8 @@ class KITTMODEL():
         SETS STATE VALUE self.direction"""
         match cmd:
             case "D200":
-                self.direction = self.det_rotation(25)
-                self.phi = 25 
+                self.direction = self.det_rotation(19.4)
+                self.phi = 19
                 return
             case "D170":
                 self.direction = self.det_rotation(7)
@@ -153,6 +157,15 @@ class KITTMODEL():
                 self.direction = self.det_rotation(-25)
                 self.phi = -25 
                 return
+            case _:
+                pass
+            
+        #### ALTERNATIVE FOR EVERY DIRECTION?
+        drnr = int(re.findall(r"\d{3}", cmd)[0])
+        # drnr = math.floor(drnr)
+        self.direction = self.det_rotation(self.steering_angle(drnr))
+        self.phi = drnr
+        return
             
     def cmd_speed(self, cmd):
         """ 135 - 150: backwards
@@ -188,3 +201,10 @@ class KITTMODEL():
         """ determines x,y position of the KITT car following 
         x,y = x0 + dirx * v * dt, y0 + diry * v * dt"""
         return self.pos[0] + self.direction[0] * self.v * dt, self.pos[1] + self.direction[1] * self.v * dt
+
+if __name__ == "__main__":
+    md = KITTMODEL()
+    #,"D100 M157 1", "D200 M160 2" "D200 M157 6.1",
+    inputs = ["D200 M157 6.1", "D180 M157 3.5"]
+    md.sim(inputs)
+    plt.show(block=True)
