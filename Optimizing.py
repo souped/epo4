@@ -199,10 +199,9 @@ if __name__ == "__main__":
 
 
     start=time.time()
-    Fref, ref_signal = wavfile.read("opnames/reference.wav")
-    ref_signal =  ref_signal[:,0]
-    refsig = localization.detect_segments(ref_signal)
-    ref = refsig[12][750:1500]
+    Fref, ref_signal = wavfile.read("Beacon/reference3.wav")
+    ref_signal =  ref_signal[:,1]
+    ref = ref_signal[10000:12500]
 
     
     audio_files = [
@@ -215,7 +214,7 @@ if __name__ == "__main__":
         # "opnames/record_x232_y275.wav",
         # "opnames/record_x4_y_hidden_1.wav",
         # "opnames/record_x_y_hidden_2.wav",
-        "opnames/record_x_y_hidden_3.wav"
+        # "opnames/record_x_y_hidden_3.wav"
     ]
 
     start = time.time()
