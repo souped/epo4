@@ -5,6 +5,7 @@ from Optimizing import localization
 from scipy.io import wavfile
 from routeplanner import RoutePlanner
 from kittfile import KITT
+from keyboardfile import Keyboard
 
 def main():
     """setup audio connection"""
@@ -53,7 +54,8 @@ class Controller():
             # do this inside the KITT Class or a separate other class i.e. DrivingHistory 
 
             # send commands 
-            self.kitt.send_cmd("cmd")
+            # self.kitt.send_cmd("cmd")
+            Keyboard.car_model_input(self.kitt, inputstr="M160 D200 1")
 
             # temporary end
             self.running = False
