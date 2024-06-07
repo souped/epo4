@@ -11,7 +11,7 @@ from KITT_communication import KITT
 from Keyboard import Keyboard
 from StateTracker import StateTracker
 
-sysport = '/dev/cu.RNBT-3F3B'
+sysport = 'COM5'
 CHANNELS = 8
 RATE = 48000
 
@@ -36,25 +36,26 @@ class Controller():
 
         self.state = StateTracker(self.kitt, self.md, self.localizer, self.mic, self.ref)
 
-    def run_loop(self, dest, carloc=(0.73,0.92), car_rad=0.5*np.pi):
+    def run_loop(self, dest, carloc=(0.0,0.0), car_rad=0.5*np.pi):
         # while self.running is True:
         # apply route planning algorithm?
         curve_cmd, model_endpos, model_dir = self.rp.make_curve_route(carloc, car_rad, dest)
-        Keyboard.car_model_input(kitt=self.kitt, input_cmd=curve_cmd)
+        Keyboard.car_model_input(kitt=self.kitt, input_cmd=curve_cmd, from_curve=1)
 
         state, (x,y), dir = self.state.after_curve_deviation(model_endpos=model_endpos, model_dir=model_dir, dest=dest)
         # while state == 0:
         #     curve_cmd_corr,model_endpos,model_dir=self.rp.make_curve_route((x,y),dir,dest)
-        #     Keyboard.car_model_input(kitt=self.kitt, input_cmd=curve_cmd_corr)
+        #     Keyboard.car_model_input(kitt=self.kitt, input_cmd=curve_cmd_corr, from_curve=1)
         #     state,(x,y),dir=self.state.after_curve_deviation(model_endpos=model_endpos,model_dir=model_dir,dest=dest)
 
         print("Generating straight commands...")
         straight_cmd = self.rp.make_straight_route(carloc, dest)
         Keyboard.car_model_input(kitt=self.kitt, input_cmd=straight_cmd)
 
-        self.kitt.start_beacon()
-        print("Final location:", self.state.determine_location())
-        self.kitt.stop_beacon()
+        # self.kitt.start_beacon()
+        # print("Final location:", self.state.determine_location())
+        # self.kitt.stop_beacon()
+
         # track data?
         # do this inside the KITT Class or a separate other class i.e. DrivingHistory
 
@@ -67,5 +68,5 @@ class Controller():
 
 if __name__ == "__main__":
     controller = Controller()
-    controller.run_loop((3,0))
+    controller.run_loop((2,2))
     print(1)

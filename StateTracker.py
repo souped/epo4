@@ -39,16 +39,16 @@ class StateTracker():
         :return: '1' if the car is on track, otherwise '0'
         """
         # Determine locations
-        self.kitt.start_beacon()
+        # self.kitt.start_beacon()
         x1, y1 = self.determine_location()
-        self.kitt.stop_beacon()
+        # self.kitt.stop_beacon()
         print("Position 1: ", x1, y1)
         desired_pos_dev, _, _ = self.mod.desired_vector(model_endpos, (x1,y1))  # Calculate position deviation
         print('Car is currently', desired_pos_dev, "m away from predicted position")
         Keyboard.car_model_input(kitt=self.kitt, input_cmd=f"M158 D150 {fwd_time}")  # Drive the car forwards for 1 second
-        self.kitt.start_beacon()
+        # self.kitt.start_beacon()
         x2, y2 = self.determine_location()
-        self.kitt.stop_beacon()
+        # self.kitt.stop_beacon()
         print("Position 2: ", x2, y2)
 
         # Calculations

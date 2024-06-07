@@ -39,11 +39,13 @@ class KITT:
         if isinstance(command, str):
             command = command.encode()
         self.commands.append(command)
-        self.loop_command()
+        # Comment line below if you want keyboard input
+        self.send_command(command)
 
     def loop_command(self):
-        # while True:
-        #     if not len(self.commands):
+        while True:
+            if not len(self.commands):
+                time.sleep(0.1)
         #         start = time.time()
         #         self.serial.write(b'Sd\n')
         #         # time.sleep(0.07)
@@ -62,11 +64,16 @@ class KITT:
         #         self.serial.flush()
         #         # print("Get Distance")
         #         time.sleep(0.07)
-        #     else:
+            else:
+                self.serial.write(self.commands[0])
+                # print("Command sent")
+                self.commands.pop(0)
+                time.sleep(0.05)
+
+    def send_command(self, command):
         self.serial.write(self.commands[0])
         print("Command sent")
         self.commands.pop(0)
-        time.sleep(0.05)
 
     def set_speed(self, speed):
         self.prev_speed = speed  # Update previous speed

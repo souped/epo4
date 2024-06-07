@@ -52,7 +52,7 @@ class Keyboard:
 
         keyboard.hook(on_key_event)  # Check for any key status change
 
-    def car_model_input(kitt: KITT, input_cmd=None):
+    def car_model_input(kitt: KITT, input_cmd, from_curve = 0):
         """
         This function takes an input command and sends it to the car. If no input is given,
         it will ask the user to enter the command
@@ -60,7 +60,6 @@ class Keyboard:
         :param input_cmd: The input command in string format
         :return:
         """
-        
         cmd_string = input_cmd
         cmd_string = cmd_string.split(" ")
         print(cmd_string)
@@ -79,6 +78,18 @@ class Keyboard:
         print("Time:", ctime)
         time.sleep(ctime)
         print("Stop the car")
-        # kitt.emergency_brake(1)
+        if from_curve == 0:
+            kitt.emergency_brake(1)
+
         kitt.set_speed(150)
+        if direction < 150:
+            kitt.set_angle(170)
+            time.sleep(0.5)
+            kitt.set_angle(150)
+        elif direction > 150:
+            kitt.set_angle(130)
+            time.sleep(0.5)
+            kitt.set_angle(150)
+        else:
+            kitt.set_angle(150)
         kitt.set_angle(150)

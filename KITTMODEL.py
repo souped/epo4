@@ -254,7 +254,7 @@ class KITTMODEL():
                 print("Car is pointing to the destination! Car ran for:", t)
                 # Plot the simulated curve
                 self.modtime += round(t,3)
-                return self.positions[-1], self.direction, dir_com, round(t,3)
+                return self.positions[-1], self.direction, dir_com, round(t*0.8,3)
         # If the model cannot find a curved path to the destination, e.g. when it lies too close to the car, return -1
         print("No valid easy path found!")
         return None, None, None, None
@@ -288,7 +288,7 @@ class KITTMODEL():
             if length >= threshold:
                 # SETS THE FORCE TWICE THE MEASURED.
                 # Since current forces work perfectly in corners, and the car goes twice as fast going straight.
-                self.v = self.velocity(self.dt, self.f*2)
+                self.v = self.velocity(self.dt, self.f*2.25)
                 self.velocities.append(self.v)
                 self.pos = self.det_xy(self.dt)
                 self.positions.append(self.pos)
