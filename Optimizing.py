@@ -153,7 +153,7 @@ class localization:
     
     def TDOA_grid(grid_dimensions):
         gridTDOA = []
-        mic_locs = np.array([[0,0,50],[0,480,50],[480,480,50],[480,0,50],[0,240,80]])
+        mic_locs = np.array([[0,0,50],[0,460,50],[460,460,50],[460,0,50],[0,230,80]])
         for row in grid_dimensions:
             distances = []
             for loc in mic_locs:
@@ -168,8 +168,8 @@ class localization:
         gridTDOA = np.reshape(gridTDOA,(-1,10))
         return(gridTDOA)
     
-    def coordinates_2d(tdoa,size=10,min_x=0,max_x=480,min_y=0,max_y=480,finetuning=5): 
-        for i in range(5):
+    def coordinates_2d(tdoa,size=10,min_x=0,max_x=460,min_y=0,max_y=460,finetuning=4): 
+        for i in range(finetuning):
             xgrid = np.tile(np.linspace(min_x,max_x,size+2)[1:-1],size)
             ygrid = np.repeat(np.linspace(min_y,max_y,size+2)[1:-1],size)
             zgrid = np.repeat(30,size**2)
@@ -181,7 +181,7 @@ class localization:
             best = grid_dimensions[np.argmin(error_list)]
 
             if i<finetuning:
-                padding = 480/(size**(i+1))/2
+                padding = 460/(size**(i+1))/2
                 min_x = best[0] - padding
                 max_x = best[0] + padding
                 min_y = best[1] - padding
@@ -198,12 +198,55 @@ if __name__ == "__main__":
 
 
     start=time.time()
-    Fref, ref_signal = wavfile.read("Beacon/reference6.wav")
-    ref_signal =  ref_signal[:,1]
-    ref = ref_signal[18800:19396]
+    Fref3, ref_signal3 = wavfile.read("Beacon/reference3.wav")
+    ref_signal3 =  ref_signal3[:,1]
+    ref3 = ref_signal3[11200:11625]
+
     
-    plt.plot(ref)
-    plt.savefig("refsignalhuidig")
+    Fref5, ref_signal5 = wavfile.read("Beacon/reference5.wav")
+    ref_signal5 =  ref_signal5[:,1]
+    ref5 = ref_signal5[1800:2615] #meh
+    
+    Fref6, ref_signal6 = wavfile.read("Beacon/reference6.wav")
+    ref_signal6 =  ref_signal6[:,1]
+    ref6 = ref_signal6[18800:19396]
+    
+    Fref8, ref_signal8 = wavfile.read("Beacon/reference8.wav")
+    ref_signal8 =  ref_signal8[:,1]
+    ref8 = ref_signal8[6500:9000]
+
+    Fref11, ref_signal11 = wavfile.read("Beacon/reference11.wav")
+    ref_signal11 =  ref_signal11[:,1]
+    ref11 = ref_signal11[15740:16735]
+
+    Fref12, ref_signal12 = wavfile.read("Beacon/reference12.wav")
+    ref_signal12 =  ref_signal12[:,1]
+    ref12 = ref_signal12[17500:20000]
+    
+    
+    
+    plt.plot(ref3)
+    plt.savefig("refsignalhuidig3")
+    plt.close()
+    
+    plt.plot(ref5)
+    plt.savefig("refsignalhuidig5")
+    plt.close()
+    
+    plt.plot(ref6)
+    plt.savefig("refsignalhuidig6")
+    plt.close()
+    
+    plt.plot(ref8)
+    plt.savefig("refsignalhuidig8")
+    plt.close()
+    
+    plt.plot(ref11)
+    plt.savefig("refsignalhuidig11")
+    plt.close()
+    
+    plt.plot(ref12)
+    plt.savefig("refsignalhuidig12")
     plt.close()
 
     
@@ -223,8 +266,27 @@ if __name__ == "__main__":
         plt.savefig(plot_filename)
         plt.close()
         
-        x_car, y_car = localization.localization(audio, ref)
-        print(f"{file}: x = {x_car}, y = {y_car}")
+        
+        
+        x_car, y_car = localization.localization(audio, ref3)
+        print(f"{file}: x3 = {x_car}, y3 = {y_car}")
+        
+        """ x_car, y_car = localization.localization(audio, ref5)
+        print(f"{file}: x5 = {x_car}, y5 = {y_car}")
+        """
+        x_car, y_car = localization.localization(audio, ref6)
+        print(f"{file}: x6 = {x_car}, y6 = {y_car}")
+        
+        """ x_car, y_car = localization.localization(audio, ref8)
+        print(f"{file}: x8 = {x_car}, y8 = {y_car}") """
+        
+        x_car, y_car = localization.localization(audio, ref11)
+        print(f"{file}: x11 = {x_car}, y11 = {y_car}")
+        
+        """ x_car, y_car = localization.localization(audio, ref12)
+        print(f"{file}: x12 = {x_car}, y12 = {y_car}") """
+        
+        print(" ")
 
     end = time.time()
     print("Total time:", end - start)
