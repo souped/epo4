@@ -214,6 +214,7 @@ if __name__ == "__main__":
 
     start = time.time()
     for file in audio_files:
+        
         Fs, audio = wavfile.read(file)
         
         plt.plot(audio)
