@@ -63,7 +63,7 @@ class RoutePlanner():
             x, y = self.tdoafunc()
             print("Recalculating...")
             end_pos, end_dir, gen_com, t = self.mod.generate_curve_command(carloc=(x,y), cart_rad=cart_rad, dest=dest)
-        gen_cmd = f"M158 D{gen_com} {t*0.85}"
+        gen_cmd = f"M158 D{gen_com} {t}"
         print("Generated curve command:", gen_cmd)
 
         """

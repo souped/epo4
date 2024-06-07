@@ -21,7 +21,7 @@ class StateTracker():
         print(f"audio: {audio}")
         x,y = self.loc.localization(audiowav=audio,ref=self.ref)
         self.positions.append((x,y))
-        return x,y
+        return round(x/100,5),round(y/100)
 
     def after_curve_deviation(self,model_endpos,model_dir,dest,fwd_time=1.5,threshold=(0.3,0.5,1)):
         """

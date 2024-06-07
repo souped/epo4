@@ -36,7 +36,7 @@ class Controller():
 
         self.state = StateTracker(self.kitt, self.md, self.localizer, self.mic, self.ref)
 
-    def run_loop(self, dest, carloc=(0.2,0.3), car_rad=0.5*np.pi):
+    def run_loop(self, dest, carloc=(0.73,0.92), car_rad=0.5*np.pi):
         # while self.running is True:
         # apply route planning algorithm?
         curve_cmd, model_endpos, model_dir = self.rp.make_curve_route(carloc, car_rad, dest)
@@ -67,5 +67,5 @@ class Controller():
 
 if __name__ == "__main__":
     controller = Controller()
-    controller.run_loop((2,4))
+    controller.run_loop((3,0))
     print(1)
