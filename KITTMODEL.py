@@ -24,10 +24,11 @@ class KITTMODEL():
         self.positions = [(0,0)]
         self.velocities = [0]
         self.times = [0]
+        self.modtime = 0
 
         # self.xy = [(0,0), (1,1), (2,2), (4,4), (6,7), (9,0)]
 
-        # initialise plots
+        # initialise plots, double # = (un)commented
         self.lines, = self.ax.plot(*zip(*self.positions))
         self.vellines, = self.ax2.plot(self.times, self.velocities)
         # self.lines, = self.ax.plot(self.velocities)
@@ -79,7 +80,7 @@ class KITTMODEL():
 
                 print(self.f, self.v)
 
-            # update plot
+            # update plot has been (un)commented!
             self.update_line()
             i+=1
 
@@ -205,9 +206,9 @@ class KITTMODEL():
     def generate_curve_command(self, carloc, cart_rad, dest, threshold=0.01):
         """
         Generates the commands for the car to point in the direction of the destination.
-        :param carloc: Location of the car
-        :param cart_rad: Orientation of the car
-        :param dest: Destination
+        :param carloc: Location of the car as (x,y)
+        :param cart_rad: Orientation of the car in rad
+        :param dest: Destination as (x,y)
         :param threshold: Amount of deviation the orientation of the car can have from the destination.
         :return: end position of the car, end direction (unit vector), direction command (100 or 200), time of movement
         """
@@ -228,6 +229,10 @@ class KITTMODEL():
         self.direction = (np.cos(cart_rad), np.sin(cart_rad))
         self.pos = carloc
         self.positions.clear()
+        self.v=0
+        self.velocities.clear()
+        self.t=0
+        self.times.clear()
 
         # Simulate the cars movement
         for t in np.arange(0, time, self.dt):
@@ -249,15 +254,62 @@ class KITTMODEL():
                 print("Car is pointing to the destination! Car ran for:", t)
                 # Plot the simulated curve
                 plt.plot(*zip(*self.positions))
-                plt.xlim(0,4)
-                plt.ylim(0,4)
+                plt.xlim(0,4.6)
+                plt.ylim(0,4.6)
                 plt.grid()
                 plt.gca().set_aspect('equal')
                 plt.show()
+                self.modtime += round(t,3)
                 return self.positions[-1], self.direction, dir_com, round(t,3)
         # If the model cannot find a curved path to the destination, e.g. when it lies too close to the car, return -1
         print("No valid easy path found!")
         return None, None, None, None
+
+    def generate_straight_command(self, carloc, dest, threshold=0.025):
+        """
+        Generates the command to get the car to its destination,
+        under the condition that it is pointing to the destination.
+        :param carloc: Location of the car as (x,y)
+        :param dest: Location of the destination as (x,y)
+        :param threshold: Threshold the car can deviate from the destination.
+        :return: Time the car needs to move.
+        """
+        # Set the starting parameters
+        time = self.proc_cmd('M158 D150 10')
+        self.direction = (1,0)
+        self.pos = (0,0)
+        self.positions.clear()
+        self.v = 0
+        self.velocities.clear()
+        self.t = 0
+        self.times.clear()
+
+        # Calculate length to destination
+        total_length, _, _ = self.desired_vector(carloc,dest)
+
+        # Simulate the cars movement
+        for t in np.arange(0, time, self.dt):
+            length, _, _ = self.desired_vector(self.pos, (total_length,0))
+            # print("Distance to destination:",length)
+            if length >= threshold:
+                # SETS THE FORCE TWICE THE MEASURED.
+                # Since current forces work perfectly in corners, and the car goes twice as fast going straight.
+                self.v = self.velocity(self.dt, self.f*2)
+                self.velocities.append(self.v)
+                self.pos = self.det_xy(self.dt)
+                self.positions.append(self.pos)
+                self.t += self.dt
+                self.times.append(self.t)
+            else:
+                print("Car is at the destination! Car ran for:", t)
+                # Plot the simulated curve
+                plt.plot(*zip(*self.positions))
+                plt.xlim(0,4.6)
+                plt.ylim(-0.1,0.1)
+                plt.show()
+                self.modtime += round(t,3)
+                return f"M158 D150 {round(t,3)}"
+
 
     def desired_vector(self, carloc, dest):
         """
@@ -276,6 +328,6 @@ class KITTMODEL():
 if __name__ == "__main__":
     md = KITTMODEL()
     #,"D100 M157 1", "D200 M160 2" "D200 M157 6.1",
-    inputs = ["D200 M157 6.1", "D180 M157 3.5"]
+    inputs = ["150 M158 3"]
     md.sim(inputs)
     plt.show(block=True)

@@ -1,18 +1,16 @@
+# Libraries
 import numpy as np
+from scipy.io import wavfile
+
+# Importing files
 from KITTMODEL import KITTMODEL
 from microphone import Microphone
 from Optimizing import localization
-from scipy.io import wavfile
 from Routeplanner import RoutePlanner
-from KITT_class_only import KITT
+from KITT_communication import KITT
 from Keyboard import Keyboard
 
 sysport = 'COM5'
-
-
-def main():
-    """setup audio connection"""
-    dev_idx = Microphone.list_devices()
 
 
 class Controller():
@@ -32,37 +30,30 @@ class Controller():
 
         # temporary reference signal
         Fref, ref_signal = wavfile.read("reference.wav")
-        ref_signal =  ref_signal[:,0]
+        # ref_signal =  ref_signal[:,0]
         refsig = localization.detect_segments(ref_signal)
         self.ref = refsig[12][750:1500]
 
         self.x, self.y = (0,0)
 
+        Fref,ref_signal=wavfile.read("Beacon/reference6.wav")
+        ref_signal=ref_signal[:,1]
+        self.ref=ref_signal[18800:19396]
 
-    def run_loop(self):
-        while self.running is True:
-            # record audio
-            pass
+    def run_loop(self, dest, carloc=(0,0), car_rad=0.5*np.pi):
+        # while self.running is True:
+        # apply route planning algorithm?
+        self.rp.make_curve_route(carloc,car_rad,dest)
 
-            # assuming beacon freq of 5 hz
-            Fs, audio = wavfile.read("vanafxy-244-234.wav")
-            print(audio.shape, self.ref.shape)
+        # track data?
+        # do this inside the KITT Class or a separate other class i.e. DrivingHistory
 
-            # apply localisation algorithm
-            # self.x, self.y = self.localiser.localization(audio, self.ref)
+        # send commands
+        # self.kitt.send_cmd("cmd")
+        Keyboard.car_model_input(self.kitt, inputstr="M160 D200 1")
 
-            # apply route planning algorithm?
-            self.rp.make_and_drive_route()
-
-            # track data?
-            # do this inside the KITT Class or a separate other class i.e. DrivingHistory 
-
-            # send commands 
-            # self.kitt.send_cmd("cmd")
-            Keyboard.car_model_input(self.kitt, inputstr="M160 D200 1")
-
-            # temporary end
-            self.running = False
+        # temporary end
+        self.running = False
 
 
 if __name__ == "__main__":

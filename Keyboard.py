@@ -3,7 +3,7 @@ import numpy as np
 import time
 import msvcrt
 
-from KITT_class_only import KITT
+from KITT_communication import KITT
 
 
 class Keyboard:

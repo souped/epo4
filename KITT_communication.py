@@ -39,9 +39,9 @@ class KITT:
         if isinstance(command, str):
             command = command.encode()
         self.commands.append(command)
-        self.send_command()
+        self.loop_command()
 
-    def send_command(self):
+    def loop_command(self):
         # while True:
         #     if not len(self.commands):
         #         start = time.time()
@@ -60,7 +60,7 @@ class KITT:
         #         self.distances.append(temp)
         #         # print(self.distances[-1])
         #         self.serial.flush()
-        #         print("Get Distance")
+        #         # print("Get Distance")
         #         time.sleep(0.07)
         #     else:
         self.serial.write(self.commands[0])
@@ -110,6 +110,4 @@ class KITT:
             pass
 
     def __del__(self):
-        self.set_speed(150)
-        time.sleep(1)
         self.serial.close()  # Safely closes the comport

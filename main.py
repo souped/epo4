@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from KITT_class_only import KITT
+from KITT_communication import KITT
 from Keyboard import Keyboard
 
 sys_port = 'COM5'
@@ -15,7 +15,7 @@ if __name__ == '__main__':
         print(e)
 
     try:
-        kitt.send_command()
+        kitt.loop_command()
         # collision_plotter(kitt)
     except Exception as e:
         print(e)
