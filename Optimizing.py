@@ -4,8 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.io import wavfile
 from scipy.fft import fft, ifft
 from scipy.signal import convolve, unit_impulse, find_peaks
-#from IPython.display import Audio
-from refsignal import refsignal            # model for the EPO4 audio beacon signal
+from refsignal import refsignal          
 from wavaudioread import wavaudioread
 from recording_tool import recording_tool
 from sympy import symbols, solve
@@ -252,14 +251,15 @@ if __name__ == "__main__":
     
     audio_files = [
         "opnames/vanafxy-20-230.wav",
-        "opnames/vanafx-y-66-60.wav"
+        "opnames/vanafx-y-66-60.wav",
+        "opnames/posx175posy110.wav"
     ]
 
     start = time.time()
     for file in audio_files:
         
         Fs, audio = wavfile.read(file)
-        
+        print(Fs)
         plt.plot(audio)
         plt.title(f"Reference signal for {file}")
         plot_filename = file.replace("Beacon/", "").replace(".wav", ".png")
