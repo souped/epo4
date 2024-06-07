@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import regex as re
 
+
 class KITTMODEL():
     def __init__(self) -> None:
         self.m = 5.6  # mass, [kg]
@@ -40,6 +41,8 @@ class KITTMODEL():
         self.t = 0
         self.dt = 0.01
         self.f = None
+
+        
 
     def update_line(self):
         """updates the initialised figures with new data generated after running a command string"""
