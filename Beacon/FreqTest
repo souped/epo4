@@ -39,7 +39,7 @@ for file in audio_files:
     elif file == "Beacon/reference5.wav":
         segment = audio[1000:3500]
     elif file == "Beacon/reference6.wav":
-        segment = audio[17500:20000]
+        segment = audio[0:17500]
     elif file == "Beacon/reference7.wav":
         segment = audio[2500:5000]
     elif file == "Beacon/reference8.wav":
@@ -55,7 +55,7 @@ for file in audio_files:
     else:
         segment = audio
     
-   
+    
     plt.plot(segment)
     plt.title(f"Reference signal for {file}")
     
@@ -78,3 +78,5 @@ for file in audio_files:
     autocorr_filename = file.replace("Beacon/s", "").replace(".wav", "_autocorr.png")
     plt.savefig(autocorr_filename)
     plt.close() """
+
+

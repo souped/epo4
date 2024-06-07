@@ -11,6 +11,8 @@ from sympy import symbols, solve
 import numpy as np
 import math
 import time
+from scipy.signal import butter, filtfilt
+
 
 
 
@@ -188,6 +190,8 @@ class localization:
         return best
 
 
+
+
 if __name__ == "__main__":
 # Main block for testing
 # Read the .wav file
@@ -208,7 +212,7 @@ if __name__ == "__main__":
     
     Fref6, ref_signal6 = wavfile.read("Beacon/reference6.wav")
     ref_signal6 =  ref_signal6[:,1]
-    ref6 = ref_signal6[18800:19396]
+    ref6 = ref_signal6[0:17500]
     
     Fref8, ref_signal8 = wavfile.read("Beacon/reference8.wav")
     ref_signal8 =  ref_signal8[:,1]
@@ -268,8 +272,8 @@ if __name__ == "__main__":
         
         
         
-        x_car, y_car = localization.localization(audio, ref3)
-        print(f"{file}: x3 = {x_car}, y3 = {y_car}")
+        """ x_car, y_car = localization.localization(audio, ref3)
+        print(f"{file}: x3 = {x_car}, y3 = {y_car}") """
         
         """ x_car, y_car = localization.localization(audio, ref5)
         print(f"{file}: x5 = {x_car}, y5 = {y_car}")
@@ -280,13 +284,13 @@ if __name__ == "__main__":
         """ x_car, y_car = localization.localization(audio, ref8)
         print(f"{file}: x8 = {x_car}, y8 = {y_car}") """
         
-        x_car, y_car = localization.localization(audio, ref11)
-        print(f"{file}: x11 = {x_car}, y11 = {y_car}")
+        """ x_car, y_car = localization.localization(audio, ref11)
+        print(f"{file}: x11 = {x_car}, y11 = {y_car}") """
         
         """ x_car, y_car = localization.localization(audio, ref12)
         print(f"{file}: x12 = {x_car}, y12 = {y_car}") """
         
-        print(" ")
+  
 
     end = time.time()
     print("Total time:", end - start)
