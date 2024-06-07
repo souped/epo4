@@ -79,12 +79,13 @@ class RoutePlanner():
         #     print("Recalculating commands.")
         #     self.make_and_drive_route(carloc, cart_rad, dest)
         """
-        return gen_cmd
+        return gen_cmd, end_pos, end_dir
 
     def make_straight_route(self,carloc,dest):
 
         cmd = self.mod.generate_straight_command(carloc=carloc, dest=dest)
-        Keyboard.car_model_input(kitt=self.kitt,input_cmd=cmd)
+        print("Generated straight command:", cmd)
+        return cmd
 
 
 if __name__ == '__main__':
