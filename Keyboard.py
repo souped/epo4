@@ -1,7 +1,6 @@
 import keyboard
 import numpy as np
 import time
-import msvcrt
 
 from KITT_communication import KITT
 
@@ -61,14 +60,8 @@ class Keyboard:
         :param input_cmd: The input command in string format
         :return:
         """
-        if input_cmd is None:
-            print("\n")
-            while msvcrt.kbhit():
-                msvcrt.getch()
-            cmd_string = input("Enter commands: ")
-            # Example input: D150 M165 0.5
-        else:
-            cmd_string = input_cmd
+        
+        cmd_string = input_cmd
         cmd_string = cmd_string.split(" ")
         print(cmd_string)
         for string in cmd_string:
@@ -86,6 +79,6 @@ class Keyboard:
         print("Time:", ctime)
         time.sleep(ctime)
         print("Stop the car")
-        kitt.emergency_brake(1)
+        # kitt.emergency_brake(1)
         kitt.set_speed(150)
         kitt.set_angle(150)

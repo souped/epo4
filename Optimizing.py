@@ -12,6 +12,7 @@ import numpy as np
 import math
 import time
 
+Fs = 48000
 
 class localization:
     # def __init__(recording, debug=False):
@@ -21,8 +22,8 @@ class localization:
         # Calculate TDOA between different microphone pairs
         for i in range(5):
             for j in range(i + 1,5):
-                audio_channel_i=audiowav[:,i]
-                audio_channel_j=audiowav[:,j]
+                audio_channel_i=audiowav[i,:]
+                audio_channel_j=audiowav[j,:]
                 mean_peak_i=localization.process_channel(audio_channel_i,ref)
                 mean_peak_j=localization.process_channel(audio_channel_j,ref)
                 TDOA=localization.TDOA(mean_peak_j,mean_peak_i)

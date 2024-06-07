@@ -57,7 +57,7 @@ class Microphone:
                                   input=True)
         samples = stream.read(N)
         data = np.frombuffer(samples, dtype='int16')
-        return data
+        return self.separate(data)[:5]
     
     def write_wavfile(self, audio, filename = "wavfile.wav"):
         """writes multichannel audio in np.Array to .wav file.

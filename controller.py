@@ -11,8 +11,9 @@ from KITT_communication import KITT
 from Keyboard import Keyboard
 from StateTracker import StateTracker
 
-sysport = 'COM5'
-
+sysport = '/dev/cu.RNBT-3F3B'
+CHANNELS = 8
+RATE = 48000
 
 class Controller():
     def __init__(self) -> None:
@@ -25,7 +26,7 @@ class Controller():
 
         # microphone
         self.recording_time = 4 # seconds
-        self.mic = Microphone(channelnumbers = 8, Fs= 48000)
+        self.mic = Microphone(channelnumbers = CHANNELS, Fs= RATE)
         self.stream = []
 
         # Temporary reference signal
@@ -35,7 +36,7 @@ class Controller():
 
         self.state = StateTracker(self.kitt, self.md, self.localizer, self.mic, self.ref)
 
-    def run_loop(self, dest, carloc=(0,0), car_rad=0.5*np.pi):
+    def run_loop(self, dest, carloc=(0.2,0.3), car_rad=0.5*np.pi):
         # while self.running is True:
         # apply route planning algorithm?
         curve_cmd, model_endpos, model_dir = self.rp.make_curve_route(carloc, car_rad, dest)
@@ -51,7 +52,9 @@ class Controller():
         straight_cmd = self.rp.make_straight_route(carloc, dest)
         Keyboard.car_model_input(kitt=self.kitt, input_cmd=straight_cmd)
 
+        self.kitt.start_beacon()
         print("Final location:", self.state.determine_location())
+        self.kitt.stop_beacon()
         # track data?
         # do this inside the KITT Class or a separate other class i.e. DrivingHistory
 
@@ -65,3 +68,4 @@ class Controller():
 if __name__ == "__main__":
     controller = Controller()
     controller.run_loop((2,4))
+    print(1)

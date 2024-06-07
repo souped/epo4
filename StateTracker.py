@@ -18,6 +18,7 @@ class StateTracker():
     """
     def determine_location(self):
         audio = self.mic.record_audio(seconds=3, devidx=self.mic.device_index)
+        print(f"audio: {audio}")
         x,y = self.loc.localization(audiowav=audio,ref=self.ref)
         self.positions.append((x,y))
         return x,y

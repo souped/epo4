@@ -240,9 +240,9 @@ class KITTMODEL():
             # and return the simulation values.
             diff = np.linalg.norm(np.subtract(desired_vec, self.direction))
             if diff > threshold:
-                print("F:", self.f)
+                # print("F:", self.f)
                 self.v = self.velocity(self.dt, self.f)
-                print("V: ", self.v)
+                # print("V: ", self.v)
                 self.velocities.append(self.v)
                 self.direction = self.det_rotation()
                 self.pos = self.det_xy(self.dt)
@@ -253,12 +253,6 @@ class KITTMODEL():
             else:
                 print("Car is pointing to the destination! Car ran for:", t)
                 # Plot the simulated curve
-                plt.plot(*zip(*self.positions))
-                plt.xlim(0,4.6)
-                plt.ylim(0,4.6)
-                plt.grid()
-                plt.gca().set_aspect('equal')
-                plt.show()
                 self.modtime += round(t,3)
                 return self.positions[-1], self.direction, dir_com, round(t,3)
         # If the model cannot find a curved path to the destination, e.g. when it lies too close to the car, return -1
@@ -303,10 +297,7 @@ class KITTMODEL():
             else:
                 print("Car is at the destination! Car ran for:", t)
                 # Plot the simulated curve
-                plt.plot(*zip(*self.positions))
-                plt.xlim(0,4.6)
-                plt.ylim(-0.1,0.1)
-                plt.show()
+                
                 self.modtime += round(t,3)
                 return f"M158 D150 {round(t,3)}"
 
