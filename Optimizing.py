@@ -15,7 +15,7 @@ import time
 
 class localization:
     # def __init__(recording, debug=False):
-    def localization(audiowav,ref):
+    def localization(self,audiowav,ref):
         # Split each recording into individual pulses
         TDOA_list=[]
         # Calculate TDOA between different microphone pairs

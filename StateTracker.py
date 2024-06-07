@@ -1,26 +1,28 @@
 import numpy as np
 from Keyboard import Keyboard
 from Optimizing import localization
+from microphone import Microphone
 
 
 class StateTracker():
-    def __init__(self, kitt, mod, loc: localization):
+    def __init__(self, kitt, mod, loc: localization, mic: Microphone, ref):
         self.kitt = kitt
         self.mod = mod
         self.loc = loc
+        self.mic = mic
         self.current_pos = [0, 0]
         self.positions = []
+        self.ref = ref
     """
     Should determine_location be placed in StateTracker or in the controller?
     """
     def determine_location(self):
-        x,y = 0,0
-        # x,y = self.loc.localize(audio,ref)
-        current_pos = x,y
-        self.positions.append(self.current_pos)
+        audio = self.mic.record_audio(seconds=3, devidx=self.mic.device_index)
+        x,y = self.loc.localization(audiowav=audio,ref=self.ref)
+        self.positions.append((x,y))
         return x,y
 
-    def after_curve_deviation(self,model_endpos,model_dir,dest,fwd_time=1,threshold=(0.3,0.5,1)):
+    def after_curve_deviation(self,model_endpos,model_dir,dest,fwd_time=1.5,threshold=(0.3,0.5,1)):
         """
         This function is not yet complete, as it misses TDOA implementation. The TDOA function should run for
         a couple of seconds to get an as accurate possible location measurements.
@@ -56,10 +58,10 @@ class StateTracker():
         if (desired_pos_dev < threshold[0] and np.abs(model_dir - actual_dir) < threshold[1] and
                 length_to_dest < threshold[2]):
             print("Car is on track!")
-            return 1
+            return 1, (x2,y2), actual_dir
         else:
             print("Car is off track!")
-            return 0
+            return 0, (x2,y2), actual_dir
 
     def after_straight_deviation(self,model_endpos,model_dir,dest):
         pass
