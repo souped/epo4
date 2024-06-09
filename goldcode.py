@@ -1,69 +1,81 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.signal import correlate, correlation_lags
 
-def generate_m_sequence(n, feedback_taps):
-    """Generate an m-sequence (maximum length sequence)"""
-    m_seq = np.zeros((2**n - 1,), dtype=int)
-    state = np.ones(n, dtype=int)  # Initial state
-    for i in range(2**n - 1):
-        m_seq[i] = state[-1]
-        new_bit = np.bitwise_xor.reduce(state[feedback_taps])
-        state = np.roll(state, 1)
-        state[0] = new_bit
-    return m_seq
+def lfsr(seed, taps, length):
+    """Generate an m-sequence using an LFSR with specified taps."""
+    sr = seed
+    xor = 0
+    result = []
+    for _ in range(length):
+        result.append(sr[-1])
+        for t in taps:
+            xor ^= sr[t-1]
+        sr = [xor] + sr[:-1]
+        xor = 0
+    return np.array(result)
 
-def xor_sequences(seq1, seq2):
-    """XOR two sequences to generate a Gold code"""
-    return np.bitwise_xor(seq1, seq2)
+def generate_gold_codes(mseq1, mseq2):
+    """Generate Gold codes from two m-sequences."""
+    gold_codes = []
+    for i in range(len(mseq1)):
+        gold_codes.append(np.bitwise_xor(mseq1, np.roll(mseq2, i)))
+    gold_codes.append(mseq1)
+    gold_codes.append(mseq2)
+    return gold_codes
 
-def autocorrelation(seq):
-    """Compute the autocorrelation of a sequence"""
-    n = len(seq)
-    result = np.correlate(seq, seq, mode='full')
-    return result[n-1:]
+def evaluate_codes(gold_codes):
+    """Evaluate the autocorrelation and cross-correlation of Gold codes."""
+    num_codes = len(gold_codes)
+    codes_per_page = 16
+    num_pages = (num_codes + codes_per_page - 1) // codes_per_page
 
-def binary_to_hex(binary_string):
-    """Convert binary string to hexadecimal string"""
-    # Pad the binary string with leading zeros to make it a multiple of four bits
-    while len(binary_string) % 4 != 0:
-        binary_string = '0' + binary_string
-    # Convert binary to hexadecimal
-    hex_string = hex(int(binary_string, 2))[2:]
-    return hex_string.upper()  # Convert to uppercase for consistency
+    for page in range(num_pages):
+        plt.figure(figsize=(15, 8))
+        start_idx = page * codes_per_page
+        end_idx = min((page + 1) * codes_per_page, num_codes)
+        
+        for i, gold_code in enumerate(gold_codes[start_idx:end_idx], start=start_idx):
+            autocorr = correlate(gold_code, gold_code, mode='full')
+            lags = correlation_lags(len(gold_code), len(gold_code))
+            
+            
+            plt.subplot(4, 4, i - start_idx + 1)
+            plt.plot(lags, autocorr)  # Shift the lags to center at 0
+            plt.title(f'Autocorrelation of Gold Code {i}')
+            plt.xlabel('Lag')
+            plt.ylabel('Autocorrelation')
+            plt.grid(True)
+
+        plt.tight_layout()
+        plt.show()
 
 
-# Parameters
-n = 5  # Length parameter for m-sequences
-feedback_taps_1 = [4]  # Feedback taps for the first m-sequence
-feedback_taps_2 = [3, 4]  # Feedback taps for the second m-sequence
+
+def gold_code_to_hex(gold_code):
+    """Convert a binary Gold code to a hexadecimal string."""
+    binary_string = ''.join(str(bit) for bit in gold_code)
+    hex_string = hex(int(binary_string, 2))[2:]  # Remove '0x' prefix
+    return hex_string.upper()  # Upper case for consistencyS
+
+# Example seeds and taps for two m-sequences
+seed1 = [0, 0, 0, 0, 1]
+seed2 = [0, 0, 0, 0, 1]
+taps1 = [5, 1]  # Reversed tap positions for better understanding
+taps2 = [5, 1]
 
 # Generate m-sequences
-m_seq1 = generate_m_sequence(n, feedback_taps_1)
-m_seq2 = generate_m_sequence(n, feedback_taps_2)
+mseq1 = lfsr(seed1, taps1, 2**5 - 1)
+mseq2 = lfsr(seed2, taps2, 2**5 - 1)
 
-# Generate Gold code by XORing m-sequences
-gold_code = xor_sequences(m_seq1, m_seq2)
+# Generate Gold codes
+gold_codes = generate_gold_codes(mseq1, mseq2)
 
-# Convert Gold code to binary string
-binary_gold_code = ''.join(map(str, gold_code))
-if len(binary_gold_code) % 4 != 0:
-    binary_gold_code = '0' + binary_gold_code
+# Print all Gold codes in hexadecimal format
+for i, gold_code in enumerate(gold_codes):
+    hex_code = gold_code_to_hex(gold_code)
+    print(f"Gold Code {i} in Hex: {hex_code}")
+    print(len(gold_codes[i]))
 
-# Compute autocorrelation
-autocorr = autocorrelation(gold_code)
-
-# Convert binary Gold code to hexadecimal
-hex_gold_code = binary_to_hex(binary_gold_code)
-
-print("Gold code (binary):", binary_gold_code)
-print("Gold code (hexadecimal):", hex_gold_code)
-print("length: ", len(binary_gold_code))
-
-# Plot autocorrelation
-plt.figure()
-plt.plot(autocorr, marker='o', linestyle='-', color='b')
-plt.title('Autocorrelation of Gold Code')
-plt.xlabel('Shift')
-plt.ylabel('Autocorrelation')
-plt.savefig("goldcode2")
-plt.close()
+# Evaluate Gold codes
+evaluate_codes(gold_codes)

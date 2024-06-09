@@ -1,0 +1,115 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.signal import correlate, correlation_lags
+import pandas as pd
+
+def hex_to_binary_array(hex_str):
+    """ Convert a hexadecimal string to a binary array. """
+    binary_str = bin(int(hex_str, 16))[2:].zfill(len(hex_str) * 4)
+    binary_array = np.array([int(bit) for bit in binary_str])
+    return binary_array
+
+def auto_correlation(code):
+    n = len(code)
+    result = np.correlate(code, code, mode='full')
+    return result[n-1:]
+def gold_code_to_hex_string(gold_code):
+    # Convert list of binary digits to a binary string
+    binary_string = ''.join(str(bit) for bit in gold_code)
+    
+    # Convert binary string to an integer
+    binary_number = int(binary_string, 2)
+    
+    # Convert integer to a hexadecimal string
+    hex_string = hex(binary_number)[2:]  # Remove the '0x' prefix
+    
+    return hex_string
+
+
+
+#Step 1: Generate m-sequences
+def lfsr(seed, taps, length):
+    sr = seed
+    xor = 0
+    result = []
+    for _ in range(length):
+        result.append(sr[-1])
+        for t in taps:
+            xor ^= sr[t-1]
+        sr = [xor] + sr[:-1]
+        xor = 0
+    return np.array(result)
+
+# Example seeds and taps for two m-sequences
+seed1 = [0, 0, 0, 0, 1]
+seed2 = [0, 0, 0, 1, 0]
+taps1 = [2 , 3, 4, 5]
+taps2 = [3, 5]
+mseq1 = lfsr(seed1, taps1, 2**5 - 1)
+mseq2 = lfsr(seed2, taps2, 2**5 - 1)
+
+# Step 2: Generate Gold Codes
+def generate_gold_codes(mseq1, mseq2):
+    gold_codes = []
+    for i in range(len(mseq1)):
+        gold_codes.append(np.bitwise_xor(mseq1, np.roll(mseq2, i)))
+    gold_codes.append(mseq1)
+    gold_codes.append(mseq2)
+    return gold_codes
+
+gold_codes = generate_gold_codes(mseq1, mseq2)
+
+
+print("gold_code",gold_codes[9])
+# Plot the auto-correlation of the binary code'
+# for i in range(len(gold_codes)):
+#     gold_code = gold_codes[i]
+
+#     gold_code_hex = gold_code_to_hex_string(gold_code)
+    
+#     gold_code_bin = hex_to_binary_array(gold_code_hex)
+
+#     """ Plot the auto-correlation of a given code. """
+#     """0x7584E1B5""" --
+#     """0xF584E1B5"""
+#     """0xF9A42BB1"""
+#     ac = auto_correlation(gold_code_bin)
+#     plt.figure()
+#     plt.plot(ac)
+#     plt.title(f'Auto-correlation code {i}')
+#     plt.xlabel('Lag')
+#     plt.ylabel('Correlation')1p[]
+    
+#     plt.grid(True)
+
+code_bin = hex_to_binary_array('0x7584E1B5')
+autocorr = correlate(code_bin, code_bin)
+
+# Plot autocorrelation
+plt.figure(figsize=(10, 6))
+lags = correlation_lags(len(code_bin),len(code_bin))
+plt.stem(lags, autocorr)
+plt.title('Autocorrelation of the Sequence')
+plt.xlabel('Lag')
+plt.ylabel('Autocorrelation')
+plt.grid(True)
+
+
+
+
+
+
+# Define the data sequence
+data_series = pd.Series(code_bin)
+
+# Compute autocorrelation for different lags
+autocorr_pandas = [data_series.autocorr(lag) for lag in range(len(code_bin))]
+
+# Plot autocorrelation using pandas.Series.autocorr
+plt.figure(figsize=(10, 5))
+plt.stem(range(len(autocorr_pandas)), np.abs(autocorr_pandas))
+plt.xlabel('Lag')
+plt.ylabel('Autocorrelation')
+plt.title('Autocorrelation using pandas.Series.autocorr')
+plt.grid(True)
+plt.show()
