@@ -13,15 +13,20 @@ class StateTracker():
         self.current_pos = [0, 0]
         self.positions = []
         self.ref = ref
-    """
-    Should determine_location be placed in StateTracker or in the controller?
-    """
+
     def determine_location(self):
+        """
+        Determines the current location of the car using the localization module.
+        :return: x,y coordinates of the current location in m.
+        """
+        self.kitt.start_beacon()
         audio = self.mic.record_audio(seconds=3, devidx=self.mic.device_index)
+        self.kitt.stop_beacon()
         print(f"audio: {audio}")
         x,y = self.loc.localization(audiowav=audio,ref=self.ref)
+        x,y = round(x/100, 5), round(y/100, 5)
         self.positions.append((x,y))
-        return round(x/100,5),round(y/100)
+        return x,y
 
     def after_curve_deviation(self,model_endpos,model_dir,dest,fwd_time=1.5,threshold=(0.3,0.5,1)):
         """
@@ -39,16 +44,12 @@ class StateTracker():
         :return: '1' if the car is on track, otherwise '0'
         """
         # Determine locations
-        # self.kitt.start_beacon()
         x1, y1 = self.determine_location()
-        # self.kitt.stop_beacon()
         print("Position 1: ", x1, y1)
         desired_pos_dev, _, _ = self.mod.desired_vector(model_endpos, (x1,y1))  # Calculate position deviation
         print('Car is currently', desired_pos_dev, "m away from predicted position")
         Keyboard.car_model_input(kitt=self.kitt, input_cmd=f"M158 D150 {fwd_time}")  # Drive the car forwards for 1 second
-        # self.kitt.start_beacon()
         x2, y2 = self.determine_location()
-        # self.kitt.stop_beacon()
         print("Position 2: ", x2, y2)
 
         # Calculations

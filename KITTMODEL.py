@@ -13,12 +13,12 @@ class KITTMODEL():
         self.L = 33.5  # Length of wheelbase
 
         # create figures & axes
-        self.figure = plt.figure()
-        self.ax = self.figure.subplots()
-        self.figure2 = plt.figure()
-        self.ax2 = self.figure2.subplots()
-        self.ax.grid()
-        plt.show(block=False)
+        self.plotting_enabled = 1
+        # self.figure = plt.figure()
+        # self.ax = self.figure.subplots()
+        # self.figure2 = plt.figure()
+        # self.ax2 = self.figure2.subplots()
+        # self.ax.grid()
 
         # data
         self.positions = [(0,0)]
@@ -29,8 +29,8 @@ class KITTMODEL():
         # self.xy = [(0,0), (1,1), (2,2), (4,4), (6,7), (9,0)]
 
         # initialise plots, double # = (un)commented
-        self.lines, = self.ax.plot(*zip(*self.positions))
-        self.vellines, = self.ax2.plot(self.times, self.velocities)
+        # self.lines, = self.ax.plot(*zip(*self.positions))
+        # self.vellines, = self.ax2.plot(self.times, self.velocities)
         # self.lines, = self.ax.plot(self.velocities)
 
         # state variables
@@ -121,7 +121,7 @@ class KITTMODEL():
         return self.v + temp0 - temp1
 
     def calcdrag(self) -> float:
-        """Determines the air drag the car experiences at its current velocity"""
+        """Determines the drag the car experiences at its current velocity"""
         return (self.b * np.abs(self.v) + self.c * np.square(self.v))
 
     def steering_angle(self, directionnr):
@@ -251,15 +251,16 @@ class KITTMODEL():
                 self.times.append(self.t)
                 _, _, desired_vec = self.desired_vector(self.positions[-1], dest)
             else:
+                t = round(t,3)
                 print("Car is pointing to the destination! Car ran for:", t)
-                # Plot the simulated curve
-                self.modtime += round(t,3)
-                return self.positions[-1], self.direction, dir_com, round(t*0.8,3)
+                self.modtime += t
+                print(self.direction)
+                return self.positions[-1], self.direction, dir_com, t*0.8
         # If the model cannot find a curved path to the destination, e.g. when it lies too close to the car, return -1
         print("No valid easy path found!")
         return None, None, None, None
 
-    def generate_straight_command(self, carloc, dest, threshold=0.025):
+    def generate_straight_command(self, carloc, dest, threshold=0.05):
         """
         Generates the command to get the car to its destination,
         under the condition that it is pointing to the destination.
@@ -270,20 +271,20 @@ class KITTMODEL():
         """
         # Set the starting parameters
         time = self.proc_cmd('M158 D150 10')
-        self.direction = (1,0)
-        self.pos = (0,0)
-        self.positions.clear()
+        # self.direction = (1,0)
+        # self.pos = (0,0)
+        # self.positions.clear()
         self.v = 0
         self.velocities.clear()
-        self.t = 0
-        self.times.clear()
+        # self.t = 0
+        # self.times.clear()
 
         # Calculate length to destination
         total_length, _, _ = self.desired_vector(carloc,dest)
 
         # Simulate the cars movement
         for t in np.arange(0, time, self.dt):
-            length, _, _ = self.desired_vector(self.pos, (total_length,0))
+            length, _, _ = self.desired_vector(self.pos, dest)
             # print("Distance to destination:",length)
             if length >= threshold:
                 # SETS THE FORCE TWICE THE MEASURED.
@@ -295,11 +296,12 @@ class KITTMODEL():
                 self.t += self.dt
                 self.times.append(self.t)
             else:
+                t = round(t,3)
                 print("Car is at the destination! Car ran for:", t)
-                # Plot the simulated curve
-                
-                self.modtime += round(t,3)
-                return f"M158 D150 {round(t,3)}"
+                if self.plotting_enabled == 1:
+                    self.plot_path(dest)
+                self.modtime += t
+                return f"M158 D150 {t}"
 
 
     def desired_vector(self, carloc, dest):
@@ -315,10 +317,25 @@ class KITTMODEL():
         # Returns the vectors length, direction in radii and direction as a unit vector.
         return length, direction, [np.cos(direction), np.sin(direction)]
 
+    def plot_path(self, dest):
+        # Plot the simulated curve
+        fig, ax = plt.subplots()
+        ax.plot(*zip(*self.positions))
+        ax.set_xlim(0, 4.6)
+        ax.set_ylim(0, 4.6)
+        ax.set_aspect('equal')
+        ax.plot(dest[0], dest[1], marker='o', color='red')
+        plt.xlabel('X-axis [m]')
+        plt.ylabel('Y-axis [m]')
+        plt.grid()
+        plt.show(block=False)
+
 
 if __name__ == "__main__":
     md = KITTMODEL()
     #,"D100 M157 1", "D200 M160 2" "D200 M157 6.1",
-    inputs = ["150 M158 3"]
-    md.sim(inputs)
-    plt.show(block=True)
+    # inputs = ["150 M158 3"]
+    # md.sim(inputs)
+    # plt.show(block=True)
+    xy, dir, _, _ = md.generate_curve_command(carloc=(0,0), cart_rad=0.5*np.pi, dest=(2.07,0))
+    print(md.generate_straight_command(carloc=xy, dest=(2.07,0)))

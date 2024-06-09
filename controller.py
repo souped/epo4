@@ -65,6 +65,15 @@ class Controller():
         # temporary end
         self.running = False
 
+    def TDOA_tester(self):
+        input("Place car on the field, press Enter to continue...")
+        i=0
+        while i<4:
+            x,y = self.state.determine_location()
+            print("Current location:",x,y)
+            input("Move car to next location, press Enter to continue...")
+            i+=1
+
 
 if __name__ == "__main__":
     controller = Controller()
