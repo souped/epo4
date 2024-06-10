@@ -48,22 +48,26 @@ class StateTracker():
         print("Position 1: ", x1, y1)
         desired_pos_dev, _, _ = self.mod.desired_vector(model_endpos, (x1,y1))  # Calculate position deviation
         print('Car is currently', desired_pos_dev, "m away from predicted position")
-        Keyboard.car_model_input(kitt=self.kitt, input_cmd=f"M158 D150 {fwd_time}")  # Drive the car forwards for 1 second
-        x2, y2 = self.determine_location()
-        print("Position 2: ", x2, y2)
+        if desired_pos_dev > threshold[0]:
+            Keyboard.car_model_input(kitt=self.kitt, input_cmd=f"M158 D150 {fwd_time}")  # Drive the car forwards for 1 second
+            x2, y2 = self.determine_location()
+            print("Position 2: ", x2, y2)
 
-        # Calculations
-        _, actual_dir, _ = self.mod.desired_vector((x1,y1), (x2,y2))  # Calculate the orientation deviation
-        print('Car is currently', actual_dir, "rad from predicted orientation")
-        length_to_dest, _, _ = self.mod.desired_vector((x2,y2), dest)  # Calculate distance to endpoint
-        # Are all three conditions necessary? Should these be altered?
-        if (desired_pos_dev < threshold[0] and np.abs(model_dir - actual_dir) < threshold[1] and
-                length_to_dest < threshold[2]):
-            print("Car is on track!")
-            return 1, (x2,y2), actual_dir
+            # Calculations
+            _, actual_dir, _ = self.mod.desired_vector((x1,y1), (x2,y2))  # Calculate the orientation deviation
+            print('Car is currently', actual_dir, "rad from predicted orientation")
+            length_to_dest, _, _ = self.mod.desired_vector((x2,y2), dest)  # Calculate distance to endpoint
+            # Are all three conditions necessary? Should these be altered?
+            if (desired_pos_dev < threshold[0] and np.abs(model_dir - actual_dir) < threshold[1] and
+                    length_to_dest < threshold[2]):
+                print("Car is on track!")
+                return 1, (x2,y2), actual_dir
+            else:
+                print("Car is off track!")
+                return 0, (x2,y2), actual_dir
         else:
-            print("Car is off track!")
-            return 0, (x2,y2), actual_dir
+            print("Car is close to destination")
+            return 1, (x1,y1), model_dir
 
     def after_straight_deviation(self,model_endpos,model_dir,dest):
         pass

@@ -2,11 +2,11 @@ import serial
 import time
 
 # beacon specs
-carrier_freq = 7500  # Carrier frequency, min = 5 kHz & max = 30 kHz, (5, 7500, 10
+carrier_freq = 10000  # Carrier frequency, min = 5 kHz & max = 30 kHz, (5, 7500, 10
 bit_freq = 5000  # The bit frequency, min = 1 kHz & max = 5 kHz, (1 , 2.5 5
 # rep 250 for 1k, 625 for 2.5k, 1250 for 5k
 repetition_cnt = 1250  # = bit_freq/repetition_freq, sets the time between transmissions, with repetition_freq 1-10 Hz.
-codeword = 0x03DCD41E  # Code word in hexadecimal
+codeword = 0xEA28B7C5  # Code word in hexadecimal
 
 system_start = time.time()  # initialize time
 

@@ -241,7 +241,7 @@ class KITTMODEL():
             diff = np.linalg.norm(np.subtract(desired_vec, self.direction))
             if diff > threshold:
                 # print("F:", self.f)
-                self.v = self.velocity(self.dt, self.f)
+                self.v = self.velocity(self.dt, self.f*1.3)
                 # print("V: ", self.v)
                 self.velocities.append(self.v)
                 self.direction = self.det_rotation()
@@ -251,11 +251,11 @@ class KITTMODEL():
                 self.times.append(self.t)
                 _, _, desired_vec = self.desired_vector(self.positions[-1], dest)
             else:
-                t = round(t,3)
+                t = round(t,3)*0.8
                 print("Car is pointing to the destination! Car ran for:", t)
                 self.modtime += t
                 print(self.direction)
-                return self.positions[-1], self.direction, dir_com, t*0.8
+                return self.positions[-1], self.direction, dir_com, t
         # If the model cannot find a curved path to the destination, e.g. when it lies too close to the car, return -1
         print("No valid easy path found!")
         return None, None, None, None
@@ -289,7 +289,7 @@ class KITTMODEL():
             if length >= threshold:
                 # SETS THE FORCE TWICE THE MEASURED.
                 # Since current forces work perfectly in corners, and the car goes twice as fast going straight.
-                self.v = self.velocity(self.dt, self.f*2.25)
+                self.v = self.velocity(self.dt, self.f*1.75)
                 self.velocities.append(self.v)
                 self.pos = self.det_xy(self.dt)
                 self.positions.append(self.pos)
