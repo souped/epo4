@@ -21,6 +21,7 @@ class StateTracker():
         """
         self.kitt.start_beacon()
         audio = self.mic.record_audio(seconds=3, devidx=self.mic.device_index)
+
         self.kitt.stop_beacon()
         print(f"audio: {audio}")
         x,y = self.loc.localization(audiowav=audio,ref=self.ref)

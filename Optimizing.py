@@ -45,7 +45,7 @@ class localization:
 
     def detect_segments(audio_signal):
         segments=[]
-        num_segments=6
+        num_segments=8
         segment_length=len(audio_signal) // num_segments
         segments=[abs(audio_signal[i * segment_length: (i + 1) * segment_length]) for i in range(num_segments)]
         return segments
