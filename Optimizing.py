@@ -3,17 +3,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.io import wavfile
 from scipy.fft import fft, ifft
-from scipy.signal import convolve, unit_impulse, find_peaks
-#from IPython.display import Audio
-from refsignal import refsignal            # model for the EPO4 audio beacon signal
-from wavaudioread import wavaudioread
-from recording_tool import recording_tool
-from sympy import symbols, solve
 import numpy as np
-import math
 import time
-
-
+from microphone import Microphone
+Fs = 48000
 
 class localization:
     #def __init__(recording, debug=False):
@@ -23,8 +16,8 @@ class localization:
         # Calculate TDOA between different microphone pairs
         for i in range(5):
             for j in range(i+1, 5):
-                audio_channel_i = audiowav[:, i]
-                audio_channel_j = audiowav[:, j]
+                audio_channel_i = audiowav[i,:]
+                audio_channel_j = audiowav[j,:]
                 mean_peak_i = localization.process_channel(audio_channel_i, ref)
                 mean_peak_j = localization.process_channel(audio_channel_j, ref)
                 TDOA = localization.TDOA(mean_peak_j, mean_peak_i)
@@ -62,9 +55,6 @@ class localization:
     def TDOA(peak1, peak2):
         return (peak2 - peak1)/Fs
 
-            
-        
-                
     @staticmethod 
     def ch3(signal_1, reference_signal):
         Nsignal_1 = len(signal_1)           # Length of x
@@ -92,68 +82,10 @@ class localization:
         h = h[0:Lhat]
 
         return h
-
-
-        #old way of coordinate derivation (Matrix), turned out to be too inaccurate
-    """ def coordinate_2d(D12, D13, D14):
-        D23= D13-D12
-        D24= D14-D12
-        D34= D14-D13
-
-        # Calculate 2D coordinates based on TDOA measurements
-        X1 = np.array([0, 0])
-        X2 = np.array([0, 4.8])
-        X3 = np.array([4.8, 4.8])
-        X4 = np.array([4.8, 0])
-        #X5 = np.array([0, 2.4])
-        
-        norm_X1 = np.linalg.norm(X1)
-        norm_X2 = np.linalg.norm(X2)
-        norm_X3 = np.linalg.norm(X3)
-        norm_X4 = np.linalg.norm(X4)
-    
-    
-        
-        B = np.array([
-        [D12**2 - norm_X1**2 + norm_X2**2],
-        [D13**2 - norm_X1**2 + norm_X3**2],
-        [D14**2 - norm_X1**2 + norm_X4**2],
-        [D23**2 - norm_X2**2 + norm_X3**2],
-        [D24**2 - norm_X2**2 + norm_X4**2],
-        [D34**2 - norm_X3**2 + norm_X4**2]
-        ])
-        
-        X21=(X2-X1)
-        X31=(X3-X1)
-        X41=(X4-X1)
-        X32=(X3-X2)
-        X42=(X4-X2)
-        X43=(X4-X3)
-        
-
-        
-        A = np.array([
-        [2*X21[0], 2*X21[1], -2 * D12, 0, 0],
-        [2*X31[0], 2*X31[1], 0, -2 * D13, 0],
-        [2*X41[0], 2*X41[1], 0, 0, -2 * D14],
-        [2*X32[0], 2*X32[1], 0, -2 * D23, 0],
-        [2*X42[0], 2*X42[1], 0, 0, -2 * D24],
-        [2*X43[0], 2*X43[1], 0, 0, -2 * D34]
-        ])
-
-        A_inv = np.linalg.pinv(A)
-        result = np.dot(A_inv, B)
-        x = result[0,0]
-        y = result[1,0]
-        
-        # print(A)
-        # print(A_inv)
-        
-        return x, y """
     
     def TDOA_grid(grid_dimensions):
         gridTDOA = []
-        mic_locs = np.array([[0,0,50],[0,480,50],[480,480,50],[480,0,50],[0,240,80]])
+        mic_locs = np.array([[0,0,50],[0,460,50],[460,460,50],[460,0,50],[0,230,80]])
         for row in grid_dimensions:
             distances = []
             for loc in mic_locs:
@@ -168,7 +100,7 @@ class localization:
         gridTDOA = np.reshape(gridTDOA,(-1,10))
         return(gridTDOA)
     
-    def coordinates_2d(tdoa,size=10,min_x=0,max_x=480,min_y=0,max_y=480,finetuning=5): 
+    def coordinates_2d(tdoa,size=10,min_x=0,max_x=460,min_y=0,max_y=460,finetuning=5): 
         for i in range(5):
             xgrid = np.tile(np.linspace(min_x,max_x,size+2)[1:-1],size)
             ygrid = np.repeat(np.linspace(min_y,max_y,size+2)[1:-1],size)
@@ -181,12 +113,40 @@ class localization:
             best = grid_dimensions[np.argmin(error_list)]
 
             if i<finetuning:
-                padding = 480/(size**(i+1))/2
+                padding = 460/(size**(i+1))/2
                 min_x = best[0] - padding
                 max_x = best[0] + padding
                 min_y = best[1] - padding
                 max_y = best[1] + padding
         return best
+
+if __name__ == "__main_99_":
+    localizer = localization()
+
+    Fref, ref_signal = wavfile.read("reference6.wav")
+    ref_signal =  ref_signal[:,1]
+    ref = ref_signal[18800:19396]
+
+    #RECORD AUDIO 
+    mic = Microphone(channelnumbers = 1, Fs= 48000)
+    device_index = Microphone.list_devices()
+    print(f"device index used: {device_index}")
+    seconds = 0.1
+    # print(mic.record_audio(seconds, device_index)[0])
+    fakes = [mic.record_audio(seconds, device_index)[0] for j in range(8)]
+    fake = np.stack(fakes)
+    print(f"fake: {fake.shape}")
+
+    x_car, y_car = localization.localization(fake, ref)
+    print(f"x = {x_car}, y = {y_car}")
+
+def test_fn(audio_list):
+    # peak_idx = np.argmax(audio_list)
+    # print(audio_list[peak_idx])
+    # return audio_list[peak_idx-5:peak_idx+70]
+    # detect segment:
+    pass
+
 
 
 if __name__ == "__main__":
@@ -196,11 +156,18 @@ if __name__ == "__main__":
 # Present the results
     localizer = localization()
 
-
     start=time.time()
-    Fref, ref_signal = wavfile.read("Beacon/reference6.wav")
-    ref_signal =  ref_signal[:,1]
-    ref = ref_signal[18800:19396]
+    
+    for i in range(1,13):
+        # Fref, ref_signal = wavfile.read(f"gold_codes/gold_code_ref{i}.wav")
+        pass
+
+    Fref, ref_signal = wavfile.read("gold_codes/gold_code_ref4.wav")
+    # Fref, ref_signal = wavfile.read("ref_sigs/reference6.wav")
+    print(ref_signal.shape)
+    ref =  ref_signal[5600:6200]
+    # ref = test_fn(ref_signal)
+    # ref = ref_signal[18800:19396]
     
     plt.plot(ref)
     plt.savefig("refsignalhuidig")
@@ -208,15 +175,16 @@ if __name__ == "__main__":
 
     
     audio_files = [
-        "opnames/vanafxy-20-230.wav",
-        "opnames/vanafx-y-66-60.wav"
+        "vanafxy-20-230.wav",
+        "vanafx-y-66-60.wav",
+        "posx175posy110.wav"
     ]
 
     start = time.time()
     for file in audio_files:
         
-        Fs, audio = wavfile.read(file)
-        
+        Fs, audio = wavfile.read(f"ref_sigs/{file}")
+        print(f"fs: {Fs}")
         plt.plot(audio)
         plt.title(f"Reference signal for {file}")
         plot_filename = file.replace("Beacon/", "").replace(".wav", ".png")

@@ -3,7 +3,7 @@ from KITTMODEL import KITTMODEL
 from microphone import Microphone
 from Optimizing import localization
 from scipy.io import wavfile
-from routeplanner import RoutePlanner
+# from routeplanner import RoutePlanner
 from kittfile import KITT
 from keyboardfile import Keyboard
 
@@ -17,20 +17,20 @@ class Controller():
 
         self.md = KITTMODEL()
         self.kitt = KITT()
-        self.rp = RoutePlanner(self.md)
+        # self.rp = RoutePlanner(self.md)
 
         # microphone
         self.recording_time = 2 # seconds
-        self.mic = Microphone(channelnumbers = 8, Fs= 48000)
+        self.mic = Microphone(channelnumbers = 1, Fs= 48000)
         self.stream = []
 
         self.localiser = localization()
 
         # temporary reference signal
-        Fref, ref_signal = wavfile.read("reference.wav")
+        Fref, ref_signal = wavfile.read("reference6.wav")
         ref_signal =  ref_signal[:,0]
         refsig = localization.detect_segments(ref_signal)
-        self.ref = refsig[12][750:1500]
+        self.ref = refsig[18800:19396]
 
         self.x, self.y = (0,0)
 
@@ -48,7 +48,7 @@ class Controller():
             # self.x, self.y = self.localiser.localization(audio, self.ref)
 
             # apply route planning algorithm?
-            self.rp.make_and_drive_route()
+            # self.rp.make_and_drive_route()
             
             # track data?
             # do this inside the KITT Class or a separate other class i.e. DrivingHistory 

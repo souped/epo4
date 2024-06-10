@@ -83,7 +83,7 @@ class Microphone:
         pass
 
     def callback(in_data, frame_count, time_info, status):
-        pass
+        return (in_data, pyaudio.paContinue)
 
 
 if __name__ == "__main__":
@@ -91,7 +91,10 @@ if __name__ == "__main__":
     device_index = Microphone.list_devices()
     print(f"device index used: {device_index}")
     seconds = 2
-    audio = mic.record_audio(seconds, device_index)
-    mic.write_wavfile(audio)
-    Microphone.read_wavfile("wavfile.wav")
-    plt.show()
+    while True:
+        nr = int(input("number of reference?: "))
+        audio = mic.record_audio(seconds, device_index)
+        mic.write_wavfile(audio, filename=f"gold_code_ref{nr}.wav")
+        Microphone.read_wavfile(f"gold_code_ref{nr}.wav")
+        plt.show()
+
