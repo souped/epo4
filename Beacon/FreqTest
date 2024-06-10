@@ -31,7 +31,7 @@ for file in audio_files:
     if file == "Beacon/reference1.wav":
         segment = audio[10000:12500]
     elif file == "Beacon/reference2.wav":
-        segment = audio[5000:7500]
+        segment = audio[7000:8500]
     elif file == "Beacon/reference3.wav":
         segment = audio[10000:12500]
     elif file == "Beacon/reference4.wav":
@@ -39,7 +39,7 @@ for file in audio_files:
     elif file == "Beacon/reference5.wav":
         segment = audio[1000:3500]
     elif file == "Beacon/reference6.wav":
-        segment = audio[0:17500]
+        segment = audio[6500:8000]
     elif file == "Beacon/reference7.wav":
         segment = audio[2500:5000]
     elif file == "Beacon/reference8.wav":

@@ -3,8 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.io import wavfile
 from scipy.fft import fft, ifft
-from scipy.signal import convolve, unit_impulse, find_peaks
-from refsignal import refsignal          
+from scipy.signal import convolve, unit_impulse, find_peaks       
 from wavaudioread import wavaudioread
 from recording_tool import recording_tool
 from sympy import symbols, solve
@@ -22,6 +21,11 @@ class localization:
         # Split each recording into individual pulses
         TDOA_list = []
         # Calculate TDOA between different microphone pairs
+        plt.plot(audiowav)
+        plt.title(f"audio signal")
+        plt.savefig("audio")
+        plt.close()
+        
         for i in range(5):
             for j in range(i+1, 5):
                 audio_channel_i = audiowav[:, i]
@@ -37,13 +41,22 @@ class localization:
     
     def process_channel(channel_data, ref):
         segments = localization.detect_segments(channel_data)
+        plt.plot(segments[4])
+        plt.title(f"segments signal")
+        plt.savefig("segments")
+        plt.close()
         channel_responses = [localization.ch3(segment, ref) for segment in segments]
+        plt.plot(channel_responses[4])
+        plt.title(f"estimation signal")
+        plt.savefig("channeles")
+        plt.close()
         channel_responses_array = np.array(channel_responses)
         peaks = localization.find_segment_peaks(channel_responses_array)
         sorted_peaks = np.sort(peaks)
         trimmed_peaks = sorted_peaks[1:-1]
         mean_peak = np.mean(trimmed_peaks)
         return mean_peak
+    
 
     def detect_segments(audio_signal):
         segments = []
@@ -201,56 +214,16 @@ if __name__ == "__main__":
 
 
     start=time.time()
-    Fref3, ref_signal3 = wavfile.read("Beacon/reference3.wav")
-    ref_signal3 =  ref_signal3[:,1]
-    ref3 = ref_signal3[11200:11625]
-
-    
-    Fref5, ref_signal5 = wavfile.read("Beacon/reference5.wav")
-    ref_signal5 =  ref_signal5[:,1]
-    ref5 = ref_signal5[1800:2615] #meh
-    
-    Fref6, ref_signal6 = wavfile.read("Beacon/reference6.wav")
-    ref_signal6 =  ref_signal6[:,1]
-    ref6 = ref_signal6[0:17500]
-    
-    Fref8, ref_signal8 = wavfile.read("Beacon/reference8.wav")
-    ref_signal8 =  ref_signal8[:,1]
-    ref8 = ref_signal8[6500:9000]
-
-    Fref11, ref_signal11 = wavfile.read("Beacon/reference11.wav")
-    ref_signal11 =  ref_signal11[:,1]
-    ref11 = ref_signal11[15740:16735]
-
-    Fref12, ref_signal12 = wavfile.read("Beacon/reference12.wav")
-    ref_signal12 =  ref_signal12[:,1]
-    ref12 = ref_signal12[17500:20000]
+    Fref3, ref_signal3 = wavfile.read("gold_codes/gold_code_ref13.wav")
+    ref_signal3 =  ref_signal3[:,0]
+    ref3 = ref_signal3[7500:9000]
     
     
     
     plt.plot(ref3)
-    plt.savefig("refsignalhuidig3")
+    plt.savefig("refsignalhuidig3_new")
     plt.close()
-    
-    plt.plot(ref5)
-    plt.savefig("refsignalhuidig5")
-    plt.close()
-    
-    plt.plot(ref6)
-    plt.savefig("refsignalhuidig6")
-    plt.close()
-    
-    plt.plot(ref8)
-    plt.savefig("refsignalhuidig8")
-    plt.close()
-    
-    plt.plot(ref11)
-    plt.savefig("refsignalhuidig11")
-    plt.close()
-    
-    plt.plot(ref12)
-    plt.savefig("refsignalhuidig12")
-    plt.close()
+
 
     
     audio_files = [
@@ -263,7 +236,6 @@ if __name__ == "__main__":
     for file in audio_files:
         
         Fs, audio = wavfile.read(file)
-        print(Fs)
         plt.plot(audio)
         plt.title(f"Reference signal for {file}")
         plot_filename = file.replace("Beacon/", "").replace(".wav", ".png")
@@ -278,7 +250,7 @@ if __name__ == "__main__":
         """ x_car, y_car = localization.localization(audio, ref5)
         print(f"{file}: x5 = {x_car}, y5 = {y_car}")
         """
-        x_car, y_car = localization.localization(audio, ref6)
+        x_car, y_car = localization.localization(audio, ref3)
         print(f"{file}: x6 = {x_car}, y6 = {y_car}")
         
         """ x_car, y_car = localization.localization(audio, ref8)

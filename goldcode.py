@@ -60,9 +60,9 @@ def gold_code_to_hex(gold_code):
 
 # Example seeds and taps for two m-sequences
 seed1 = [0, 0, 0, 0, 1]
-seed2 = [0, 1, 0, 0, 0]
-taps1 = [5, 2, 1, 0]  # Reversed tap positions for better understanding
-taps2 = [5, 1]
+seed2 = [0, 0, 0, 1, 0]
+taps1 = [5, 4, 3, 2]  # Reversed tap positions for better understanding
+taps2 = [5, 3]
 
 # Generate m-sequences
 mseq1 = lfsr(seed1, taps1, 2**5 - 1)
