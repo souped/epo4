@@ -40,7 +40,7 @@ class KITT:
             command = command.encode()
         self.commands.append(command)
         # Comment line below if you want keyboard input
-        self.send_command()
+        self.send_command(command)
 
     def loop_command(self):
         while True:
@@ -70,9 +70,9 @@ class KITT:
                 self.commands.pop(0)
                 time.sleep(0.05)
 
-    def send_command(self):
+    def send_command(self, command):
         self.serial.write(self.commands[0])
-        # print("Command sent")
+        print("Command sent")
         self.commands.pop(0)
 
     def set_speed(self, speed):
@@ -94,13 +94,13 @@ class KITT:
 
     def emergency_brake(self, from_speed):  # STILL NEEDS TUNING!
         if self.prev_speed > 153 and from_speed==1:
-            print('Speed emergency Brake')
+            print('Emergency Brake')
             # If previous speed > standstill, apply emergency brake
             self.set_speed(140)  # Set speed to move backwards
             time.sleep(0.4)  # Reverse for a short period.
             self.set_speed(150)  # Stop the car
         elif self.prev_speed < 147 and from_speed==1:
-            print('Speed emergency Brake')
+            print('Emergency Brake')
             # If previous speed < standstill, apply emergency brake
             self.set_speed(160)  # Set speed to move backwards
             time.sleep(0.4)  # Reverse for a short period.
