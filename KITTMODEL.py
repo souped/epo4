@@ -4,8 +4,7 @@ import regex as re
 
 
 class KITTMODEL():
-    def __init__(self, gui) -> None:
-        self.gui = gui
+    def __init__(self) -> None:
 
         self.m = 5.6  # mass, [kg]
         self.b = 5  # viscous friction, [N m^-1 s]
@@ -45,7 +44,7 @@ class KITTMODEL():
         self.dt = 0.01
         self.f = None
 
-        
+
 
     def update_line(self):
         """updates the initialised figures with new data generated after running a command string"""
@@ -62,7 +61,7 @@ class KITTMODEL():
         self.ax2.autoscale_view()
         self.figure2.canvas.draw()
         self.figure2.canvas.flush_events()
-        
+
     def sim(self, inputs):
         """simulates a list of command strings"""
         i = 0
@@ -103,14 +102,14 @@ class KITTMODEL():
 
     def det_rotation(self, phi = None):
         """determines a direction vector derived from phi"""
-        if phi is None: phi = self.phi 
+        if phi is None: phi = self.phi
         # convert phi to radians
         phi = phi / 360 * np.pi * 2
-        
+
         # determine rotation matrix
         dtheta = self.v*np.sin(phi)/self.L
         rotation_matrix = np.array([[np.cos(dtheta), -np.sin(dtheta)], [np.sin(dtheta), np.cos(dtheta)]])
-        
+
         direction = np.matmul(rotation_matrix, self.direction)
         return direction
 
@@ -146,11 +145,11 @@ class KITTMODEL():
                 return
             case "D170":
                 self.direction = self.det_rotation(7)
-                self.phi = 7 
+                self.phi = 7
                 return
             case "D150":
                 self.direction = self.det_rotation(0)
-                self.phi = 0 
+                self.phi = 0
                 return
             case "D130":
                 self.direction = self.det_rotation(-11)
@@ -237,6 +236,21 @@ class KITTMODEL():
         self.times.clear()
 
         # Simulate the cars movement
+        t, state = self.curve_command_simulate(desired_vec=desired_vec, dest=dest, dir_com=dir_com)
+        while state == 0:
+            if dir_com == 100:
+                dir_com = 200
+                self.curve_command_simulate(desired_vec=desired_vec, dest=dest, dir_com=dir_com)
+            elif dir_com == 200:
+                dir_com = 100
+
+
+
+        # If the model cannot find a curved path to the destination, e.g. when it lies too close to the car, return -1
+        print("No valid easy path found!")
+        return None, None, None, None
+
+    def curve_command_simulate(self, desired_vec, dest, dir_com, threshold=0.01, time=10):
         for t in np.arange(0, time, self.dt):
             # Calculates the difference between vector angles. If it lies within a treshold, stop simulating
             # and return the simulation values.
@@ -253,13 +267,14 @@ class KITTMODEL():
                 self.times.append(self.t)
                 _, _, desired_vec = self.desired_vector(self.positions[-1], dest)
             else:
+                if self.out_of_bounds(self.positions):
+                    print("Path goes out of bounds!")
+                    return t,0
+
                 t = round(t,3)*0.8
                 print("Car is pointing to the destination! Car ran for:", t)
                 self.modtime += t
-                return self.positions[-1], self.direction, dir_com, t
-        # If the model cannot find a curved path to the destination, e.g. when it lies too close to the car, return -1
-        print("No valid easy path found!")
-        return None, None, None, None
+                return t, 1
 
     def generate_straight_command(self, carloc, dest, threshold=0.05):
         """
@@ -318,6 +333,14 @@ class KITTMODEL():
         direction = np.arctan2(vector[1], vector[0])
         # Returns the vectors length, direction in radii and direction as a unit vector.
         return length, direction, [np.cos(direction), np.sin(direction)]
+
+    def out_of_bounds(self, path):
+        for i in range(len(path)):
+            for j in range(len(path[i])):
+                if i > 4.6 or j > 4.6:
+                    return True
+        return False
+
 
     def plot_path(self, dest):
         # Plot the simulated curve

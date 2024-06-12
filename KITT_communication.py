@@ -87,9 +87,11 @@ class KITT:
         self.set_angle(151)
 
     def start_beacon(self):
+        print("Beacon is on!")
         self.encode_command(b'A1\n')
 
     def stop_beacon(self):
+        print("Beacon is off!")
         self.encode_command(b'A0\n')
 
     def emergency_brake(self, from_speed):  # STILL NEEDS TUNING!
