@@ -47,10 +47,9 @@ class localization:
         x_car = location[0]
         y_car = location[1]
         
-        
-        
-        segments = localization.detect_segments(audiowav[:,0], num_segments = 7)
-        num_segments = 7
+        num_segments = 8
+        segments = localization.detect_segments(audiowav[:,0], num_segments)
+   
         fig, axes = plt.subplots(num_segments, 1, figsize=(10, 14))
 
         for i in range(num_segments):
@@ -68,19 +67,32 @@ class localization:
     
     def process_channel(channel_data, ref):
         # function goal: return the mean of the peaks (using segments) of the signal
-        num_segments = 7
+        num_segments = 8
         
         start=0
-        for i in range(len(channel_data)):
+        """ for i in range(len(channel_data)):
             if np.abs(channel_data[i])>0.2*np.max(channel_data):
                 start=i
-                break
+                break """
+            
+        
                 
-        channel_data = channel_data[start:start+num_segments*12000]
-        print(start)
+        channel_data = channel_data
 
         segments = localization.detect_segments(channel_data, num_segments) # split signal into segments using function detect_segments()
+        
+        plt.plot(segments[3])
+        plt.title(f"audio signal")
+        plt.savefig("segmentlos")
+        plt.close()
+        
         channel_responses = [localization.ch3(segment, ref) for segment in segments] # retrieve the channel estimation for each segment using the function ch3()
+        
+        plt.plot(channel_responses[3])
+        plt.title(f"audio signal")
+        plt.savefig("chlos")
+        plt.close()
+        
         channel_responses_array = np.array(channel_responses)
         peaks = localization.find_segment_peaks(channel_responses_array) # get the peaks from the channel estimated segments
         sorted_peaks = np.sort(peaks)
@@ -97,12 +109,12 @@ class localization:
                 start=i
                 break
                 
-        audio_signal = audio_signal[start:start+7*12000]
+        audio_signal = audio_signal[start:start+num_segments*12000]
         print(start) """
         
         segments = []
         segment_length = len(audio_signal) // num_segments
-        segments = [abs(audio_signal[i*segment_length : (i+1)*segment_length]) for i in range(num_segments)]
+        segments = [(audio_signal[i*segment_length : (i+1)*segment_length]) for i in range(num_segments)]
         return segments
 
     def find_segment_peaks(segment_signal):
@@ -213,11 +225,16 @@ if __name__ == "__main__":
     Fref3, ref_signal3 = wavfile.read("gold_codes/gold_code_ref13.wav")
     ref_signal3 =  ref_signal3[:,0]
     ref3 = ref_signal3[8500:9000]
-
+    
+    plt.plot(ref3)
+    plt.title(f"Reference signal for")
+    plt.savefig("refsignu")
+    plt.close()
+    
 
     
     audio_files = [
-        "opnames\goldcode13recordingtest.wav",
+        "opnames nieuw\gold_code13_test200-195.wav",
     ]
 
     start = time.time()
