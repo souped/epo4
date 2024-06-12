@@ -5,7 +5,7 @@ from microphone import Microphone
 
 
 class StateTracker():
-    def __init__(self, kitt, mod, loc: localization, mic: Microphone, ref):
+    def __init__(self, kitt, mod, loc: localization, mic: Microphone, ref, gui):
         self.kitt = kitt
         self.mod = mod
         self.loc = loc
@@ -13,19 +13,25 @@ class StateTracker():
         self.current_pos = [0, 0]
         self.positions = []
         self.ref = ref
+        self.gui = gui
 
     def determine_location(self):
         """
         Determines the current location of the car using the localization module.
         :return: x,y coordinates of the current location in m.
         """
-        self.kitt.start_beacon()
-        audio = self.mic.record_audio(seconds=3, devidx=self.mic.device_index)
-        self.kitt.stop_beacon()
-        print(f"audio: {audio}")
-        x,y = self.loc.localization(audiowav=audio,ref=self.ref)
-        x,y = round(x/100, 5), round(y/100, 5)
-        self.positions.append((x,y))
+        # self.kitt.start_beacon()
+        # audio = self.mic.record_audio(seconds=3, devidx=self.mic.device_index)
+        #
+        # self.kitt.stop_beacon()
+        # print(f"audio: {audio}")
+        # x,y = self.loc.localization(audiowav=audio,ref=self.ref)
+        # x,y = round(x/100, 5), round(y/100, 5)
+        # self.positions.append((x,y))
+        x = input("Enter fake x")
+        y = input("Enter fake y")
+        print("Entered", x,y)
+        self.gui.update_carinfo(carloc=(x,y))
         return x,y
 
     def after_curve_deviation(self,model_endpos,model_dir,dest,fwd_time=1.5,threshold=(0.3,0.5,1)):
@@ -56,6 +62,7 @@ class StateTracker():
             # Calculations
             _, actual_dir, _ = self.mod.desired_vector((x1,y1), (x2,y2))  # Calculate the orientation deviation
             print('Car is currently', actual_dir, "rad from predicted orientation")
+            self.gui.update_carinfo(cardir=actual_dir)
             length_to_dest, _, _ = self.mod.desired_vector((x2,y2), dest)  # Calculate distance to endpoint
             # Are all three conditions necessary? Should these be altered?
             if (desired_pos_dev < threshold[0] and np.abs(model_dir - actual_dir) < threshold[1] and
