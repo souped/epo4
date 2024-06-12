@@ -92,9 +92,9 @@ if __name__ == "__main__":
     print(f"device index used: {device_index}")
     seconds = 2
     while True:
-        nr = int(input("number of reference?: "))
+        nr = input("number of test: ")
         audio = mic.record_audio(seconds, device_index)
-        mic.write_wavfile(audio, filename=f"gold_code_ref{nr}.wav")
-        Microphone.read_wavfile(f"gold_code_ref{nr}.wav")
+        mic.write_wavfile(audio, filename=f"gold_code15_test{nr}.wav")
+        Microphone.read_wavfile(f"gold_code15_test{nr}.wav")
         plt.show()
 

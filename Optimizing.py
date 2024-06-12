@@ -149,7 +149,7 @@ def peak_idxs(channel):
     # max(channel) * 0.95
     m_i = np.argmax(channel)
     m = channel[m_i]
-    a = 0.95
+    a = 0.96
     th = m * a
     peaks_i = []
     for i,val in enumerate(channel):
@@ -165,9 +165,11 @@ def peak_idxs(channel):
     # list of peaks indices made, now go to other channels
     return peaks_i
 
-def other_channel(channel, indxs):
-    # 
-    pass
+def segment_from_rec(audio):
+    # audio is 5 channel array
+    seglen = 12000
+    seg = audio[:seglen*1.2]
+
         
 # volgorde:
 # call localization(audio, ref)
@@ -176,15 +178,15 @@ def other_channel(channel, indxs):
 # in proc: detect_segments: snijd op in stukjes met 1 peak per stukjes
 # 
 
-if __name__ == "__main__":
+if __name__ == "__main_33_":
     localizer = localization()
     start = time.time()
-    Fref, ref_signal = wavfile.read("gold_codes/gold_code_ref4.wav")
+    Fref, ref_signal = wavfile.read("gold_codes/gold_code_ref13.wav")
     # for ch in ref_signal.T[:5]:
     #     test_fn(ch)
     idxs = peak_idxs(ref_signal.T[0])
     plt.plot(ref_signal.T[0])
-    plt.xlim([idxs[0]-550, idxs[0]+550])
+    # plt.xlim([idxs[0]-550, idxs[0]+550])
     plt.show()
     
 
@@ -236,3 +238,10 @@ if __name__ == "__main_9_":
 
     end = time.time()
     print("Total time:", end - start)
+
+if __name__ == "__main__":
+    Fs, audio = wavfile.read(f"ref_sigs/goldcode13recordingtest.wav")
+    axs = plt.figure().subplots(8)
+    for channel in audio.T:
+        plt.figure().subplots().plot(channel)
+    plt.show()
