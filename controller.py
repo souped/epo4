@@ -13,7 +13,7 @@ from StateTracker import StateTracker
 import os
 
 if os.name == 'nt': # windows:
-    sysport = 'COM4'
+    sysport = 'COM5'
 elif os.name == 'posix':
     sysport = '/dev/cu.RNBT-3F3B'
 CHANNELS = 8
@@ -56,9 +56,7 @@ class Controller():
         straight_cmd = self.rp.make_straight_route(carloc, dest)
         Keyboard.car_model_input(kitt=self.kitt, input_cmd=straight_cmd)
 
-        self.kitt.start_beacon()
         print("Final location:", self.state.determine_location())
-        self.kitt.stop_beacon()
         # track data?
         # do this inside the KITT Class or a separate other class i.e. DrivingHistory
 
