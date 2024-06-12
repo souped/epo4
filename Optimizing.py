@@ -140,16 +140,56 @@ if __name__ == "__main_99_":
     x_car, y_car = localization.localization(fake, ref)
     print(f"x = {x_car}, y = {y_car}")
 
-def test_fn(audio_list):
+def peak_idxs(channel):
     # peak_idx = np.argmax(audio_list)
     # print(audio_list[peak_idx])
     # return audio_list[peak_idx-5:peak_idx+70]
-    # detect segment:
+
+    # create list of peaks in this channel, peak is defined as every value greater than
+    # max(channel) * 0.95
+    m_i = np.argmax(channel)
+    m = channel[m_i]
+    a = 0.95
+    th = m * a
+    peaks_i = []
+    for i,val in enumerate(channel):
+        if val < th:
+            continue
+        else:
+            peaks_i.append(i)
+    print(f"max: {m}, th: {th}, list: ", end="")
+    print(peaks_i)
+    print(np.diff(peaks_i, 1))
+    print(channel[peaks_i])
+
+    # list of peaks indices made, now go to other channels
+    return peaks_i
+
+def other_channel(channel, indxs):
+    # 
     pass
-
-
+        
+# volgorde:
+# call localization(audio, ref)
+# split in channels, neem 2 channels
+# process_channel(channel, ref) -> mean van de peaks
+# in proc: detect_segments: snijd op in stukjes met 1 peak per stukjes
+# 
 
 if __name__ == "__main__":
+    localizer = localization()
+    start = time.time()
+    Fref, ref_signal = wavfile.read("gold_codes/gold_code_ref4.wav")
+    # for ch in ref_signal.T[:5]:
+    #     test_fn(ch)
+    idxs = peak_idxs(ref_signal.T[0])
+    plt.plot(ref_signal.T[0])
+    plt.xlim([idxs[0]-550, idxs[0]+550])
+    plt.show()
+    
+
+
+if __name__ == "__main_9_":
 # Main block for testing
 # Read the .wav file
 # Localize the sound source
