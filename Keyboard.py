@@ -62,22 +62,22 @@ class Keyboard:
         """
         cmd_string = input_cmd
         cmd_string = cmd_string.split(" ")
-        print(cmd_string)
+        # print(cmd_string)
         for string in cmd_string:
             if "d" in string.lower():
                 direction = int(string[-3:])
-                print("Set direction:", direction)
+                # print("Set direction:", direction)
                 kitt.set_angle(direction)
             if "m" in string.lower():
                 speed = int(string[-3:])
-                print("Set speed:", speed)
+                # print("Set speed:", speed)
                 kitt.set_speed(speed)
             else:
                 pass
         ctime = float(cmd_string[-1])
-        print("Time:", ctime)
+        # print("Time:", ctime)
         time.sleep(ctime)
-        print("Stop the car")
+        # print("Stop the car")
         if from_curve == 0:
             kitt.emergency_brake(1)
 
