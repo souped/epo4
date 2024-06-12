@@ -19,7 +19,8 @@ class localization:
     def localization(audiowav, ref):
         # function goal: return the coorinates (x, y) using a ref signal and the audiosignal
         
-        TDOA_list = []    
+        TDOA_list = []  
+        TDOA_temp_list = []
         
         #loop the calculateions so it will be done for a microphone and the following one, creating 10 microphone pairs (12, 13, 14, ... , 45)
         for i in range(5):
@@ -29,12 +30,22 @@ class localization:
                 audio_channel_j = audiowav[:, j]
                 
                 # calculate the mean of the list with peaks using the function process_channel() for each channel
-                mean_peak_i = localization.process_channel(audio_channel_i, ref)
-                mean_peak_j = localization.process_channel(audio_channel_j, ref)
-                
+                peaks_i = localization.process_channel(audio_channel_i, ref)
+                peaks_j = localization.process_channel(audio_channel_j, ref)
+
                 # using the peaks, calculate the TDOA's by comparing the microphone pairs using function TDOA()
-                TDOA = localization.TDOA(mean_peak_j, mean_peak_i)
-                TDOA_list.append(TDOA)
+                for k in range(len(peaks_i)):
+                    TDOA = localization.TDOA(peaks_i[k], peaks_j[k])
+                    TDOA_temp_list.append(TDOA)
+                print(TDOA_temp_list)
+
+                sorted_TDOA = np.sort(TDOA_temp_list)
+                trimmed_peaks = sorted_TDOA[1:-1]
+                mean_TDOA = np.mean(peaks_i)
+                TDOA_list.append(mean_TDOA)
+
+                
+
         
         # calculate the coordinates using the function coordinates_2d and the TDOA-list
         location = localization.coordinates_2d(TDOA_list)
@@ -49,10 +60,7 @@ class localization:
         channel_responses = [localization.ch3(segment, ref) for segment in segments] # retrieve the channel estimation for each segment using the function ch3()
         channel_responses_array = np.array(channel_responses)
         peaks = localization.find_segment_peaks(channel_responses_array) # get the peaks from the channel estimated segments
-        sorted_peaks = np.sort(peaks)
-        trimmed_peaks = sorted_peaks[1:-1] # sort the list of peaks and remove the extreme peaks, to avoid interference due outliers
-        mean_peak = np.mean(trimmed_peaks)
-        return mean_peak
+        return peaks
     
 
     def detect_segments(audio_signal, num_segments):
