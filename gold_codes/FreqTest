@@ -59,7 +59,7 @@ for file in audio_files:
     elif file == "gold_codes\gold_code_ref12.wav":
         segment = audio
     elif file == "gold_codes\gold_code_ref13.wav":
-        segment = audio[7500:9000]
+        segment = audio[8600:9000]
     elif file == "gold_codes\gold_code_ref14.wav":
         segment = audio[11000:12000]
     elif file == "gold_codes\\reference.wav":
