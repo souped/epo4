@@ -25,7 +25,6 @@ class Controller():
 
         self.md = KITTMODEL()
         self.kitt = KITT(sysport)
-        self.rp = RoutePlanner(self.kitt, self.md)
         self.localizer = localization()
 
         # microphone
@@ -39,6 +38,7 @@ class Controller():
         self.ref=ref_signal[18800:19396]
 
         self.state = StateTracker(self.kitt, self.md, self.localizer, self.mic, self.ref)
+        self.rp=RoutePlanner(self.kitt,self.md,self.state)
 
     def run_loop(self, dest, carloc=(0.73,0.92), car_rad=0.5*np.pi):
         # while self.running is True:
@@ -60,14 +60,20 @@ class Controller():
         # track data?
         # do this inside the KITT Class or a separate other class i.e. DrivingHistory
 
-        # send commands
-        # self.kitt.send_cmd("cmd")
-
         # temporary end
         self.running = False
+
+    def TDOA_tester(self):
+        input("Place car on the field, press Enter to continue...")
+        i=0
+        while i < 4:
+            x,y=self.state.determine_location()
+            print("Current location:",x,y)
+            input("Move car to next location, press Enter to continue...")
+            i+=1
 
 
 if __name__ == "__main__":
     controller = Controller()
-    controller.run_loop((3,0))
-    print(1)
+    # controller.run_loop(carloc=(0.2,0.3), car_rad=0.5*np.pi, dest=(2,4))
+    controller.TDOA_tester()

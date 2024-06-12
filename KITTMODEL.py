@@ -214,7 +214,7 @@ class KITTMODEL():
         """
         # Get the desired vector, and check if it lies on the left or right of the car.
         _, desired_rad, desired_vec = self.desired_vector(carloc, dest)
-        print("Car rad", cart_rad, "Desired rad:", desired_rad, "Desired vec:", desired_vec)
+        # print("Car rad", cart_rad, "Desired rad:", desired_rad, "Desired vec:", desired_vec)
         if desired_rad < cart_rad:
             print("Go right")
             dir_com = 100
@@ -254,7 +254,6 @@ class KITTMODEL():
                 t = round(t,3)*0.8
                 print("Car is pointing to the destination! Car ran for:", t)
                 self.modtime += t
-                print(self.direction)
                 return self.positions[-1], self.direction, dir_com, t
         # If the model cannot find a curved path to the destination, e.g. when it lies too close to the car, return -1
         print("No valid easy path found!")
