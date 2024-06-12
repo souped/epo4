@@ -19,13 +19,7 @@ class localization:
     def localization(audiowav, ref):
         # function goal: return the coorinates (x, y) using a ref signal and the audiosignal
         
-        TDOA_list = []
-        plt.plot(audiowav)
-        plt.title(f"audio signal")
-        plt.savefig("audio")
-        plt.close()
-        
-        
+        TDOA_list = []    
         
         #loop the calculateions so it will be done for a microphone and the following one, creating 10 microphone pairs (12, 13, 14, ... , 45)
         for i in range(5):
@@ -46,53 +40,13 @@ class localization:
         location = localization.coordinates_2d(TDOA_list)
         x_car = location[0]
         y_car = location[1]
-        
-        num_segments = 8
-        segments = localization.detect_segments(audiowav[:,0], num_segments)
-   
-        fig, axes = plt.subplots(num_segments, 1, figsize=(10, 14))
-
-        for i in range(num_segments):
-            axes[i].plot(segments[i])
-            axes[i].set_title(f"Segment {i}")
-
-        fig.tight_layout()
-        plt.savefig("segmenttest.png")
-        plt.close()
-        
-        
-        
-        
         return x_car, y_car #return the coordinates
     
     def process_channel(channel_data, ref):
         # function goal: return the mean of the peaks (using segments) of the signal
         num_segments = 8
-        
-        start=0
-        """ for i in range(len(channel_data)):
-            if np.abs(channel_data[i])>0.2*np.max(channel_data):
-                start=i
-                break """
-            
-        
-                
-        channel_data = channel_data
-
         segments = localization.detect_segments(channel_data, num_segments) # split signal into segments using function detect_segments()
-        
-        plt.plot(segments[3])
-        plt.title(f"audio signal")
-        plt.savefig("segmentlos")
-        plt.close()
-        
         channel_responses = [localization.ch3(segment, ref) for segment in segments] # retrieve the channel estimation for each segment using the function ch3()
-        
-        plt.plot(channel_responses[3])
-        plt.title(f"audio signal")
-        plt.savefig("chlos")
-        plt.close()
-        
         channel_responses_array = np.array(channel_responses)
         peaks = localization.find_segment_peaks(channel_responses_array) # get the peaks from the channel estimated segments
         sorted_peaks = np.sort(peaks)
@@ -226,46 +180,23 @@ if __name__ == "__main__":
     ref_signal3 =  ref_signal3[:,0]
     ref3 = ref_signal3[8500:9000]
     
-    plt.plot(ref3)
-    plt.title(f"Reference signal for")
-    plt.savefig("refsignu")
-    plt.close()
-    
 
     
     audio_files = [
         "opnames nieuw\gold_code13_test200-195.wav",
+        "opnames nieuw\gold_code13_test0-0.wav",
+        "opnames nieuw\gold_code13_test128-375.wav",
+        "opnames nieuw\gold_code13_test334-354.wav"
+        
+        
     ]
 
     start = time.time()
     for file in audio_files:
         
         Fs, audio = wavfile.read(file)
-        
-        plt.plot(audio)
-        plt.title(f"Reference signal for {file}")
-        plot_filename = file.replace("Beacon/", "").replace(".wav", ".png")
-        plt.savefig(plot_filename)
-        plt.close()
-        
-        """ x_car, y_car = localization.localization(audio, ref3)
-        print(f"{file}: x3 = {x_car}, y3 = {y_car}") """
-        
-        """ x_car, y_car = localization.localization(audio, ref5)
-        print(f"{file}: x5 = {x_car}, y5 = {y_car}")
-        """
         x_car, y_car = localization.localization(audio, ref3)
         print(f"{file}: x6 = {x_car}, y6 = {y_car}")
-        
-        """ x_car, y_car = localization.localization(audio, ref8)
-        print(f"{file}: x8 = {x_car}, y8 = {y_car}") """
-        
-        """ x_car, y_car = localization.localization(audio, ref11)
-        print(f"{file}: x11 = {x_car}, y11 = {y_car}") """
-        
-        """ x_car, y_car = localization.localization(audio, ref12)
-        print(f"{file}: x12 = {x_car}, y12 = {y_car}") """
-        
   
 
     end = time.time()
