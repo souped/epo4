@@ -33,7 +33,7 @@ class Controller():
         self.stream = []
 
         # Temporary reference signal
-        Fref,ref_signal=wavfile.read("gold_codes\gold_code_ref14.wav")
+        Fref,ref_signal=wavfile.read("gold_codes\gold_code_ref13.wav")
         ref_signal=ref_signal[:,0]
         self.ref=ref_signal[8500:9000]
 
