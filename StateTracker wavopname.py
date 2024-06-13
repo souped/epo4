@@ -21,17 +21,14 @@ class StateTracker():
         :return: x,y coordinates of the current location in m.
         """
         self.kitt.start_beacon()
-        audio = self.mic.record_audio(seconds=2, devidx=self.mic.device_index)
+        FF, audio = wavfile.read("gold_code13_test128-375.wav")
+
         self.kitt.stop_beacon()
         print(f"audio: {audio}")
         x,y = self.loc.localization(audiowav=audio,ref=self.ref)
-        if 0 < x < 4.6 and 0 < y < 4.6:
-            x,y = round(x/100, 5), round(y/100, 5)
-            self.positions.append((x,y))
-            return x,y
-        else:
-            x,y = self.determine_location()
-            return x,y
+        x,y = round(x/100, 5), round(y/100, 5)
+        self.positions.append((x,y))
+        return x,y
 
     def after_curve_deviation(self,model_endpos,model_dir,dest,fwd_time=1.5,threshold=(0.3,0.5,1)):
         """
@@ -87,7 +84,7 @@ class StateTracker():
         :return: Location of the car as (x,y)
         """
         if self.mod.modtime < 5:
-            x = (model_endpos[0]*0.8 + Tdoa_xy[0]*0.2)
+            x = (model_endpos[0] + Tdoa_xy[0])/2
             y = (model_endpos[1] + Tdoa_xy[1])/2
             return x,y
         elif self.mod.modtime < 10:
