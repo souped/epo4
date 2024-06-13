@@ -30,23 +30,12 @@ class localization:
                 audio_channel_j = audiowav[:, j]
                 
                 # calculate the mean of the list with peaks using the function process_channel() for each channel
-                peaks_i = localization.process_channel(audio_channel_i, ref)
-                peaks_j = localization.process_channel(audio_channel_j, ref)
+                mean_peak_i = localization.process_channel(audio_channel_i, ref)
+                mean_peak_j = localization.process_channel(audio_channel_j, ref)
 
                 # using the peaks, calculate the TDOA's by comparing the microphone pairs using function TDOA()
-                for k in range(len(peaks_i)):
-                    TDOA = localization.TDOA(peaks_i[k], peaks_j[k])
-                    TDOA_temp_list.append(TDOA)
-                print(TDOA_temp_list)
-
-                sorted_TDOA = np.sort(TDOA_temp_list)
-                trimmed_peaks = sorted_TDOA[1:-1]
-                mean_TDOA = np.mean(peaks_i)
-                TDOA_list.append(mean_TDOA)
-
-                
-
-        
+                TDOA = localization.TDOA(mean_peak_j, mean_peak_i)
+                TDOA_list.append(TDOA)
         # calculate the coordinates using the function coordinates_2d and the TDOA-list
         location = localization.coordinates_2d(TDOA_list)
         x_car = location[0]
@@ -60,7 +49,10 @@ class localization:
         channel_responses = [localization.ch3(segment, ref) for segment in segments] # retrieve the channel estimation for each segment using the function ch3()
         channel_responses_array = np.array(channel_responses)
         peaks = localization.find_segment_peaks(channel_responses_array) # get the peaks from the channel estimated segments
-        return peaks
+        trimmed_peaks = peaks.pop(np.argmax(peaks))
+        trimmed_peaks = peaks.pop(np.argmin(peaks))
+        mean_peak = np.mean(trimmed_peaks)
+        return mean_peak
     
 
     def detect_segments(audio_signal, num_segments):
