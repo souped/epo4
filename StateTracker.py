@@ -3,7 +3,6 @@ from Keyboard import Keyboard
 from Optimizing import localization
 from microphone import Microphone
 
-from scipy.io import wavfile
 
 class StateTracker():
     def __init__(self, kitt, mod, loc: localization, mic: Microphone, ref):
@@ -11,9 +10,11 @@ class StateTracker():
         self.mod = mod
         self.loc = loc
         self.mic = mic
+        self.ref = ref
+
         self.current_pos = [0, 0]
         self.positions = []
-        self.ref = ref
+        self.direction_rad = 0
 
     def determine_location(self):
         """
@@ -35,9 +36,6 @@ class StateTracker():
 
     def after_curve_deviation(self,model_endpos,model_dir,dest,fwd_time=1.5,threshold=(0.3,0.5,1)):
         """
-        This function is not yet complete, as it misses TDOA implementation. The TDOA function should run for
-        a couple of seconds to get an as accurate possible location measurements.
-
         This function checks if the car is deviating from the model path. It does this by driving the car forwards
         for a small time.
         This allows for calculating the cars actual orientation and checking the deviation in actual position.
@@ -66,31 +64,48 @@ class StateTracker():
             if (desired_pos_dev < threshold[0] and np.abs(model_dir - actual_dir) < threshold[1] and
                     length_to_dest < threshold[2]):
                 print("Car is on track!")
+                self.direction_rad = actual_dir
                 return 1, (x2,y2), actual_dir
             else:
                 print("Car is off track!")
+                self.direction_rad = actual_dir
                 return 0, (x2,y2), actual_dir
         else:
             print("Car is close to destination")
             return 1, (x1,y1), model_dir
 
-    def after_straight_deviation(self,model_endpos,model_dir,dest):
-        pass
-
-    def weighted_location(self, model_endpos, model_dir, Tdoa_xy, Tdoa_dir):
+    def after_straight_state(self, direction, driving_time=2):
         """
-        Returns a weighted location of the car, depending on the generated model, current location and model time.
-        :param model_endpos: End position of the model as (x,y)
-        :param model_dir: End orientation of the model in rad
-        :param Tdoa_xy: TDOA position as (x,y)
-        :param Tdoa_dir: TDOA orientation in rad
-        :return: Location of the car as (x,y)
+        Determines the current direction of the car by moving either forwards or backwards.
+        :param direction: 0 for forward, 1 for backward
+        :return: (x,y) coordinates of the car in m, direction of the car in rad.
         """
-        if self.mod.modtime < 5:
-            x = (model_endpos[0]*0.8 + Tdoa_xy[0]*0.2)
-            y = (model_endpos[1] + Tdoa_xy[1])/2
-            return x,y
-        elif self.mod.modtime < 10:
-            pass
+        x1, y1 = self.determine_location()
+        if direction == 0:
+            Keyboard.car_model_input(kitt=self.kitt, input_cmd=f"D150 M158 {driving_time}")
+            x2, y2 = self.determine_location()
+            _, actual_dir, _ = self.mod.desired_vector((x1, y1), (x2, y2))  # Calculate the orientation deviation
         else:
-            pass
+            Keyboard.car_model_input(kitt=self.kitt, input_cmd=f"D150 M142 {driving_time}")
+            x2, y2 = self.determine_location()
+            _, actual_dir, _ = self.mod.desired_vector((x2, y2), (x1, y1))  # Calculate the orientation deviation
+        self.direction_rad = actual_dir
+        return (x2,y2), actual_dir
+
+    # def weighted_location(self, model_endpos, model_dir, Tdoa_xy, Tdoa_dir):
+    #     """
+    #     Returns a weighted location of the car, depending on the generated model, current location and model time.
+    #     :param model_endpos: End position of the model as (x,y)
+    #     :param model_dir: End orientation of the model in rad
+    #     :param Tdoa_xy: TDOA position as (x,y)
+    #     :param Tdoa_dir: TDOA orientation in rad
+    #     :return: Location of the car as (x,y)
+    #     """
+    #     if self.mod.modtime < 5:
+    #         x = (model_endpos[0]*0.8 + Tdoa_xy[0]*0.2)
+    #         y = (model_endpos[1] + Tdoa_xy[1])/2
+    #         return x,y
+    #     elif self.mod.modtime < 10:
+    #         pass
+    #     else:
+    #         pass

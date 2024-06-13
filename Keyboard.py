@@ -54,34 +54,30 @@ class Keyboard:
 
     def car_model_input(kitt: KITT, input_cmd, from_curve = 0):
         """
-        This function takes an input command and sends it to the car. If no input is given,
-        it will ask the user to enter the command
+        This function takes an input command and sends it to the car.
         :param kitt: The kitt class
         :param input_cmd: The input command in string format
         :return:
         """
-        cmd_string = input_cmd
-        cmd_string = cmd_string.split(" ")
-        print(cmd_string)
-        for string in cmd_string:
+        input_cmd = input_cmd.split(" ")
+        for string in input_cmd:
             if "d" in string.lower():
                 direction = int(string[-3:])
-                # print("Set direction:", direction)
                 kitt.set_angle(direction)
             if "m" in string.lower():
                 speed = int(string[-3:])
-                # print("Set speed:", speed)
                 kitt.set_speed(speed)
             else:
                 pass
-        ctime = float(cmd_string[-1])
-        # print("Time:", ctime)
+        ctime = float(input_cmd[-1])
         time.sleep(ctime)
-        # print("Stop the car")
+
+        # To only forcefully stop the car when it is necessary.
         if from_curve == 0:
             kitt.emergency_brake(1)
-
         kitt.set_speed(150)
+
+        # To completely get the steering to neutral.
         if direction < 150:
             kitt.set_angle(170)
             time.sleep(0.5)
