@@ -13,7 +13,7 @@ from StateTracker import StateTracker
 import os
 
 if os.name == 'nt': # windows:
-    sysport = 'COM5'
+    sysport = 'COM1'
 elif os.name == 'posix':
     sysport = '/dev/cu.RNBT-3F3B'
 CHANNELS = 8
@@ -33,9 +33,9 @@ class Controller():
         self.stream = []
 
         # Temporary reference signal
-        Fref,ref_signal=wavfile.read("reference6.wav")
-        ref_signal=ref_signal[:,1]
-        self.ref=ref_signal[18800:19396]
+        Fref,ref_signal=wavfile.read("gold_codes\gold_code_ref14.wav")
+        ref_signal=ref_signal[:,0]
+        self.ref=ref_signal[8500:9000]
 
         self.state = StateTracker(self.kitt, self.md, self.localizer, self.mic, self.ref)
         self.rp=RoutePlanner(self.kitt,self.md,self.state)

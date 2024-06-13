@@ -22,8 +22,8 @@ class localization:
         # Calculate TDOA between different microphone pairs
         for i in range(5):
             for j in range(i + 1,5):
-                audio_channel_i=audiowav[i,:]
-                audio_channel_j=audiowav[j,:]
+                audio_channel_i=audiowav[:, i]
+                audio_channel_j=audiowav[:, j]
                 mean_peak_i=localization.process_channel(audio_channel_i,ref)
                 mean_peak_j=localization.process_channel(audio_channel_j,ref)
                 TDOA=localization.TDOA(mean_peak_j,mean_peak_i)
@@ -193,23 +193,18 @@ if __name__=="__main__":
     localizer=localization()
 
     start=time.time()
-    Fref,ref_signal=wavfile.read("Beacon/reference6.wav")
+    Fref,ref_signal=wavfile.read("gold_codes\gold_code_ref13.wav")
     ref_signal=ref_signal[:,1]
-    ref=ref_signal[18800:19396]
-
-    plt.plot(ref)
-    plt.savefig("refsignalhuidig")
-    plt.close()
-
+    ref=ref_signal[8600:9000]
+    print(type(ref))
     audio_files=[
-        "opnames/vanafxy-20-230.wav",
-        "opnames/vanafx-y-66-60.wav"
+        "gold_code13_test128-375.wav",
     ]
 
     start=time.time()
     for file in audio_files:
         Fs,audio=wavfile.read(file)
-
+        print(type(audio))
         plt.plot(audio)
         plt.title(f"Reference signal for {file}")
         plot_filename=file.replace("Beacon/","").replace(".wav",".png")
