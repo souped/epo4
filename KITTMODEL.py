@@ -203,26 +203,28 @@ class KITTMODEL():
         x,y = x0 + dirx * v * dt, y0 + diry * v * dt"""
         return self.pos[0] + self.direction[0] * self.v * dt, self.pos[1] + self.direction[1] * self.v * dt
 
-    def generate_curve_command(self, carloc, cart_rad, dest, threshold=0.01):
+    def generate_curve_command(self, carloc, cart_rad, dest, dir_flip = 0, threshold=0.01):
         """
         Generates the commands for the car to point in the direction of the destination.
         :param carloc: Location of the car as (x,y)
         :param cart_rad: Orientation of the car in rad
         :param dest: Destination as (x,y)
+        :param direction_override:
         :param threshold: Amount of deviation the orientation of the car can have from the destination.
         :return: end position of the car, end direction (unit vector), direction command (100 or 200), time of movement
         """
         # Get the desired vector, and check if it lies on the left or right of the car.
         _, desired_rad, desired_vec = self.desired_vector(carloc, dest)
-        # print("Car rad", cart_rad, "Desired rad:", desired_rad, "Desired vec:", desired_vec)
+        if desired_rad < 0: desired_rad += 2*np.pi
+        print("Car rad", cart_rad, "Desired rad:", desired_rad, "Desired vec:", desired_vec)
         if desired_rad < cart_rad:
             print("Go right")
-            dir_com = 100
-            input_com = 'M158 D100 10'
+            dir_com=100 if dir_flip==0 else 200
         else:
             print("Go left")
-            dir_com = 200
-            input_com = 'M158 D200 10'
+            dir_com=200 if dir_flip==0 else 100
+
+        input_com=f'M158 D{dir_com} 10'
 
         # Process the command, and set the starting parameters
         time = self.proc_cmd(input_com)
@@ -251,10 +253,14 @@ class KITTMODEL():
                 self.times.append(self.t)
                 _, _, desired_vec = self.desired_vector(self.positions[-1], dest)
             else:
+                if self.out_of_bounds(self.positions):
+                    # a, b, c, d = self.generate_curve_command(carloc=carloc, cart_rad=cart_rad, dest=dest, dir_flip= 1, threshold=threshold)
+                    # return a, b, c, d
+                    print("Car is out of bounds")
                 t = round(t,3)*0.8
                 print("Car is pointing to the destination! Car ran for:", t)
                 self.modtime += t
-                return self.positions[-1], self.direction, dir_com, t
+                return self.pos, self.direction, dir_com, t
         # If the model cannot find a curved path to the destination, e.g. when it lies too close to the car, return -1
         print("No valid easy path found!")
         return None, None, None, None
@@ -301,7 +307,88 @@ class KITTMODEL():
                     self.plot_path(dest)
                 self.modtime += t
                 return f"M158 D150 {t}"
+        return print("No path found!")
 
+    # def generate_curve_command(self, carloc, cart_rad, dest, dir_flip = 0):
+    #     """
+    #     Generates the commands for the car to point in the direction of the destination.
+    #     :param carloc: Location of the car as (x,y)
+    #     :param cart_rad: Orientation of the car in rad
+    #     :param dest: Destination as (x,y)
+    #     :param direction_override:
+    #     :param threshold: Amount of deviation the orientation of the car can have from the destination.
+    #     :return: end position of the car, end direction (unit vector), direction command (100 or 200), time of movement
+    #     """
+    #     # Get the desired vector, and check if it lies on the left or right of the car.
+    #     _, desired_rad, desired_vec = self.desired_vector(carloc, dest)
+    #     if desired_rad < 0: desired_rad += 2*np.pi
+    #     print("Car rad", cart_rad, "Desired rad:", desired_rad, "Desired vec:", desired_vec)
+    #
+    #     if desired_rad < cart_rad:
+    #         print("Go right")
+    #         dir_com=100 if dir_flip==0 else 200
+    #     else:
+    #         print("Go left")
+    #         dir_com=200 if dir_flip==0 else 100
+    #
+    #     input_com=f'M158 D{dir_com} 10'
+    #     state, pos, dir, t = self.curve_command_simulator(input_com=input_com, carloc=carloc, cart_rad=cart_rad,
+    #                                                       desired_vec=desired_vec, dest=dest)
+    #     if state == 1:
+    #         return  pos, dir, dir_com, t
+    #     else:
+    #         return -1, 0, 0, 0
+
+
+
+    def curve_command_simulator(self, input_com, carloc, cart_rad, desired_vec, dest, threshold=0.01):
+        print("Simulating...")
+        time=self.proc_cmd(input_com)
+        self.direction=(np.cos(cart_rad),np.sin(cart_rad))
+        self.pos=carloc
+        self.positions.clear()
+        self.v=0
+        self.velocities.clear()
+        self.t=0
+        self.times.clear()
+
+        # Simulate the cars movement
+        for t in np.arange(0,time,self.dt):
+            # Calculates the difference between vector angles. If it lies within a treshold, stop simulating
+            # and return the simulation values.
+            diff=np.linalg.norm(np.subtract(desired_vec,self.direction))
+            if diff > threshold:
+                # print("F:", self.f)
+                self.v=self.velocity(self.dt,self.f * 1.3)
+                # print("V: ", self.v)
+                self.velocities.append(self.v)
+                self.direction=self.det_rotation()
+                self.pos=self.det_xy(self.dt)
+                self.positions.append(self.pos)
+                self.t+=self.dt
+                self.times.append(self.t)
+                _,_,desired_vec=self.desired_vector(self.positions[-1],dest)
+            else:
+                if self.out_of_bounds(self.positions):
+                    print("Car is out of bounds!")
+                    self.plot_path(dest)
+                    return 0, 0, 0, 0
+                t=round(t,3) * 0.8
+                print("Car is pointing to the destination! Car ran for:",t)
+                self.modtime+=t
+                return 1,self.pos,self.direction,t
+
+        # If the model cannot find a curved path to the destination, e.g. when it lies too close to the car, return -1
+        print("No valid easy path found!")
+        return None, None, None, None
+
+    def out_of_bounds(self,path):
+        for i in range(len(path)):
+            for j in range(len(path[i])):
+                x = path[i][j]
+                if x < 0 or x > 4.6:
+                    return True
+        return False
 
     def desired_vector(self, carloc, dest):
         """
@@ -336,5 +423,6 @@ if __name__ == "__main__":
     # inputs = ["150 M158 3"]
     # md.sim(inputs)
     # plt.show(block=True)
-    xy, dir, _, _ = md.generate_curve_command(carloc=(0,0), cart_rad=0.5*np.pi, dest=(2.07,0))
-    print(md.generate_straight_command(carloc=xy, dest=(2.07,0)))
+    dest = (1,3)
+    xy, dir, _, _ = md.generate_curve_command(carloc=(1,2), cart_rad=1*np.pi, dest=dest)
+    # md.generate_straight_command(carloc=xy, dest=dest)

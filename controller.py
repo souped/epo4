@@ -40,13 +40,13 @@ class Controller():
         self.state = StateTracker(self.kitt, self.md, self.localizer, self.mic, self.ref)
         self.rp=RoutePlanner(self.kitt,self.md,self.state)
 
-    def run_loop(self, dest, carloc=(0.73,0.92), car_rad=0.5*np.pi):
+    def run_loop(self, dest, carloc=(0.2,0.3), car_rad=0.5*np.pi):
         # while self.running is True:
         # apply route planning algorithm?
         curve_cmd, model_endpos, model_dir = self.rp.make_curve_route(carloc, car_rad, dest)
         Keyboard.car_model_input(kitt=self.kitt, input_cmd=curve_cmd)
 
-        state, (x,y), dir = self.state.after_curve_deviation(model_endpos=model_endpos, model_dir=model_dir, dest=dest)
+        # state, (x,y), dir = self.state.after_curve_deviation(model_endpos=model_endpos, model_dir=model_dir, dest=dest)
         # while state == 0:
         #     curve_cmd_corr,model_endpos,model_dir=self.rp.make_curve_route((x,y),dir,dest)
         #     Keyboard.car_model_input(kitt=self.kitt, input_cmd=curve_cmd_corr)
@@ -66,7 +66,7 @@ class Controller():
     def TDOA_tester(self):
         input("Place car on the field, press Enter to continue...")
         i=0
-        while i < 4:
+        while i < 10:
             x,y=self.state.determine_location()
             print("Current location:",x,y)
             input("Move car to next location, press Enter to continue...")
@@ -75,5 +75,5 @@ class Controller():
 
 if __name__ == "__main__":
     controller = Controller()
-    # controller.run_loop(carloc=(0.2,0.3), car_rad=0.5*np.pi, dest=(2,4))
-    controller.TDOA_tester()
+    controller.run_loop(carloc=(0,0), car_rad=0.5*np.pi, dest=(0,4))
+    # controller.TDOA_tester()

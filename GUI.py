@@ -84,5 +84,8 @@ if __name__ == '__main__':
     plt.pause(0.1)
     time.sleep(2)
     gui.update_path(path)
+    plt.pause(0.1)
+    time.sleep(2)
+    gui.update_carinfo(carloc=(3,1), cardir=1*np.pi)
     while True:
         plt.pause(0.1)

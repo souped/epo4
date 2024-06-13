@@ -6,7 +6,7 @@ carrier_freq = 10000  # Carrier frequency, min = 5 kHz & max = 30 kHz, (5, 7500,
 bit_freq = 5000  # The bit frequency, min = 1 kHz & max = 5 kHz, (1 , 2.5 5
 # rep 250 for 1k, 625 for 2.5k, 1250 for 5k
 repetition_cnt = 1250  # = bit_freq/repetition_freq, sets the time between transmissions, with repetition_freq 1-10 Hz.
-codeword = 0xEA28B7C5  # Code word in hexadecimal
+codeword = 0x221F5310  # Code word in hexadecimal
 
 system_start = time.time()  # initialize time
 
@@ -92,7 +92,7 @@ class KITT:
     def stop_beacon(self):
         self.encode_command(b'A0\n')
 
-    def emergency_brake(self, from_speed):  # STILL NEEDS TUNING!
+    def emergency_brake(self, from_speed):
         if self.prev_speed > 153 and from_speed==1:
             print('Speed emergency Brake')
             # If previous speed > standstill, apply emergency brake

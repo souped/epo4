@@ -46,6 +46,32 @@ class RoutePlanner():
     def set_dest(self, x, y):
         self.dest = [x,y]
 
+    # def make_curve_route(self,carloc,cart_rad,dest):
+    #     """
+    #     This function generates the commands that get the car pointing to a destination.
+    #
+    #     If the model cannot get the car pointing in the right direction, e.g. when the destination is too close
+    #     to the car, drive it forwards, get its position and check again. Drive the car forwards until it can
+    #     reach its destination.
+    #
+    #     :param carloc: Location of the car as (x,y)
+    #     :param cart_rad: Orientation of the car in rad
+    #     :param dest: Destination as (x,y)
+    #     :return: gen_cmd: The generated command as a string
+    #     """
+    #     # Generating commands
+    #     end_pos, end_dir, gen_com, t = self.mod.generate_curve_command(carloc=carloc, cart_rad=cart_rad, dest=dest)
+    #     while end_pos is None:
+    #         print("No path possible from this location.")
+    #         print("Driving forwards...")
+    #         Keyboard.car_model_input(kitt=self.kitt, input_cmd="D150 M158 2")
+    #         x, y = self.state.determine_location()
+    #         print("Recalculating...")
+    #         end_pos, end_dir, gen_com, t = self.mod.generate_curve_command(carloc=(x,y), cart_rad=cart_rad, dest=dest)
+    #     gen_cmd = f"M158 D{gen_com} {t}"
+    #     print("Generated curve command:", gen_cmd)
+    #     return gen_cmd, end_pos, end_dir
+
     def make_curve_route(self,carloc,cart_rad,dest):
         """
         This function generates the commands that get the car pointing to a destination.
@@ -68,22 +94,14 @@ class RoutePlanner():
             x, y = self.state.determine_location()
             print("Recalculating...")
             end_pos, end_dir, gen_com, t = self.mod.generate_curve_command(carloc=(x,y), cart_rad=cart_rad, dest=dest)
+        while end_pos == -1:
+            print("Driving backwards...")
+            Keyboard.car_model_input(kitt=self.kitt, input_cmd="D150 M142 2")
+            x, y = self.state.determine_location()
+            print("Recalculating...")
+            end_pos, end_dir, gen_com, t = self.mod.generate_curve_command(carloc=(x,y), cart_rad=cart_rad, dest=dest)
         gen_cmd = f"M158 D{gen_com} {t}"
         print("Generated curve command:", gen_cmd)
-
-        """
-        # Send the command and check deviation
-        Keyboard.car_model_input(kitt=self.kitt,input_cmd=gen_cmd)
-        end_dir_rad=math.atan2(end_dir[1],end_dir[0])  # Convert unit vector to radians
-        # dev = self.standstill_deviation(model_endpos=end_pos,desired_dir=end_dir_rad, dest=dest)
-        # if dev == 1:
-        #     print("Going straight.")
-        #     print("Still need to make this functionality :)")
-        #     # self.generate_straight_command()
-        # else:
-        #     print("Recalculating commands.")
-        #     self.make_and_drive_route(carloc, cart_rad, dest)
-        """
         return gen_cmd, end_pos, end_dir
 
     def make_straight_route(self,carloc,dest):
