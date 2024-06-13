@@ -137,7 +137,7 @@ class localization:
         gridTDOA = np.reshape(gridTDOA,(-1,10))
         return(gridTDOA)
     
-    def coordinates_2d(tdoa,size=10,min_x=0,max_x=460,min_y=0,max_y=460,finetuning=4):     
+    def coordinates_2d(tdoa,min_x=0,max_x=460,min_y=0,max_y=460,size=5,finetuning=5):     
         #definition goal: return the coordinates of the car using the measured and calculated TDOA's  
         for i in range(finetuning):
             
@@ -146,13 +146,16 @@ class localization:
             ygrid = np.repeat(np.linspace(min_y,max_y,size+2)[1:-1],size)
             zgrid = np.repeat(30,size**2)
             grid_dimensions = np.stack((xgrid,ygrid,zgrid),axis=1)
+      
             
             #manually calculate the TDOA's for each microphone-pair using the function gridTDOA
             gridTDOA = localization.TDOA_grid(grid_dimensions)
             
             #compare the calculated TDOA with the measure TDOA and find the point where their difference is the smallest
-            errors = np.linalg.norm(gridTDOA - tdoa, axis=1)
-            best = grid_dimensions[np.argmin(errors)]
+            comparison = np.linalg.norm(gridTDOA - tdoa, axis=1)
+            best = grid_dimensions[np.argmin(comparison)]
+
+            print(best)
             
             #To make the algorithm more accurate, once a point has been found, the algorithm will be looped
             #set the dimensions for a new grid to have a higher resolution around the found point (same gridpoints will be used for a smaller area)
