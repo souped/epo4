@@ -21,7 +21,7 @@ class StateTracker():
         :return: x,y coordinates of the current location in m.
         """
         self.kitt.start_beacon()
-        audio = self.mic.record_audio(seconds=3, devidx=self.mic.device_index)
+        FF, audio = wavfile.read("gold_code13_test128-375.wav")
 
         self.kitt.stop_beacon()
         print(f"audio: {audio}")

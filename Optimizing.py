@@ -139,7 +139,7 @@ if __name__=="__main__":
     localizer=localization()
 
     start=time.time()
-    Fref,ref_signal=wavfile.read("gold_codes\gold_code_ref13.wav")
+    Fref,ref_signal=wavfile.read("gold_codes\\gold_code_ref13.wav")
     ref_signal=ref_signal[:,1]
     ref=ref_signal[8600:9000]
     print(type(ref))
