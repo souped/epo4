@@ -60,8 +60,8 @@ def gold_code_to_hex(gold_code):
 
 # Example seeds and taps for two m-sequences
 seed1 = [0, 0, 0, 0, 1]
-seed2 = [0, 0, 0, 1, 0]
-taps1 = [5, 4, 3, 2]  # Reversed tap positions for better understanding
+seed2 = [0, 0, 1, 0, 1]
+taps1 = [5, 2]
 taps2 = [5, 3]
 
 # Generate m-sequences
@@ -77,4 +77,4 @@ for i, gold_code in enumerate(gold_codes):
     print(f"Gold Code {i} in Hex: {hex_code}")
 
 # Evaluate Gold codes
-#evaluate_codes(gold_codes)
+evaluate_codes(gold_codes)

@@ -9,22 +9,14 @@ def autocorrelation(seq):
 
 # Beacon specs
 audio_files = [
-    "gold_codes\gold_code_ref1.wav",
-    "gold_codes\gold_code_ref2.wav",
-    "gold_codes\gold_code_ref3.wav",
-    "gold_codes\gold_code_ref4.wav",
-    "gold_codes\gold_code_ref5.wav",
-    "gold_codes\gold_code_ref6.wav",
-    "gold_codes\gold_code_ref7.wav",
-    "gold_codes\gold_code_ref8.wav",
-    "gold_codes\gold_code_ref9.wav",
-    "gold_codes\gold_code_ref10.wav",
-    "gold_codes\gold_code_ref11.wav",
-    "gold_codes\gold_code_ref12.wav",
-    "gold_codes\gold_code_ref13.wav",
-    "gold_codes\gold_code_ref14.wav",
-    "gold_codes\\reference.wav"
-    
+    "gold_codes\\gold_code_ref2.wav",
+    "gold_codes\\gold_code_ref4.wav",
+    "gold_codes\\gold_code_ref6.wav",
+    "gold_codes\\gold_code_ref8.wav",
+    "gold_codes\\gold_code_ref10.wav",
+    "gold_codes\\gold_code_ref11.wav",
+    "gold_codes\\gold_code_ref12.wav",
+    "gold_codes\\gold_code_ref13.wav",
 ]
 
 
@@ -33,40 +25,12 @@ for file in audio_files:
     
     
     audio = audio[:, 0]
-    
-    if file == "gold_codes\gold_code_ref1.wav":
-        segment = audio[11500:12500]
-    elif file == "gold_codes\gold_code_ref2.wav":
-        segment = audio[8000:9000]
-    elif file == "gold_codes\gold_code_ref3.wav":
-        segment = audio[18000:25000]
-    elif file == "gold_codes\gold_code_ref4.wav":
-        segment = audio
-    elif file == "gold_codes\gold_code_ref5.wav":
-        segment = audio
-    elif file == "gold_codes\gold_code_ref6.wav":
-        segment = audio
-    elif file == "gold_codes\gold_code_ref7.wav":
-        segment = audio
-    elif file == "gold_codes\gold_code_ref8.wav":
-        segment = audio
-    elif file == "gold_codes\gold_code_ref9.wav":
-        segment = audio[16500:25000]
-    elif file == "gold_codes\gold_code_ref10.wav":
-        segment = audio
-    elif file == "gold_codes\gold_code_ref11.wav":
-        segment = audio
-    elif file == "gold_codes\gold_code_ref12.wav":
-        segment = audio
-    elif file == "gold_codes\gold_code_ref13.wav":
-        segment = audio[8600:9000]
-    elif file == "gold_codes\gold_code_ref14.wav":
-        segment = audio[11000:12000]
-    elif file == "gold_codes\\reference.wav":
-        segment = audio[221000:223200]
-    else:
-        segment = audio
-    
+    for i in range(len(audio)):
+        if np.abs(audio[i])>50:
+            start=i
+            break   
+
+    segment = audio[start:start+307]
     
     plt.plot(segment)
     plt.title(f"Reference signal for {file}")

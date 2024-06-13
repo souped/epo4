@@ -176,28 +176,44 @@ if __name__ == "__main__":
 
 
     start=time.time()
-    Fref3, ref_signal3 = wavfile.read("gold_codes/gold_code_ref13.wav")
-    ref_signal3 =  ref_signal3[:,0]
-    ref3 = ref_signal3[8500:9000]
-    
-
+    Fref3, ref_signal3 = wavfile.read("gold_codes/gold_code_ref11.wav")
+    ref_files = [
+        #"gold_codes\\gold_code_ref2.wav",
+        #"gold_codes\\gold_code_ref4.wav",
+        #"gold_codes\\gold_code_ref6.wav",
+        #"gold_codes\\gold_code_ref8.wav",
+        #"gold_codes\\gold_code_ref10.wav",
+        #"gold_codes\\gold_code_ref11.wav",
+        #"gold_codes\\gold_code_ref12.wav",
+        "gold_codes\\gold_code_ref13.wav"]
     
     audio_files = [
-        "opnames nieuw\gold_code13_test200-195.wav",
-        "opnames nieuw\gold_code13_test0-0.wav",
-        "opnames nieuw\gold_code13_test128-375.wav",
-        "opnames nieuw\gold_code13_test334-354.wav"
-        
-        
+        "opnames nieuw\\gold_code13_test200-195.wav",
+        "opnames nieuw\\gold_code13_test128-375.wav",
+        "opnames nieuw\\gold_code13_test334-354.wav"
     ]
 
-    start = time.time()
-    for file in audio_files:
-        
-        Fs, audio = wavfile.read(file)
-        x_car, y_car = localization.localization(audio, ref3)
-        print(f"{file}: x6 = {x_car}, y6 = {y_car}")
-  
 
+    for ref in ref_files:
+        Fs, audio = wavfile.read(ref)
+        
+        
+        audio = audio[:, 0]
+        for i in range(len(audio)):
+            if np.abs(audio[i])>50:
+                start=i
+                break
+
+        pulse_length = 306
+
+        print(f"{start}, {start+pulse_length}")
+        segment = audio[start:start+pulse_length]
+    
+        start = time.time()
+        for file in audio_files:
+            Fs, audio = wavfile.read(file)
+            x_car, y_car = localization.localization(audio, segment)
+            print(f"{file}, {ref}: x6 = {x_car}, y6 = {y_car}")
+        print(" ")
     end = time.time()
     print("Total time:", end - start)
