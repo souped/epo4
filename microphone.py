@@ -11,6 +11,7 @@ class Microphone:
         self.Fs = Fs
         # self.N = int(self.Fs * seconds)
         self.handle = pyaudio.PyAudio()
+        self.device_index = Microphone.list_devices()
 
     def list_devices():
         """Lists all audio devices and 

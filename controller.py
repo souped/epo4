@@ -1,66 +1,101 @@
 import numpy as np
+import os
 from KITTMODEL import KITTMODEL
 from microphone import Microphone
 from Optimizing import localization
 from scipy.io import wavfile
-# from routeplanner import RoutePlanner
-from kittfile import KITT
+from Routeplanner import RoutePlanner
+from KITT_communication import KITT
 from keyboardfile import Keyboard
+from statetracker import StateTracker
 
-def main():
-    """setup audio connection"""
-    dev_idx = Microphone.list_devices()
+REF_WAVFILE = "gold_codes/gold_code_ref13.wav"
+
+if os.name == 'nt': # windows:
+    sysport = 'COM2'
+elif os.name == 'posix':
+    sysport = '/dev/cu.RNBT-3F3B'
+CHANNELS = 8
+RATE = 48000
 
 class Controller():
     def __init__(self) -> None:
         self.running = True
 
         self.md = KITTMODEL()
-        self.kitt = KITT()
-        # self.rp = RoutePlanner(self.md)
+        self.kitt = KITT(sysport)
+        self.localizer = localization()
 
         # microphone
         self.recording_time = 2 # seconds
-        self.mic = Microphone(channelnumbers = 1, Fs= 48000)
+        self.mic = Microphone(channelnumbers = CHANNELS, Fs = RATE)
         self.stream = []
 
         self.localiser = localization()
 
         # temporary reference signal
-        Fref, ref_signal = wavfile.read("reference6.wav")
+        Fref, ref_signal = wavfile.read(REF_WAVFILE)
         ref_signal =  ref_signal[:,0]
-        refsig = localization.detect_segments(ref_signal)
-        self.ref = refsig[18800:19396]
+        self.ref = ref_signal[8500:9000]
 
         self.x, self.y = (0,0)
+        self.state = StateTracker(self.kitt, self.md, self.localizer, self.mic, self.ref)
+        self.rp = RoutePlanner(self.md, self.state)
 
+    def run_loop(self, dest, carloc=(0.2,0.3), car_rad=0.5*np.pi):
+        # while self.running is True:
+        # apply route planning algorithm?
+        curve_cmd, model_endpos, model_dir = self.rp.make_curve_route(carloc, car_rad, dest)
+        Keyboard.car_model_input(kitt=self.kitt, input_cmd=curve_cmd)
 
-    def run_loop(self):
-        while self.running is True:
-            # record audio
-            pass
+        state, (x,y), dir = self.state.after_curve_deviation(model_endpos=model_endpos, model_dir=model_dir, dest=dest)
+        while state == 0:
+            curve_cmd_corr,model_endpos,model_dir=self.rp.make_curve_route((x,y),dir,dest)
+            Keyboard.car_model_input(kitt=self.kitt, input_cmd=curve_cmd_corr)
+            state,(x,y),dir=self.state.after_curve_deviation(model_endpos=model_endpos,model_dir=model_dir,dest=dest)
 
-            # assuming beacon freq of 5 hz
-            Fs, audio = wavfile.read("vanafxy-244-234.wav")
-            print(audio.shape, self.ref.shape)
+        print("Generating straight commands...")
+        straight_cmd = self.rp.make_straight_route(carloc, dest)
+        Keyboard.car_model_input(kitt=self.kitt, input_cmd=straight_cmd)
 
-            # apply localisation algorithm
-            # self.x, self.y = self.localiser.localization(audio, self.ref)
+        x,y = self.state.determine_location()
+        print("Final location:", x,y)
+        # track data?
+        # do this inside the KITT Class or a separate other class i.e. DrivingHistory
 
-            # apply route planning algorithm?
-            # self.rp.make_and_drive_route()
-            
-            # track data?
-            # do this inside the KITT Class or a separate other class i.e. DrivingHistory 
+        # temporary end
+        self.running = False
+        return x,y,dir
 
-            # send commands 
-            # self.kitt.send_cmd("cmd")
-            Keyboard.car_model_input(self.kitt, inputstr="M160 D200 1")
+    def TDOA_tester(self):
+        input("Place car on the field, press Enter to continue...")
+        i=0
+        while i < 10:
+            x,y=self.state.determine_location()
+            print("Current location:",x,y)
+            input("Move car to next location, press Enter to continue...")
+            i+=1
 
-            # temporary end
-            self.running = False
+    def challenge_A(self):
+        input_str = input("Enter destination coordinates (x,y):")
+        x_str, y_str = input_str.split(',')
+        x = float(x_str)
+        y = float(y_str)
+        self.run_loop(dest=(x,y))
+
+    def challenge_B(self):
+        input_str1 = input("Enter first destination coordinates (x,y):")
+        x1_str, y1_str = input_str1.split(',')
+        x1 = float(x1_str)
+        y1 = float(y1_str)
+        input_str2 = input("Enter first destination coordinates (x,y):")
+        x2_str, y2_str = input_str2.split(',')
+        x2 = float(x2_str)
+        y2 = float(y2_str)
+        carx, cary, cardir = self.run_loop(dest=(x1,y1))
+        self.run_loop(dest=(x2,y2), carloc=(carx,cary), car_rad=cardir)
 
 
 if __name__ == "__main__":
     controller = Controller()
-    controller.run_loop()
+    controller.run_loop(carloc=(0,0), car_rad=0.5*np.pi, dest=(0,4))
