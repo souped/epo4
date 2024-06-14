@@ -15,7 +15,7 @@ if os.name == 'nt': # windows:
     sysport = 'COM2'
 elif os.name == 'posix':
     sysport = '/dev/cu.RNBT-3F3B'
-CHANNELS = 8
+CHANNELS = 1
 RATE = 48000
 
 class Controller():
@@ -98,4 +98,4 @@ class Controller():
 
 if __name__ == "__main__":
     controller = Controller()
-    controller.run_loop(carloc=(0,0), car_rad=0.5*np.pi, dest=(0,4))
+    controller.run_loop(dest=(4,2))

@@ -54,7 +54,6 @@ class KITT:
 
     def send_command(self):
         self.serial.write(self.commands[0])
-        print(f"Command sent: {self.commands[0]}")
         self.commands.pop(0)
 
     def set_speed(self, speed):

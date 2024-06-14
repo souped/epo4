@@ -201,7 +201,7 @@ class KITTMODEL():
         x,y = x0 + dirx * v * dt, y0 + diry * v * dt"""
         return self.pos[0] + self.direction[0] * self.v * dt, self.pos[1] + self.direction[1] * self.v * dt
 
-    def generate_straight_command(self, carloc, dest, threshold=0.05):
+    def generate_straight_command(self, carloc, dest, threshold=0.1):
         """
         Generates the command to get the car to its destination,
         under the condition that it is pointing to the destination.
@@ -279,14 +279,19 @@ class KITTMODEL():
                                                 desired_vec=desired_vec, dest=dest), dir_com
 
         (state, pos, dir, t), dir_com = run_simulator(dir_flip)
+        
 
         if state == 1:
             return pos, dir, dir_com, t
         else:
             (state, pos, dir, t), dir_com = run_simulator(dir_flip=1)
             if state == 1:
+                print("pos, dir, dir_com, t: ", pos, dir, dir_com, t)
+                print(f"state: {state}")
                 return pos, dir, dir_com, t
             else:
+                print("pos, dir, dir_com, t: ", pos, dir, dir_com, t)
+                print(f"state: {state}")
                 return -1, 0, 0, 0
 
     def curve_command_simulator(self, input_com, carloc, cart_rad, desired_vec, dest, threshold=0.01):
@@ -343,9 +348,10 @@ class KITTMODEL():
         return None, None, None, None
 
     def out_of_bounds(self,pos):
-        if 0 < pos[0] < 4.6 and 0 < pos[1] < 4.6:
+        if 0 < pos[0] < 4.7 and 0 < pos[1] < 4.7:
             return False
         else:
+            print(f"x,y: {pos[0]}, {pos[1]}")
             return True
 
     def desired_vector(self, carloc, dest):

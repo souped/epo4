@@ -3,6 +3,7 @@ from keyboardfile import Keyboard
 from Optimizing import localization
 from microphone import Microphone
 
+from scipy.io import wavfile
 
 class StateTracker():
     def __init__(self, kitt, mod, loc: localization, mic: Microphone, ref):
@@ -16,30 +17,43 @@ class StateTracker():
         self.positions = []
         self.direction_rad = 0
 
+        self.flag = False
+        self.failcnt = 0
+
     def determine_location(self):
         """
         Determines the current location of the car using the localization module.
         :return: x,y coordinates of the current location in m.
         """
-        flag = False
+
         self.kitt.start_beacon()
         audio = self.mic.record_audio(seconds=2, devidx=self.mic.device_index)
+        # Fs, audio = wavfile.read("gold_codes/gold_code13_test128-375.wav")
         self.kitt.stop_beacon()
+        audio = audio.T
         print(type(audio))
-        print(f"shape: {audio.shape}\n audio: {audio}")
-        if flag: self.mic.write_wavfile(audio, "failure.wav")
+        print(f"shape: {audio.shape}\n audio: {audio[:,0]}")
+        if self.flag: self.mic.write_wavfile(audio, "failure.wav")
+        if self.failcnt == 3:
+            print("laat maar zitten")
+            return None
+        
         x,y = localization.localization(audiowav=audio,ref=self.ref)
-        if 0 < x < 4.6 and 0 < y < 4.6:
-            x,y = round(x/100, 5), round(y/100, 5)
+        if 0 < x < 460 and 0 < y < 460:
             self.positions.append((x,y))
+            x,y = round(x/100, 5), round(y/100, 5)
+
             return x,y
         else:
-            x,y = self.determine_location()
+            self.flag = True
+            print("-------------------FAILURE---------------------")
+            self.failcnt += 1
             print(f"x: {x}, y: {y}")
-            flag = True
+
+            x,y = self.determine_location()
             return x,y
 
-    def after_curve_deviation(self,model_endpos,model_dir,dest,fwd_time=1.5,threshold=(0.3,0.5,1)):
+    def after_curve_deviation(self,model_endpos,model_dir,dest,fwd_time=1,threshold=(0.3,0.5,1)):
         """
         This function checks if the car is deviating from the model path. It does this by driving the car forwards
         for a small time.
@@ -53,7 +67,7 @@ class StateTracker():
         """
         # Determine locations
         x1, y1 = self.determine_location()
-        print("Position 1: ", x1, y1)
+        print("Position 1: ", x1, y1, "model endpos: ", model_endpos)
         desired_pos_dev, _, _ = self.mod.desired_vector(model_endpos, (x1,y1))  # Calculate position deviation
         print('Car is currently', desired_pos_dev, "m away from predicted position")
         if desired_pos_dev > threshold[0]:
@@ -79,7 +93,7 @@ class StateTracker():
             print("Car is close to destination")
             return 1, (x1,y1), model_dir
 
-    def after_straight_state(self, direction, driving_time=2):
+    def after_straight_state(self, direction, driving_time=1):
         """
         Determines the current direction of the car by moving either forwards or backwards.
         :param direction: 0 for forward, 1 for backward
