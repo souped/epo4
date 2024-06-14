@@ -154,8 +154,6 @@ class localization:
             #compare the calculated TDOA with the measure TDOA and find the point where their difference is the smallest
             comparison = np.linalg.norm(gridTDOA - tdoa, axis=1)
             best = grid_dimensions[np.argmin(comparison)]
-
-            print(best)
             
             #To make the algorithm more accurate, once a point has been found, the algorithm will be looped
             #set the dimensions for a new grid to have a higher resolution around the found point (same gridpoints will be used for a smaller area)
