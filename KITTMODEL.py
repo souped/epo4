@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import regex as re
 
+from KITT_communication import KITT
+from Keyboard import Keyboard
 
 class KITTMODEL():
     def __init__(self) -> None:
@@ -105,6 +107,7 @@ class KITTMODEL():
         
         # determine rotation matrix
         dtheta = self.v*np.sin(phi)/self.L
+        dtheta = dtheta*1.15
         rotation_matrix = np.array([[np.cos(dtheta), -np.sin(dtheta)], [np.sin(dtheta), np.cos(dtheta)]])
         
         direction = np.matmul(rotation_matrix, self.direction)
@@ -217,7 +220,7 @@ class KITTMODEL():
         # self.positions.clear()
         self.v = 0
         self.velocities.clear()
-        # self.t = 0
+        self.t = 0
         # self.times.clear()
 
         # Calculate length to destination
@@ -238,10 +241,10 @@ class KITTMODEL():
                 self.times.append(self.t)
             else:
                 t = round(t,3)
-                print("Car is at the destination! Car ran for:", t)
+                print("Simulated car is at the destination! Car ran for:", t)
                 if self.plotting_enabled == 1:
                     self.plot_path(dest)
-                self.modtime += t
+                self.modtime = t
                 return f"M158 D150 {t}"
         return print("No path found!")
 
@@ -262,17 +265,17 @@ class KITTMODEL():
             if desired_rad < cart_rad:
                 if dir_flip == 0:
                     dir_com=100
-                    print("Go right")
+                    print("Simulating when car goes right")
                 else:
                     dir_com = 200
-                    print("Go left")
+                    print("Simulating when car goes left")
             else:
                 if dir_flip == 0:
                     dir_com = 200
-                    print("Go left")
+                    print("Simulating when car goes left")
                 else:
                     dir_com = 100
-                    print("Go right")
+                    print("Simulating when car goes right")
 
             input_com=f'M158 D{dir_com} 10'
             return self.curve_command_simulator(input_com=input_com, carloc=carloc, cart_rad=cart_rad,
@@ -318,8 +321,15 @@ class KITTMODEL():
             # and return the simulation values.
             diff=np.linalg.norm(np.subtract(desired_vec,self.direction))
             if diff > threshold:
-                # print("F:", self.f)
-                self.v=self.velocity(self.dt,self.f * 1.3)
+                print("F:", self.f)
+                if self.t < 1:
+                    force = self.f * 0.3
+                elif self.t < 2:
+                    force = self.f * 0.7
+                else:
+                    force = self.f * 1.2
+
+                self.v=self.velocity(self.dt,force)
                 # print("V: ", self.v)
                 self.velocities.append(self.v)
                 self.direction=self.det_rotation()
@@ -329,13 +339,13 @@ class KITTMODEL():
                 self.times.append(self.t)
                 _,_,desired_vec=self.desired_vector(self.positions[-1],dest)
                 if self.out_of_bounds(self.pos):
-                    print("Car is out of bounds!")
+                    print("Simulated car is out of bounds!")
                     self.plot_path(dest)
                     return 0, 0, 0, 0
             else:
                 t=round(t,3) * 0.8
-                print("Car is pointing to the destination! Car ran for:",t)
-                self.modtime+=t
+                print("Simulated car is pointing to the destination! Car ran for:",t)
+                self.modtime=t
                 return 1,self.pos,self.direction,t
 
         # If the model cannot find a curved path to the destination, e.g. when it lies too close to the car, return -1
@@ -343,7 +353,7 @@ class KITTMODEL():
         return None, None, None, None
 
     def out_of_bounds(self,pos):
-        if 0 < pos[0] < 4.6 and 0 < pos[1] < 4.6:
+        if 0 < pos[0] < 4.7 and 0 < pos[1] < 4.7:
             return False
         else:
             return True
@@ -381,6 +391,9 @@ if __name__ == "__main__":
     # inputs = ["150 M158 3"]
     # md.sim(inputs)
     # plt.show(block=True)
-    dest = (3,4)
-    xy, dir, _, _ = md.generate_curve_command(carloc=(2,3), cart_rad=1*np.pi, dest=dest)
-    md.generate_straight_command(carloc=xy, dest=dest)
+    dest = (1,2)
+    kitt = KITT('COM5')
+    xy, dir, dir_com, time = md.generate_curve_command(carloc=(0,0), cart_rad=0.5*np.pi, dest=dest)
+    Keyboard.car_model_input(kitt,f"M158 D{dir_com} {time}")
+    print(xy, time)
+    # md.generate_straight_command(carloc=xy, dest=dest)

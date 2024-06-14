@@ -24,7 +24,7 @@ class Microphone:
         for i in range(pyaudio_handle.get_device_count()):
             device_info = pyaudio_handle.get_device_info_by_index(i)
             print(f"{i}, name: {device_info['name']}, inputchannels: {device_info['maxInputChannels']}")
-            if device_info['name'] == "AudioBox 1818 VSL ":
+            if device_info['name'] == "(AudioBox 1818 VSL )":
                 print("detected!")
                 pyaudio_handle.terminate()
                 return i  

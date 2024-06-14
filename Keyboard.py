@@ -79,7 +79,7 @@ class Keyboard:
 
         # To completely get the steering to neutral.
         if direction < 150:
-            kitt.set_angle(170)
+            kitt.set_angle(180)
             time.sleep(0.5)
             kitt.set_angle(150)
         elif direction > 150:
@@ -89,3 +89,7 @@ class Keyboard:
         else:
             kitt.set_angle(150)
         kitt.set_angle(150)
+
+if __name__ == '__main__':
+    kitt = KITT(port='COM5')
+    Keyboard.car_model_input(kitt, "D150 M157 1.5")

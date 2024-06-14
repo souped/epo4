@@ -1,6 +1,7 @@
 # Libraries
 import numpy as np
 from scipy.io import wavfile
+import time
 
 # Importing files
 from KITTMODEL import KITTMODEL
@@ -13,7 +14,7 @@ from StateTracker import StateTracker
 import os
 
 if os.name == 'nt': # windows:
-    sysport = 'COM2'
+    sysport = 'COM5'
 elif os.name == 'posix':
     sysport = '/dev/cu.RNBT-3F3B'
 CHANNELS = 8
@@ -33,7 +34,7 @@ class Controller():
         self.stream = []
 
         # Temporary reference signal
-        Fref,ref_signal=wavfile.read("gold_codes\gold_code_ref13.wav")
+        Fref,ref_signal=wavfile.read("gold_codes\\gold_code_ref13.wav")
         ref_signal=ref_signal[:,0]
         self.ref=ref_signal[8500:9000]
 
@@ -91,6 +92,7 @@ class Controller():
         x2 = float(x2_str)
         y2 = float(y2_str)
         carx, cary, cardir = self.run_loop(dest=(x1,y1))
+        time.sleep(10)
         self.run_loop(dest=(x2,y2), carloc=(carx,cary), car_rad=cardir)
 
 

@@ -25,13 +25,14 @@ class StateTracker():
         audio = self.mic.record_audio(seconds=2, devidx=self.mic.device_index)
         self.kitt.stop_beacon()
         print(type(audio))
-        print(f"audio: {audio}")
         x,y = self.loc.localization(audiowav=audio,ref=self.ref)
         if 0 < x < 4.6 and 0 < y < 4.6:
+            print("Tdoa location x,y=", x,y)
             x,y = round(x/100, 5), round(y/100, 5)
             self.positions.append((x,y))
             return x,y
         else:
+            print("TDOA is out of bounds! x,y=",x,y)
             x,y = self.determine_location()
             return x,y
 
@@ -48,13 +49,19 @@ class StateTracker():
         :return: '1' if the car is on track, otherwise '0'
         """
         # Determine locations
-        x1, y1 = self.determine_location()
+        state, x1, y1 = self.det_and_validate_tdoa(modelxy=model_endpos, modeltime=self.mod.modtime)
+        while state == 0:
+            state,x1,y1=self.det_and_validate_tdoa(modelxy=model_endpos,modeltime=self.mod.modtime)
         print("Position 1: ", x1, y1)
         desired_pos_dev, _, _ = self.mod.desired_vector(model_endpos, (x1,y1))  # Calculate position deviation
         print('Car is currently', desired_pos_dev, "m away from predicted position")
         if desired_pos_dev > threshold[0]:
+            after_straight_pos = (model_endpos[0]+self.mod.direction[0]*0.45,
+                                  model_endpos[1]+self.mod.direction[1]*0.45)
             Keyboard.car_model_input(kitt=self.kitt, input_cmd=f"M158 D150 {fwd_time}")  # Drive the car forwards for 1 second
-            x2, y2 = self.determine_location()
+            state, x2, y2 = self.det_and_validate_tdoa(modelxy=(after_straight_pos),modeltime=fwd_time)
+            while state == 0:
+                state,x2,y2 = self.det_and_validate_tdoa()
             print("Position 2: ", x2, y2)
 
             # Calculations
@@ -93,20 +100,26 @@ class StateTracker():
         self.direction_rad = actual_dir
         return (x2,y2), actual_dir
 
-    # def weighted_location(self, model_endpos, model_dir, Tdoa_xy, Tdoa_dir):
-    #     """
-    #     Returns a weighted location of the car, depending on the generated model, current location and model time.
-    #     :param model_endpos: End position of the model as (x,y)
-    #     :param model_dir: End orientation of the model in rad
-    #     :param Tdoa_xy: TDOA position as (x,y)
-    #     :param Tdoa_dir: TDOA orientation in rad
-    #     :return: Location of the car as (x,y)
-    #     """
-    #     if self.mod.modtime < 5:
-    #         x = (model_endpos[0]*0.8 + Tdoa_xy[0]*0.2)
-    #         y = (model_endpos[1] + Tdoa_xy[1])/2
-    #         return x,y
-    #     elif self.mod.modtime < 10:
-    #         pass
-    #     else:
-    #         pass
+    def det_and_validate_tdoa(self, modelxy, modeltime):
+        self.kitt.start_beacon()
+        audio=self.mic.record_audio(seconds=2,devidx=self.mic.device_index)
+        self.kitt.stop_beacon()
+        print(type(audio))
+        print(f"audio: {audio}")
+        x,y=self.loc.localization(audiowav=audio,ref=self.ref)
+        if 0 < x < 4.6 and 0 < y < 4.6:
+            print("Location x,y=",x,y)
+            x,y=round(x / 100,5),round(y / 100,5)
+            self.positions.append((x,y))
+        else:
+            print("TDOA is out of bounds! x,y=",x,y)
+            x,y=self.determine_location()
+
+        diff, _, _ = self.mod.desired_vector(modelxy, x,y)
+        if diff < 0.3 and modeltime < 2:
+            return 1,x,y
+        if diff < 0.6 and modeltime < 4:
+            return 1,x,y
+        else:
+            print("TDOA is not accurate!")
+            return 0,x,y
