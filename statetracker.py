@@ -2,6 +2,7 @@ import numpy as np
 from keyboardfile import Keyboard
 from Optimizing import localization
 from microphone import Microphone
+import time
 
 from scipy.io import wavfile
 
@@ -33,7 +34,8 @@ class StateTracker():
         audio = audio.T
         print(type(audio))
         print(f"shape: {audio.shape}\n audio: {audio[:,0]}")
-        if self.flag: self.mic.write_wavfile(audio, "failure.wav")
+        if True: 
+            self.mic.write_wavfile(audio.T, f"failures/failure{time.time()}.wav")
         if self.failcnt == 3:
             print("laat maar zitten")
             return None

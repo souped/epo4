@@ -8,6 +8,7 @@ from Routeplanner import RoutePlanner
 from KITT_communication import KITT
 from keyboardfile import Keyboard
 from statetracker import StateTracker
+import time
 
 REF_WAVFILE = "gold_codes/gold_code_ref13.wav"
 
@@ -68,12 +69,15 @@ class Controller():
         return x,y,dir
 
     def TDOA_tester(self):
-        input("Place car on the field, press Enter to continue...")
+        # input("Place car on the field, press Enter to continue...")
         i=0
-        while i < 10:
-            x,y=self.state.determine_location()
+        while i < 4:
+            try:
+                x,y=self.state.determine_location()
+            except IndexError:
+                x,y = -111,-111
             print("Current location:",x,y)
-            input("Move car to next location, press Enter to continue...")
+            time.sleep(2)
             i+=1
 
     def challenge_A(self):
@@ -95,7 +99,17 @@ class Controller():
         carx, cary, cardir = self.run_loop(dest=(x1,y1))
         self.run_loop(dest=(x2,y2), carloc=(carx,cary), car_rad=cardir)
 
+    def test_writer(self):
+        self.kitt.start_beacon()
+        audio = self.mic.record_audio(seconds=2, devidx=self.mic.device_index)
+        self.kitt.stop_beacon()
+        print(f"audio: {audio}")
+        print(f"shape: {audio.shape}")
+        self.mic.write_wavfile(audio, "failure.wav")
+
 
 if __name__ == "__main__":
     controller = Controller()
-    controller.run_loop(dest=(4,2))
+    # controller.run_loop(dest=(4,2))
+    # controller.test_writer()
+    controller.TDOA_tester()

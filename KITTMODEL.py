@@ -341,17 +341,17 @@ class KITTMODEL():
                 t=round(t,3) * 0.8
                 print("Car is pointing to the destination! Car ran for:",t)
                 self.modtime+=t
-                return 1,self.pos,self.direction,t
+                return 1, self.pos, self.direction, t
 
         # If the model cannot find a curved path to the destination, e.g. when it lies too close to the car, return -1
         print("No valid easy path found!")
         return None, None, None, None
 
-    def out_of_bounds(self,pos):
+    def out_of_bounds(self, pos):
         if 0 < pos[0] < 4.7 and 0 < pos[1] < 4.7:
             return False
         else:
-            print(f"x,y: {pos[0]}, {pos[1]}")
+            print(f"MODEL x,y: {pos[0]}, {pos[1]}")
             return True
 
     def desired_vector(self, carloc, dest):
