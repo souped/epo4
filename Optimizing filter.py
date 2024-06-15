@@ -19,15 +19,17 @@ class localization:
     def localization(audiowav, ref):
         # function goal: return the coorinates (x, y) using a ref signal and the audiosignal
                         
-        """ plt.figure(figsize=(15, 5))
+        plt.figure(figsize=(15, 5))
         for i in range(5):
             audio_channel_i = audiowav[:, i]
             segment = localization.detect_segments(audio_channel_i, 8)
-            ch = localization.ch3(segment[3], ref)
+            filtered_seg = localization.band_pass_filter(segment[5], lowcut=9500, highcut=10500, Fs=48000, order=5)
+            ch = localization.ch3(filtered_seg, ref)
             
+
             # Plot segment 5 in the first row
             plt.subplot(2, 5, i + 1)
-            plt.plot(segment[3], label='Segment 5')
+            plt.plot(filtered_seg, label='Segment 5')
             plt.title(f'Channel {i+1} Segment 5')
             plt.legend()
             
@@ -38,8 +40,8 @@ class localization:
             plt.legend()
 
         plt.tight_layout()
-        plt.show() """
-       
+        plt.show()
+
 
         TDOA_list = []  
         
@@ -67,14 +69,11 @@ class localization:
         # function goal: return the mean of the peaks (using segments) of the signal
         num_segments = 8
         segments = localization.detect_segments(channel_data, num_segments) # split signal into segments using function detect_segments()
-        channel_responses = [localization.ch3(segment, ref) for segment in segments] # retrieve the channel estimation for each segment using the function ch3()
+        filtered_seg = [localization.band_pass_filter(segment, lowcut=9500, highcut=10500, Fs=48000, order=5) for segment in segments]
+        channel_responses = [localization.ch3(filtered_seg, ref) for filtered_seg in filtered_seg] # retrieve the channel estimation for each segment using the function ch3()
         channel_responses_array = np.array(channel_responses)
         peaks = localization.find_segment_peaks(channel_responses_array) # get the peaks from the channel estimated segments
-        trimmed_peaks = peaks.pop(np.argmax(peaks))
-        trimmed_peaks = peaks.pop(np.argmin(peaks))
-        trimmed_peaks2 = peaks.pop(np.argmax(trimmed_peaks))
-        trimmed_peaks2 = peaks.pop(np.argmin(trimmed_peaks))
-        mean_peak = np.mean(trimmed_peaks2)
+        mean_peak = np.mean(peaks)
         return mean_peak
     
 
@@ -115,7 +114,7 @@ class localization:
         Nreference_signal = len(reference_signal)
         L = Nsignal_1 - Nreference_signal + 1
         Lhat = max(len(reference_signal), len(signal_1)) 
-        epsi = 0.15
+        epsi = 0.005
 
         # Force x to be the same length as y
         reference_signal = np.append(reference_signal, [0]* (L-1))
@@ -134,6 +133,15 @@ class localization:
 
         return h
     
+    def band_pass_filter(data, lowcut, highcut, Fs, order=5):
+        nyquist = 0.5 * Fs
+        low = lowcut / nyquist
+        high = highcut / nyquist
+        b, a = butter(order, [low, high], btype='band')
+
+        y = filtfilt(b, a, data)
+
+        return y
 
 
     def TDOA_grid(grid_dimensions):
@@ -161,15 +169,16 @@ class localization:
         gridTDOA = np.reshape(gridTDOA,(-1,10))
         return(gridTDOA)
     
-    def coordinates_2d(tdoa,min_x=0,max_x=460,min_y=0,max_y=460,grid_resolution=5,finetuning=5):     
+    def coordinates_2d(tdoa,min_x=0,max_x=460,min_y=0,max_y=460,size=5,finetuning=5):     
         #definition goal: return the coordinates of the car using the measured and calculated TDOA's  
         for i in range(finetuning):
             
             #set the grid dimensions using the given boundaries
-            xgrid = np.tile(np.linspace(min_x,max_x,grid_resolution+2)[1:-1],grid_resolution)
-            ygrid = np.repeat(np.linspace(min_y,max_y,grid_resolution+2)[1:-1],grid_resolution)
-            zgrid = np.repeat(30,grid_resolution**2)
+            xgrid = np.tile(np.linspace(min_x,max_x,size+2)[1:-1],size)
+            ygrid = np.repeat(np.linspace(min_y,max_y,size+2)[1:-1],size)
+            zgrid = np.repeat(30,size**2)
             grid_dimensions = np.stack((xgrid,ygrid,zgrid),axis=1)
+      
             
             #manually calculate the TDOA's for each microphone-pair using the function gridTDOA
             gridTDOA = localization.TDOA_grid(grid_dimensions)
@@ -181,11 +190,11 @@ class localization:
             #To make the algorithm more accurate, once a point has been found, the algorithm will be looped
             #set the dimensions for a new grid to have a higher resolution around the found point (same gridpoints will be used for a smaller area)
             if i<finetuning:
-                crop = 2/(grid_resolution**(i+1))
-                min_x = best[0] - 460*crop
-                max_x = best[0] + 460*crop
-                min_y = best[1] - 460*crop
-                max_y = best[1] + 460*crop
+                padding = 460/(size**(i+1))/2
+                min_x = best[0] - padding
+                max_x = best[0] + padding
+                min_y = best[1] - padding
+                max_y = best[1] + padding
         return best
 
 
@@ -213,12 +222,12 @@ if __name__ == "__main__":
     
     audio_files = [
         "opnames nieuw\\gold_code13_test200-195.wav",
-        "opnames nieuw\\gold_code13_test128-375.wav",
-        "opnames nieuw\\gold_code13_test334-354.wav",
-        "failures\\failure1718378635.395296.wav",
-        "failures\\failure1718378639.9232068.wav",
+        #"opnames nieuw\\gold_code13_test128-375.wav",
+        #"opnames nieuw\\gold_code13_test334-354.wav",
+        #"failures\\failure1718378635.395296.wav",
+        #"failures\\failure1718378639.9232068.wav",
         "failures\\failure1718378644.446856.wav",
-        "failures\\failure1718378648.973517.wav"
+        #"failures\\failure1718378648.973517.wav"
 
     ]
 
