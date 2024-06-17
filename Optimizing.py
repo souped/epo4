@@ -237,7 +237,14 @@ if __name__ == "__main__":
 
         print(f"{start}, {start+pulse_length}")
         segment = audio[start:start+pulse_length]
-    
+
+        plt.plot(segment)
+        plt.xlabel('Sample Index')
+        plt.ylabel('Amplitude')
+        plt.title('Reference Signal')
+        plt.show()
+        plt.close()
+
         start = time.time()
         for file in audio_files:
             Fs, audio = wavfile.read(file)
