@@ -204,7 +204,7 @@ class KITTMODEL():
         x,y = x0 + dirx * v * dt, y0 + diry * v * dt"""
         return self.pos[0] + self.direction[0] * self.v * dt, self.pos[1] + self.direction[1] * self.v * dt
 
-    def generate_straight_command(self, carloc, dest, threshold=0.05):
+    def generate_straight_command(self, carloc, dest, threshold=0.1):
         """
         Generates the command to get the car to its destination,
         under the condition that it is pointing to the destination.
@@ -353,7 +353,7 @@ class KITTMODEL():
         return None, None, None, None
 
     def out_of_bounds(self,pos):
-        if 0 < pos[0] < 4.7 and 0 < pos[1] < 4.7:
+        if 0 < pos[0] < 4.65 and 0 < pos[1] < 4.65:
             return False
         else:
             return True
@@ -374,13 +374,16 @@ class KITTMODEL():
     def plot_path(self, dest):
         # Plot the simulated curve
         fig, ax = plt.subplots()
-        ax.plot(*zip(*self.positions))
+        ax.plot(*zip(*self.positions), label='Path')
         ax.set_xlim(0, 4.6)
         ax.set_ylim(0, 4.6)
         ax.set_aspect('equal')
-        ax.plot(dest[0], dest[1], marker='o', color='red')
+        ax.plot(dest[0], dest[1], marker='o', color='red', label='Destination')
         plt.xlabel('X-axis [m]')
         plt.ylabel('Y-axis [m]')
+        plt.title(f'Generated path from {round(self.positions[0][0],2),round(self.positions[0][1],2)} to {dest}')
+        plt.tight_layout()
+        plt.legend(loc='upper right')
         plt.grid()
         plt.show(block=False)
 
@@ -391,9 +394,10 @@ if __name__ == "__main__":
     # inputs = ["150 M158 3"]
     # md.sim(inputs)
     # plt.show(block=True)
-    dest = (1,2)
-    kitt = KITT('COM5')
+    dest = (4,2)
+    kitt = KITT('COM4')
     xy, dir, dir_com, time = md.generate_curve_command(carloc=(0,0), cart_rad=0.5*np.pi, dest=dest)
-    Keyboard.car_model_input(kitt,f"M158 D{dir_com} {time}")
-    print(xy, time)
+    md.generate_straight_command(carloc=xy, dest=dest)
+    # Keyboard.car_model_input(kitt,f"M158 D{dir_com} {time}")
+    # print(xy, time)
     # md.generate_straight_command(carloc=xy, dest=dest)
