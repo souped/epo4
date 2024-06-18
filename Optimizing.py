@@ -42,11 +42,11 @@ class localization:
         channel_responses = [localization.ch3(segment, ref) for segment in segments] # retrieve the channel estimation for each segment using the function ch3()
         channel_responses_array = np.array(channel_responses)
         peaks = localization.find_segment_peaks(channel_responses_array) # get the peaks from the channel estimated segments
-        trimmed_peaks = peaks.pop(np.argmax(peaks))
-        trimmed_peaks = peaks.pop(np.argmin(trimmed_peaks))
-        trimmed_peaks2 = peaks.pop(np.argmax(trimmed_peaks))
-        trimmed_peaks2 = peaks.pop(np.argmin(trimmed_peaks2))
-        mean_peak = np.mean(trimmed_peaks2)
+        peaks.pop(np.argmax(peaks))
+        peaks.pop(np.argmin(peaks))
+        peaks.pop(np.argmax(peaks))
+        peaks.pop(np.argmin(peaks))
+        mean_peak = np.mean(peaks)
         return mean_peak
 
     def detect_segments(audio_signal, num_segments):
