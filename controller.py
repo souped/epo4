@@ -110,6 +110,6 @@ class Controller():
 
 if __name__ == "__main__":
     controller = Controller()
-    # controller.run_loop(dest=(4,2))
+    controller.run_loop(dest=(4,2))
     # controller.test_writer()
-    controller.TDOA_tester()
+    # controller.TDOA_tester()

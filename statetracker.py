@@ -27,7 +27,9 @@ class StateTracker():
         self.kitt.start_beacon()
         audio = self.mic.record_audio(seconds=2, devidx=self.mic.device_index)
         self.kitt.stop_beacon()
+
         print(audio.shape)
+        audio = audio.T
         x,y = localization.localization(audiowav=audio,ref=self.ref)
         print(x,y)
         if 0 < x < 460 and 0 < y < 460:
