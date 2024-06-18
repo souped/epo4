@@ -95,7 +95,7 @@ if __name__ == "__main__":
     while True:
         nr = input("number of test: ")
         audio = mic.record_audio(seconds, device_index)
-        mic.write_wavfile(audio, filename=f"gold_code15_test{nr}.wav")
-        Microphone.read_wavfile(f"gold_code15_test{nr}.wav")
+        mic.write_wavfile(audio, filename=f"gold_code13_2500.wav")
+        Microphone.read_wavfile(f"gold_code13_2500.wav")
         plt.show()
 

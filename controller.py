@@ -16,7 +16,7 @@ if os.name == 'nt': # windows:
     sysport = 'COM2'
 elif os.name == 'posix':
     sysport = '/dev/cu.RNBT-3F3B'
-CHANNELS = 1
+CHANNELS = 8
 RATE = 48000
 
 class Controller():

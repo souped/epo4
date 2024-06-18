@@ -10,6 +10,7 @@ Fs = 48000
 
 class localization:
     def localization(audiowav, ref):
+        
         # function goal: return the coorinates (x, y) using a ref signal and the audiosignal
         TDOA_list = []  
         
@@ -41,8 +42,10 @@ class localization:
         channel_responses_array = np.array(channel_responses)
         peaks = localization.find_segment_peaks(channel_responses_array) # get the peaks from the channel estimated segments
         trimmed_peaks = peaks.pop(np.argmax(peaks))
-        trimmed_peaks = peaks.pop(np.argmin(peaks))
-        mean_peak = np.mean(trimmed_peaks)
+        trimmed_peaks2 = peaks.pop(np.argmin(trimmed_peaks))
+        trimmed_peaks3 = peaks.pop(np.argmax(trimmed_peaks2))
+        trimmed_peaks4 = peaks.pop(np.argmin(trimmed_peaks3))
+        mean_peak = np.mean(trimmed_peaks4)
         return mean_peak
 
     def detect_segments(audio_signal, num_segments):
@@ -70,7 +73,7 @@ class localization:
         Nreference_signal = len(reference_signal)
         L = Nsignal_1 - Nreference_signal + 1
         Lhat = max(len(reference_signal), len(signal_1)) 
-        epsi = 0.005
+        epsi = 0.15
 
         # Force x to be the same length as y
         reference_signal = np.append(reference_signal, [0]* (L-1))

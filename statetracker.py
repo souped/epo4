@@ -2,12 +2,13 @@ import numpy as np
 from keyboardfile import Keyboard
 from Optimizing import localization
 from microphone import Microphone
+from KITTMODEL import KITTMODEL
 import time
 
 from scipy.io import wavfile
 
 class StateTracker():
-    def __init__(self, kitt, mod, loc: localization, mic: Microphone, ref):
+    def __init__(self, kitt, mod: KITTMODEL, loc: localization, mic: Microphone, ref):
         self.kitt = kitt
         self.mod = mod
         self.loc = loc
@@ -18,44 +19,28 @@ class StateTracker():
         self.positions = []
         self.direction_rad = 0
 
-        self.flag = False
-        self.failcnt = 0
-
     def determine_location(self):
         """
         Determines the current location of the car using the localization module.
         :return: x,y coordinates of the current location in m.
         """
-
         self.kitt.start_beacon()
         audio = self.mic.record_audio(seconds=2, devidx=self.mic.device_index)
-        # Fs, audio = wavfile.read("gold_codes/gold_code13_test128-375.wav")
         self.kitt.stop_beacon()
-        audio = audio.T
-        print(type(audio))
-        print(f"shape: {audio.shape}\n audio: {audio[:,0]}")
-        if True: 
-            self.mic.write_wavfile(audio.T, f"failures/failure{time.time()}.wav")
-        if self.failcnt == 3:
-            print("laat maar zitten")
-            return None
-        
+        print(audio.shape)
         x,y = localization.localization(audiowav=audio,ref=self.ref)
+        print(x,y)
         if 0 < x < 460 and 0 < y < 460:
-            self.positions.append((x,y))
+            print("Tdoa location x, y=", x,y)
             x,y = round(x/100, 5), round(y/100, 5)
-
+            self.positions.append((x,y))
             return x,y
         else:
-            self.flag = True
-            print("-------------------FAILURE---------------------")
-            self.failcnt += 1
-            print(f"x: {x}, y: {y}")
-
+            print("TDOA is out of bounds! x,y=",x,y)
             x,y = self.determine_location()
             return x,y
 
-    def after_curve_deviation(self,model_endpos,model_dir,dest,fwd_time=1,threshold=(0.3,0.5,1)):
+    def after_curve_deviation(self,model_endpos,model_dir,dest,fwd_time=1.5,threshold=(0.3,0.5,1)):
         """
         This function checks if the car is deviating from the model path. It does this by driving the car forwards
         for a small time.
@@ -68,13 +53,15 @@ class StateTracker():
         :return: '1' if the car is on track, otherwise '0'
         """
         # Determine locations
-        x1, y1 = self.determine_location()
+        x1, y1 = self.det_and_validate_tdoa(modelxy=model_endpos, modeltime=self.mod.modtime)
         print("Position 1: ", x1, y1, "model endpos: ", model_endpos)
         desired_pos_dev, _, _ = self.mod.desired_vector(model_endpos, (x1,y1))  # Calculate position deviation
         print('Car is currently', desired_pos_dev, "m away from predicted position")
         if desired_pos_dev > threshold[0]:
+            after_straight_pos = (model_endpos[0]+self.mod.direction[0]*0.45,
+                                  model_endpos[1]+self.mod.direction[1]*0.45)
             Keyboard.car_model_input(kitt=self.kitt, input_cmd=f"M158 D150 {fwd_time}")  # Drive the car forwards for 1 second
-            x2, y2 = self.determine_location()
+            x2, y2 = self.det_and_validate_tdoa(modelxy=(after_straight_pos),modeltime=fwd_time)
             print("Position 2: ", x2, y2)
 
             # Calculations
@@ -112,3 +99,59 @@ class StateTracker():
             _, actual_dir, _ = self.mod.desired_vector((x2, y2), (x1, y1))  # Calculate the orientation deviation
         self.direction_rad = actual_dir
         return (x2,y2), actual_dir
+
+    def det_and_validate_tdoa(self, modelxy, modeltime):
+        def get_valid_location():
+            self.kitt.start_beacon()
+            audio=self.mic.record_audio(seconds=2,devidx=self.mic.device_index)
+            self.kitt.stop_beacon()
+            print(type(audio))
+            print(f"audio: {audio}")
+            x,y=localization.localization(audiowav=audio,ref=self.ref)
+            i=0
+            while not (0 < x < 460 and 0 < y < 460) and i<3:
+                print("TDOA is out of bounds! x,y=",x,y)
+                self.kitt.start_beacon()
+                audio = self.mic.record_audio(seconds=2, devidx=self.mic.device_index)
+                self.kitt.stop_beacon()
+                print(type(audio))
+                print(f"audio: {audio}")
+                x, y = localization.localization(audiowav=audio, ref=self.ref)
+                i += 1
+            print("Location x,y=", x, y)
+            x, y = round(x / 100, 5), round(y / 100, 5)
+            return x,y
+
+        def get_same_location(x1,y1):
+            x2, y2 = get_valid_location()
+            diff, _, _ = self.mod.desired_vector((x1,y1), (x2,y2))
+            print("Difference between TDOA estimations:", diff,"meter")
+            while diff > 1:
+                print("Second TDOA is too far away!")
+                x2, y2 = get_valid_location()
+            return (x1+x2)/2, (y1+y2)/2
+
+        x,y = get_valid_location()
+        diff, _, _ = self.mod.desired_vector(modelxy, (x,y))
+        if diff < 0.3 and modeltime < 2:
+            get_same_location(x,y)
+            self.positions.append((x, y))
+            return x, y
+        elif diff < 0.6 and modeltime < 4:
+            get_same_location(x,y)
+            self.positions.append((x, y))
+            return x, y
+        else:
+            print("TDOA is not accurate! Trying again...")
+            x,y = get_valid_location()
+            diff, _, _ = self.mod.desired_vector(modelxy, (x,y))
+            if diff < 0.3 and modeltime < 2:
+                get_same_location(x, y)
+                self.positions.append((x, y))
+                return x, y
+            elif diff < 0.6 and modeltime < 4:
+                get_same_location(x, y)
+                self.positions.append((x, y))
+                return x, y
+            else:
+                return 0, 0
