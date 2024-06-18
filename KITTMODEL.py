@@ -107,7 +107,7 @@ class KITTMODEL():
         
         # determine rotation matrix
         dtheta = self.v*np.sin(phi)/self.L
-        dtheta = dtheta*1.15
+        # dtheta = dtheta*1.15
         rotation_matrix = np.array([[np.cos(dtheta), -np.sin(dtheta)], [np.sin(dtheta), np.cos(dtheta)]])
         
         direction = np.matmul(rotation_matrix, self.direction)
@@ -321,13 +321,14 @@ class KITTMODEL():
             # and return the simulation values.
             diff=np.linalg.norm(np.subtract(desired_vec,self.direction))
             if diff > threshold:
-                print("F:", self.f)
                 if self.t < 1:
-                    force = self.f * 0.3
+                    force = self.f * 0.5
                 elif self.t < 2:
-                    force = self.f * 0.7
+                    force = self.f * 1
+                elif self.t < 3:
+                    force = self.f * 1.5
                 else:
-                    force = self.f * 1.2
+                    force = self.f * 0
 
                 self.v=self.velocity(self.dt,force)
                 # print("V: ", self.v)
@@ -344,8 +345,10 @@ class KITTMODEL():
                     return 0, 0, 0, 0
             else:
                 t=round(t,3) * 0.8
+                if t > 4: t+=0.5
                 print("Simulated car is pointing to the destination! Car ran for:",t)
                 self.modtime=t
+                self.plot_path((round(self.positions[-1][0],3),round(self.positions[-1][1],3)))
                 return 1,self.pos,self.direction,t
 
         # If the model cannot find a curved path to the destination, e.g. when it lies too close to the car, return -1
@@ -395,9 +398,9 @@ if __name__ == "__main__":
     # md.sim(inputs)
     # plt.show(block=True)
     dest = (4,2)
-    kitt = KITT('COM4')
+    # kitt = KITT('COM5')
     xy, dir, dir_com, time = md.generate_curve_command(carloc=(0,0), cart_rad=0.5*np.pi, dest=dest)
-    md.generate_straight_command(carloc=xy, dest=dest)
+    # md.generate_straight_command(carloc=xy, dest=dest)
     # Keyboard.car_model_input(kitt,f"M158 D{dir_com} {time}")
     # print(xy, time)
     # md.generate_straight_command(carloc=xy, dest=dest)

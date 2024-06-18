@@ -47,24 +47,25 @@ class Controller():
         curve_cmd, model_endpos, model_dir = self.rp.make_curve_route(carloc, car_rad, dest)
         Keyboard.car_model_input(kitt=self.kitt, input_cmd=curve_cmd)
 
-        state, (x,y), dir = self.state.after_curve_deviation(model_endpos=model_endpos, model_dir=model_dir, dest=dest)
-        while state == 0:
-            curve_cmd_corr,model_endpos,model_dir=self.rp.make_curve_route((x,y),dir,dest)
-            Keyboard.car_model_input(kitt=self.kitt, input_cmd=curve_cmd_corr)
-            state,(x,y),dir=self.state.after_curve_deviation(model_endpos=model_endpos,model_dir=model_dir,dest=dest)
+        # state, (x,y), dir = self.state.after_curve_deviation(model_endpos=model_endpos, model_dir=model_dir, dest=dest)
+        # while state == 0:
+        #     curve_cmd_corr,model_endpos,model_dir=self.rp.make_curve_route((x,y),dir,dest)
+        #     Keyboard.car_model_input(kitt=self.kitt, input_cmd=curve_cmd_corr)
+        #     state,(x,y),dir=self.state.after_curve_deviation(model_endpos=model_endpos,model_dir=model_dir,dest=dest)
 
         print("Generating straight commands...")
-        straight_cmd = self.rp.make_straight_route(carloc, dest)
+        straight_cmd = self.rp.make_straight_route(model_endpos, dest)
         Keyboard.car_model_input(kitt=self.kitt, input_cmd=straight_cmd)
+        print("Car is at location!")
 
-        x,y = self.state.determine_location()
-        print("Final location:", x,y)
+        # x,y = self.state.determine_location()
+        # print("Final location:", x,y)
         # track data?
         # do this inside the KITT Class or a separate other class i.e. DrivingHistory
 
         # temporary end
         self.running = False
-        return x,y,dir
+        return None
 
     def TDOA_tester(self):
         input("Place car on the field, press Enter to continue...")
@@ -99,5 +100,5 @@ class Controller():
 
 if __name__ == "__main__":
     controller = Controller()
-    controller.run_loop(carloc=(0,0), car_rad=0.5*np.pi, dest=(0,4))
+    controller.run_loop(carloc=(0.2,0.3), car_rad=0.5*np.pi, dest=(4.6,2.3))
     # controller.TDOA_tester()

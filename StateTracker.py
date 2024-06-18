@@ -27,7 +27,7 @@ class StateTracker():
         self.kitt.stop_beacon()
         print(type(audio))
         x,y = self.loc.localization(audiowav=audio,ref=self.ref)
-        if 0 < x < 4.6 and 0 < y < 4.6:
+        if 0 < x < 460 and 0 < y < 460:
             print("Tdoa location x,y=", x,y)
             x,y = round(x/100, 5), round(y/100, 5)
             self.positions.append((x,y))
@@ -108,16 +108,14 @@ class StateTracker():
             x = int(input("x"))
             y = int(input("y"))
             i=0
-            while not (0 < x < 4.6 and 0 < y < 4.6) and i<3:
+            while not (0 < x < 460 and 0 < y < 460) and i<3:
                 print("TDOA is out of bounds! x,y=",x,y)
                 self.kitt.start_beacon()
                 audio = self.mic.record_audio(seconds=2, devidx=self.mic.device_index)
                 self.kitt.stop_beacon()
                 print(type(audio))
                 print(f"audio: {audio}")
-                # x, y = self.loc.localization(audiowav=audio, ref=self.ref)
-                x = int(input("x"))
-                y = int(input("y"))
+                x, y = self.loc.localization(audiowav=audio, ref=self.ref)
                 i += 1
             print("Location x,y=", x, y)
             x, y = round(x / 100, 5), round(y / 100, 5)
