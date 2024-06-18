@@ -16,21 +16,22 @@ from scipy.signal import butter, filtfilt
 
 
 class localization:
-    def localization(audiowav, ref):
+    def localization(audiowav, reference):
         # function goal: return the coorinates (x, y) using a ref signal and the audiosignal
                         
-        """plt.figure(figsize=(15, 5))
+        """ plt.figure(figsize=(15, 5))
         for i in range(5):
             audio_channel_i = audiowav[:, i]
             segment = localization.detect_segments(audio_channel_i, 8)
-            ch = localization.ch3(segment[3], ref)
+            
             
             # Plot segment 5 in the first row
             plt.subplot(2, 5, i + 1)
             plt.plot(segment[3], label='Segment 5')
             plt.title(f'Channel {i+1} Segment 5')
             plt.legend()
-            
+
+            ch = localization.ch3(segment[3], ref)
             # Plot channel estimation in the second row
             plt.subplot(2, 5, i + 6)
             plt.plot(ch, label='Channel Estimation 5')
@@ -38,78 +39,51 @@ class localization:
             plt.legend()
 
         plt.tight_layout()
-        plt.show()"""
+        plt.show()  """
 
-        """Plot signals from all 5 channels
-        plt.figure(figsize=(15, 5))
+
+        """ plt.figure(figsize=(30, 10))
+
         for i in range(5):
-            plt.subplot(1, 5, i+1)
-            plt.plot(audiowav[:,i])
-            plt.title(f'Audio microphone {i+1}')
-            plt.legend()
-        plt.tight_layout()
-        plt.show()"""
+            audio_channel_i = audiowav[:, i]
+            segments = localization.detect_segments(audio_channel_i, 8)
+            peaks_segments_i = localization.find_segment_peaks(segments) # get the peaks from the channel estimated segments
 
-    
-        plt.figure(figsize=(10, 5))
-        plt.plot(audiowav[:,4])
-        plt.title('Audio microphone 5, x = 200cm, y = 195cm')
-        plt.xlabel('Sample index')
-        plt.ylabel('Amplitude')
-        plt.tight_layout()
-        plt.savefig('plt-full')
-        plt.close()
+            for j in range(8):
+                segment = segments[j]     
+                peak_index_seg = peaks_segments_i[j]           
 
-        
-        plt.figure(figsize=(10, 5))
-        plt.plot(localization.detect_segments(audiowav[:,4],8)[2])
-        plt.title('Second detected segment')
-        plt.xlabel('Sample index')
-        plt.ylabel('Amplitude')
+                plt.subplot(5, 8, i * 8 + j + 1)
+                plt.plot(segment)
+                plt.scatter(peak_index_seg, segment[peak_index_seg], color='red', zorder=5, label='Peak')
+                plt.title(f'Channel {i+1} Segment {j+1}')
+                plt.legend()
         plt.tight_layout()
-        plt.savefig('plt-segment')
-        plt.close()
+        plt.show()
 
-        plt.figure(figsize=(10, 20))
-        plt.suptitle('Segment 2 of all microphones, x = 200cm, y = 195cm')
+        plt.figure(figsize=(30, 10))
+
         for i in range(5):
-            plt.subplot(5, 1, i+1)
-            plt.plot(localization.detect_segments(audiowav[:,i],8)[2])
-            plt.title(f'Microphone {i+1}')
-            plt.xlabel('Sample index')
-            plt.ylabel('Amplitude')
-        plt.tight_layout(rect=[0, 0.01, 1, 0.98])
-        plt.savefig('plt-allsegments')
-        plt.close()
+            audio_channel_i = audiowav[:, i]
+            segments = localization.detect_segments(audio_channel_i, 8)
+            channel_responses_i = [localization.ch3(segment, ref) for segment in segments] # retrieve the channel estimation for each segment using the function ch3()
+            peaks_ch_i = localization.find_segment_peaks(channel_responses_i)
+            print(i, "ch:", peaks_ch_i)
+            print(i, "seg:", peaks_segments_i)
 
-        signal = localization.ch3(localization.detect_segments(audiowav[:,4],8)[2], ref)
-        plt.figure(figsize=(10, 5))
-        plt.plot(signal)
-        plt.title('Deconvolution of the segment')
-        plt.xlabel('Sample index')
-        plt.ylabel('Amplitude')
-        plt.legend()
+
+
+            for j in range(8):
+                peak_index = peaks_ch_i[j]
+                ch = channel_responses_i[j]           
+
+                plt.subplot(5, 8, i * 8 + j + 1)
+                plt.plot(ch)
+                plt.scatter(peak_index, ch[peak_index], color='red', zorder=5, label='Peak')
+                plt.title(f'Channel {i+1} Segment {j+1}')
+                plt.legend()
         plt.tight_layout()
-        plt.savefig('plt-deconvolution')
-        plt.close()
-
-
-        signal = localization.ch3(localization.detect_segments(audiowav[:,4],8)[2], ref)
-        p = np.argmax(signal)
-        print(p)
-        plt.figure(figsize=(10, 5))
-        plt.plot(signal)
-        plt.title('Peak detection')
-        plt.xlabel('Sample index')
-        plt.ylabel('Amplitude')
-        plt.axvline(x=p, color='r', linestyle='--', label='Detected peak')
-        plt.legend()
-        plt.tight_layout()
-        plt.savefig('plt-peakdeconvolution')
-        plt.close()
-
-
-
+        plt.show() """
         
 
         TDOA_list = []  
@@ -122,18 +96,17 @@ class localization:
                 audio_channel_j = audiowav[:, j]
 
         
-                
                 # calculate the mean of the list with peaks using the function process_channel() for each channel
-                mean_peak_i = localization.process_channel(audio_channel_i, ref)
-                mean_peak_j = localization.process_channel(audio_channel_j, ref)
+                mean_peak_i = localization.process_channel(audio_channel_i, reference)
+                mean_peak_j = localization.process_channel(audio_channel_j, reference)
 
                 # using the peaks, calculate the TDOA's by comparing the microphone pairs using function TDOA()
                 TDOA = localization.TDOA(mean_peak_j, mean_peak_i)
                 TDOA_list.append(TDOA)
-    
-        
+
+
+
         # calculate the coordinates using the function coordinates_2d and the TDOA-list
-        print(TDOA_list)
         location = localization.coordinates_2d(TDOA_list)
         x_car = location[0]
         y_car = location[1]
@@ -142,16 +115,16 @@ class localization:
     
     def process_channel(channel_data, ref):
         # function goal: return the mean of the peaks (using segments) of the signal
-        num_segments = 8
+        num_segments = 20
         segments = localization.detect_segments(channel_data, num_segments) # split signal into segments using function detect_segments()
         channel_responses = [localization.ch3(segment, ref) for segment in segments] # retrieve the channel estimation for each segment using the function ch3()
         channel_responses_array = np.array(channel_responses)
         peaks = localization.find_segment_peaks(channel_responses_array) # get the peaks from the channel estimated segments
-        trimmed_peaks = peaks.pop(np.argmax(peaks))
-        trimmed_peaks = peaks.pop(np.argmin(peaks))
-        trimmed_peaks2 = peaks.pop(np.argmax(trimmed_peaks))
-        trimmed_peaks2 = peaks.pop(np.argmin(trimmed_peaks))
-        mean_peak = np.mean(trimmed_peaks2)
+        """ peaks.pop(np.argmax(peaks))
+        peaks.pop(np.argmin(peaks))
+        peaks.pop(np.argmax(peaks))
+        peaks.pop(np.argmin(peaks)) """
+        mean_peak = np.mean(peaks)
         return mean_peak
     
 
@@ -190,13 +163,13 @@ class localization:
     def ch3(signal_1, reference_signal):
         Nsignal_1 = len(signal_1)
         Nreference_signal = len(reference_signal)
+
         L = Nsignal_1 - Nreference_signal + 1
         Lhat = max(len(reference_signal), len(signal_1)) 
         epsi = 0.15
 
-        # Force x to be the same length as y
         reference_signal = np.append(reference_signal, [0]* (L-1))
-        
+
         # Deconvolution in frequency domain
         fft_signal_1 = fft(signal_1)
         fft_reference_signal = fft(reference_signal)
@@ -286,34 +259,49 @@ if __name__ == "__main__":
         #"gold_codes\\gold_code_ref10.wav",
         #"gold_codes\\gold_code_ref11.wav",
         #"gold_codes\\gold_code_ref12.wav",
-        "gold_codes\\gold_code_ref13.wav"]
+        #"gold_codes\\gold_code_ref13.wav"
+        #"extra test/12-06_ref2.wav",
+        #"extra test/ref1.wav",
+        "newtest/12-06_ref2.wav"
+        ]
     
     audio_files = [
-        "opnames nieuw\\gold_code13_test200-195.wav"
+        #"opnames nieuw\\gold_code13_test200-195.wav"
         # "opnames nieuw\\gold_code13_test128-375.wav",
         # "opnames nieuw\\gold_code13_test334-354.wav",
-        # "failures\\failure1718378635.395296.wav",
+        #"failures\\failure1718378635.395296.wav",
         # "failures\\failure1718378639.9232068.wav",
         # "failures\\failure1718378644.446856.wav",
-        # "failures\\failure1718378648.973517.wav"
+        #"failures\\failure1718378648.973517.wav",
+        #"extra test/12-06_x430_y317.wav",
+        #"extra test/12-06_x426_y36.wav",
+        #"extra test/12-06_x339_y157.wav",
+        #"extra test/12-06_x334_y354.wav",
+        #"extra test/12-06_x267_y258.wav",
+        #"extra test/12-06_x45_y267.wav",
+        "newtest/12-06_x45_y267.wav",
+        "newtest/12-06_x64_y40.wav",
+        "newtest/12-06_x334_y354.wav",
+        "newtest/12-06_x426_y36.wav",
+        "newtest/12-06_x430_y317.wav",
+        "newtest/12-06_x339_y157.wav",
+        "newtest/12-06_x267_y258.wav",
+        "newtest/12-06_x45_y267.wav",
 
     ]
 
 
     for ref in ref_files:
         Fs, audio = wavfile.read(ref)
-        
-        
         audio = audio[:, 0]
         for i in range(len(audio)):
-            if np.abs(audio[i])>50:
+            if np.abs(audio[i])>200:
                 start=i
-                break
-
-        pulse_length = 306
-
-        print(f"{start}, {start+pulse_length}")
-        segment = audio[start:start+pulse_length]
+                break   
+        pulse=308
+        segment = audio[start-30:start+pulse]
+    
+        #[start:start+pulse_length]
 
         # plt.plot(segment)
         # plt.xlabel('Sample Index')

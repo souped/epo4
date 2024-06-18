@@ -9,14 +9,16 @@ def autocorrelation(seq):
 
 # Beacon specs
 audio_files = [
-    "gold_codes\\gold_code_ref2.wav",
-    "gold_codes\\gold_code_ref4.wav",
-    "gold_codes\\gold_code_ref6.wav",
-    "gold_codes\\gold_code_ref8.wav",
-    "gold_codes\\gold_code_ref10.wav",
-    "gold_codes\\gold_code_ref11.wav",
-    "gold_codes\\gold_code_ref12.wav",
-    "gold_codes\\gold_code_ref13.wav",
+    #"gold_codes\\gold_code_ref2.wav",
+    #"gold_codes\\gold_code_ref4.wav",
+    #"gold_codes\\gold_code_ref6.wav",
+    #"gold_codes\\gold_code_ref8.wav",
+    #"gold_codes\\gold_code_ref10.wav",
+    #"gold_codes\\gold_code_ref11.wav",
+    #"gold_codes\\gold_code_ref12.wav",
+    #"gold_codes\\gold_code_ref13.wav",
+    #"extra test/12-06_ref2.wav",
+    "newtest/12-06_ref2.wav"
 ]
 
 
@@ -26,11 +28,11 @@ for file in audio_files:
     
     audio = audio[:, 0]
     for i in range(len(audio)):
-        if np.abs(audio[i])>50:
+        if np.abs(audio[i])>200:
             start=i
             break   
-
-    segment = audio[start:start+307]
+    pulse=3072
+    segment = audio[start-25:start+pulse]
     
     plt.plot(segment)
     plt.title(f"Reference signal for {file}")
