@@ -19,7 +19,7 @@ class localization:
     def localization(audiowav, ref):
         # function goal: return the coorinates (x, y) using a ref signal and the audiosignal
                         
-        """ plt.figure(figsize=(15, 5))
+        """plt.figure(figsize=(15, 5))
         for i in range(5):
             audio_channel_i = audiowav[:, i]
             segment = localization.detect_segments(audio_channel_i, 8)
@@ -38,8 +38,79 @@ class localization:
             plt.legend()
 
         plt.tight_layout()
-        plt.show() """
-       
+        plt.show()"""
+
+        """Plot signals from all 5 channels
+        plt.figure(figsize=(15, 5))
+        for i in range(5):
+            plt.subplot(1, 5, i+1)
+            plt.plot(audiowav[:,i])
+            plt.title(f'Audio microphone {i+1}')
+            plt.legend()
+        plt.tight_layout()
+        plt.show()"""
+
+    
+        plt.figure(figsize=(10, 5))
+        plt.plot(audiowav[:,4])
+        plt.title('Audio microphone 5, x = 200cm, y = 195cm')
+        plt.xlabel('Sample index')
+        plt.ylabel('Amplitude')
+        plt.tight_layout()
+        plt.savefig('plt-full')
+        plt.close()
+
+        
+        plt.figure(figsize=(10, 5))
+        plt.plot(localization.detect_segments(audiowav[:,4],8)[2])
+        plt.title('Second detected segment')
+        plt.xlabel('Sample index')
+        plt.ylabel('Amplitude')
+        plt.tight_layout()
+        plt.savefig('plt-segment')
+        plt.close()
+
+        plt.figure(figsize=(10, 20))
+        plt.suptitle('Segment 2 of all microphones, x = 200cm, y = 195cm')
+        for i in range(5):
+            plt.subplot(5, 1, i+1)
+            plt.plot(localization.detect_segments(audiowav[:,i],8)[2])
+            plt.title(f'Microphone {i+1}')
+            plt.xlabel('Sample index')
+            plt.ylabel('Amplitude')
+        plt.tight_layout(rect=[0, 0.01, 1, 0.98])
+        plt.savefig('plt-allsegments')
+        plt.close()
+
+        signal = localization.ch3(localization.detect_segments(audiowav[:,4],8)[2], ref)
+        plt.figure(figsize=(10, 5))
+        plt.plot(signal)
+        plt.title('Deconvolution of the segment')
+        plt.xlabel('Sample index')
+        plt.ylabel('Amplitude')
+        plt.legend()
+        plt.tight_layout()
+        plt.savefig('plt-deconvolution')
+        plt.close()
+
+
+        signal = localization.ch3(localization.detect_segments(audiowav[:,4],8)[2], ref)
+        p = np.argmax(signal)
+        print(p)
+        plt.figure(figsize=(10, 5))
+        plt.plot(signal)
+        plt.title('Peak detection')
+        plt.xlabel('Sample index')
+        plt.ylabel('Amplitude')
+        plt.axvline(x=p, color='r', linestyle='--', label='Detected peak')
+        plt.legend()
+        plt.tight_layout()
+        plt.savefig('plt-peakdeconvolution')
+        plt.close()
+
+
+
+        
 
         TDOA_list = []  
         
@@ -49,6 +120,8 @@ class localization:
                 # take one channel of the audio signal
                 audio_channel_i = audiowav[:, i]
                 audio_channel_j = audiowav[:, j]
+
+        
                 
                 # calculate the mean of the list with peaks using the function process_channel() for each channel
                 mean_peak_i = localization.process_channel(audio_channel_i, ref)
@@ -57,10 +130,14 @@ class localization:
                 # using the peaks, calculate the TDOA's by comparing the microphone pairs using function TDOA()
                 TDOA = localization.TDOA(mean_peak_j, mean_peak_i)
                 TDOA_list.append(TDOA)
+    
+        
         # calculate the coordinates using the function coordinates_2d and the TDOA-list
+        print(TDOA_list)
         location = localization.coordinates_2d(TDOA_list)
         x_car = location[0]
         y_car = location[1]
+
         return x_car, y_car #return the coordinates
     
     def process_channel(channel_data, ref):
@@ -212,13 +289,13 @@ if __name__ == "__main__":
         "gold_codes\\gold_code_ref13.wav"]
     
     audio_files = [
-        "opnames nieuw\\gold_code13_test200-195.wav",
-        "opnames nieuw\\gold_code13_test128-375.wav",
-        "opnames nieuw\\gold_code13_test334-354.wav",
-        "failures\\failure1718378635.395296.wav",
-        "failures\\failure1718378639.9232068.wav",
-        "failures\\failure1718378644.446856.wav",
-        "failures\\failure1718378648.973517.wav"
+        "opnames nieuw\\gold_code13_test200-195.wav"
+        # "opnames nieuw\\gold_code13_test128-375.wav",
+        # "opnames nieuw\\gold_code13_test334-354.wav",
+        # "failures\\failure1718378635.395296.wav",
+        # "failures\\failure1718378639.9232068.wav",
+        # "failures\\failure1718378644.446856.wav",
+        # "failures\\failure1718378648.973517.wav"
 
     ]
 
@@ -238,12 +315,12 @@ if __name__ == "__main__":
         print(f"{start}, {start+pulse_length}")
         segment = audio[start:start+pulse_length]
 
-        plt.plot(segment)
-        plt.xlabel('Sample Index')
-        plt.ylabel('Amplitude')
-        plt.title('Reference Signal')
-        plt.show()
-        plt.close()
+        # plt.plot(segment)
+        # plt.xlabel('Sample Index')
+        # plt.ylabel('Amplitude')
+        # plt.title('Reference Signal')
+        # plt.show()
+        # plt.close()
 
         start = time.time()
         for file in audio_files:
