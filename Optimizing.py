@@ -9,12 +9,34 @@ from microphone import Microphone
 Fs = 48000
 
 class localization:
-    def localization(audiowav, ref):
+    def localization(audiowav, ref, EPS=None):
+
+        channeli = 0
+        segi = 0
+
+        def process_channel(channel_data, ref, EPS=None):
+            # function goal: return the mean of the peaks (using segments) of the signal
+            num_segments = 8
+            plt.gca().plot(channel_data)
+            # plt.show()
+            plt.savefig(f"pgs/channel_{channeli}-{segi}.png")
+            plt.close()
+            segments = localization.detect_segments(channel_data, num_segments) # split signal into segments using function detect_segments()
+            channel_responses = [localization.ch3(segment, ref, epsi=EPS) for segment in segments] # retrieve the channel estimation for each segment using the function ch3()
+            channel_responses_array = np.array(channel_responses)
+            peaks = localization.find_segment_peaks(channel_responses_array) # get the peaks from the channel estimated segments
+            
+            tempt = channel_data[peaks]
+            
+            peaks.pop(np.argmax(peaks))
+            peaks.pop(np.argmin(peaks))
+            mean_peak = np.mean(peaks)
+            return mean_peak
         
         # function goal: return the coorinates (x, y) using a ref signal and the audiosignal
         TDOA_list = []  
         
-        #loop the calculateions so it will be done for a microphone and the following one, creating 10 microphone pairs (12, 13, 14, ... , 45)
+        #loop the calculations so it will be done for a microphone and the following one, creating 10 microphone pairs (12, 13, 14, ... , 45)
         for i in range(5):
             for j in range(i+1, 5):
                 # take one channel of the audio signal
@@ -22,8 +44,10 @@ class localization:
                 audio_channel_j = audiowav[:, j]
                 
                 # calculate the mean of the list with peaks using the function process_channel() for each channel
-                mean_peak_i = localization.process_channel(audio_channel_i, ref)
-                mean_peak_j = localization.process_channel(audio_channel_j, ref)
+                channeli = i
+                mean_peak_i = process_channel(audio_channel_i, ref, EPS)
+                channeli = j
+                mean_peak_j = process_channel(audio_channel_j, ref, EPS)
 
                 # using the peaks, calculate the TDOA's by comparing the microphone pairs using function TDOA()
                 TDOA = localization.TDOA(mean_peak_j, mean_peak_i)
@@ -33,20 +57,6 @@ class localization:
         x_car = location[0]
         y_car = location[1]
         return x_car, y_car #return the coordinates
-    
-    def process_channel(channel_data, ref):
-        # function goal: return the mean of the peaks (using segments) of the signal
-        num_segments = 8
-        segments = localization.detect_segments(channel_data, num_segments) # split signal into segments using function detect_segments()
-        channel_responses = [localization.ch3(segment, ref) for segment in segments] # retrieve the channel estimation for each segment using the function ch3()
-        channel_responses_array = np.array(channel_responses)
-        peaks = localization.find_segment_peaks(channel_responses_array) # get the peaks from the channel estimated segments
-        trimmed_peaks = peaks.pop(np.argmax(peaks))
-        trimmed_peaks2 = peaks.pop(np.argmin(trimmed_peaks))
-        trimmed_peaks3 = peaks.pop(np.argmax(trimmed_peaks2))
-        trimmed_peaks4 = peaks.pop(np.argmin(trimmed_peaks3))
-        mean_peak = np.mean(trimmed_peaks4)
-        return mean_peak
 
     def detect_segments(audio_signal, num_segments):
         # function goals: split the audio signal into segments
@@ -68,12 +78,12 @@ class localization:
         return (peak2 - peak1)/Fs
                 
     @staticmethod 
-    def ch3(signal_1, reference_signal):
+    def ch3(signal_1, reference_signal, epsi = 0.15):
         Nsignal_1 = len(signal_1)
         Nreference_signal = len(reference_signal)
         L = Nsignal_1 - Nreference_signal + 1
         Lhat = max(len(reference_signal), len(signal_1)) 
-        epsi = 0.15
+        # epsi = 0.15
 
         # Force x to be the same length as y
         reference_signal = np.append(reference_signal, [0]* (L-1))
@@ -150,48 +160,49 @@ if __name__ == "__main__":
 # Present the results
     localizer = localization()
 
-
     start=time.time()
-    Fref3, ref_signal3 = wavfile.read("gold_codes/gold_code_ref11.wav")
+
     ref_files = [
-        #"gold_codes\\gold_code_ref2.wav",
-        #"gold_codes\\gold_code_ref4.wav",
-        #"gold_codes\\gold_code_ref6.wav",
-        #"gold_codes\\gold_code_ref8.wav",
-        #"gold_codes\\gold_code_ref10.wav",
-        #"gold_codes\\gold_code_ref11.wav",
-        #"gold_codes\\gold_code_ref12.wav",
         "gold_codes/gold_code_ref13.wav"]
     
     audio_files = [
         "gold_codes/gold_code13_test200-195.wav",
-        "gold_codes/gold_code13_test128-375.wav",
-        "gold_codes/gold_code13_test334-354.wav"
+        # "gold_codes/gold_code13_test128-375.wav",
+        # "gold_codes/gold_code13_test334-354.wav",
+        # "failures/failure1718378648.973517.wav",
+        # "failures/failure1718378644.446856.wav",
+        # "failures/failure1718378639.9232068.wav"
     ]
 
 
     for ref in ref_files:
         Fs, audio = wavfile.read(ref)
+        # plt.gca().plot(audio)
+        # plt.show()
         
         audio = audio[:, 0]
         for i,val in enumerate(audio):
-            if val > 50:
+            if abs(val) > 47:
                 start = i
                 break
 
-        pulse_length = 306
+        p = 307
+        # for p in range(300, 400, 5):
 
-        print(f"segment index range: {start}, {start+pulse_length}")
-        segment = audio[start:start+pulse_length]
+        print(f"segment index range: {start}, {start+p}")
+        segment = audio[start:start+p]
     
-        start = time.time()
         for file in audio_files:
             Fs, audio = wavfile.read(file)
-            x_car, y_car = localization.localization(audio, segment)
-            print(f"{file}, {ref}: x = {x_car:.4f}, y = {y_car:.4f}")
-        print(" ")
-    end = time.time()
-    print("Total time:", end - start)
+            print(f"file: {file}")
+            # for ep in range(1, 200, 10):
+                # ep = ep/1000
+            ep = 0.04
+            x_car, y_car = localization.localization(audio, segment, ep)
+            if x_car > 180 and x_car < 220 and y_car > 180 and y_car < 220:
+                print(f"epsi: {ep}", end = " ")
+                print(f"x = {x_car:.4f}, y = {y_car:.4f}")
+                plt.show()
 
 if __name__ == "__main_99_":
     localizer = localization()
@@ -222,7 +233,7 @@ def peak_idxs(channel):
     # max(channel) * 0.95
     m_i = np.argmax(channel)
     m = channel[m_i]
-    a = 0.96
+    a = 0.95
     th = m * a
     peaks_i = []
     for i,val in enumerate(channel):
@@ -251,7 +262,7 @@ def segment_from_rec(audio):
 # in proc: detect_segments: snijd op in stukjes met 1 peak per stukjes
 # 
 
-if __name__ == "__main_33_":
+if __name__ == "__main__99":
     localizer = localization()
     start = time.time()
     Fref, ref_signal = wavfile.read("gold_codes/gold_code_ref13.wav")
