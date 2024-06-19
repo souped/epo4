@@ -55,13 +55,13 @@ def coordinates_2d(tdoa,min_x=0,max_x=460,min_y=0,max_y=460,grid_resolution=5,fi
             max_y = best[1] + 460*crop
     return best
 
-xx = 2.2
-yy = 1.2
+xx = 1.2
+yy = 4
 
-TDOA12 = (np.sqrt((4.6-yy)**2+xx**2)-np.sqrt(xx**2+yy**2))/343
-TDOA13 = (np.sqrt((4.6-xx)**2+(4.6-yy)**2)-np.sqrt(xx**2+yy**2))/343
-TDOA14 = (np.sqrt((4.6-xx)**2+yy**2)-np.sqrt(xx**2+yy**2))/343
-TDOA15 = (np.sqrt(xx**2+(2.3-yy)**2)-np.sqrt(xx**2+yy**2))/343
+TDOA12 = (-np.sqrt((4.6-yy)**2+xx**2)+np.sqrt(xx**2+yy**2))/343
+TDOA13 = (-np.sqrt((4.6-xx)**2+(4.6-yy)**2)+np.sqrt(xx**2+yy**2))/343
+TDOA14 = (-np.sqrt((4.6-xx)**2+yy**2)+np.sqrt(xx**2+yy**2))/343
+TDOA15 = (-np.sqrt(xx**2+(2.3-yy)**2)+np.sqrt(xx**2+yy**2))/343
 TDOA23 = TDOA13 - TDOA12
 TDOA24 = TDOA14 - TDOA12
 TDOA25 = TDOA15 - TDOA12
@@ -71,10 +71,11 @@ TDOA45 = TDOA15 - TDOA14
 
 TDOA = [TDOA12, TDOA13, TDOA14, TDOA15, TDOA23, TDOA24, TDOA25, TDOA34, TDOA35, TDOA45]
 
-x = coordinates_2d(TDOA)
+print(TDOA)
+coordinates = coordinates_2d(TDOA)
+print(coordinates)
 
-print(x)
-
+"""
 def coordinate_2d(xx,yy):
 
     D12 = (np.sqrt((4.8-yy)**2+xx**2)-np.sqrt(xx**2+yy**2)) #Calculate the value of D12 using the input x and y
@@ -155,7 +156,7 @@ def coordinate_2d(xx,yy):
 # Testing to see if the output coordinates are the same as the input
 x,y = coordinate_2d(2.4,4)
 print(x,y)
-
+"""
 
 
 
