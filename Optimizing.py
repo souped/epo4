@@ -10,80 +10,106 @@ from sympy import symbols, solve
 import numpy as np
 import math
 import time
-from scipy.signal import butter, filtfilt
 
 
 
 
 class localization:
-    def localization(audiowav, reference):
+    def localization(audiowav, reference, file):
         # function goal: return the coorinates (x, y) using a ref signal and the audiosignal
                         
-        """ plt.figure(figsize=(15, 5))
-        for i in range(5):
-            audio_channel_i = audiowav[:, i]
-            segment = localization.detect_segments(audio_channel_i, 8)
-            
-            
-            # Plot segment 5 in the first row
-            plt.subplot(2, 5, i + 1)
-            plt.plot(segment[3], label='Segment 5')
-            plt.title(f'Channel {i+1} Segment 5')
-            plt.legend()
+        # Select channel 1
+        audio_channel_1 = audiowav[:, 0]
 
-            ch = localization.ch3(segment[3], ref)
-            # Plot channel estimation in the second row
-            plt.subplot(2, 5, i + 6)
-            plt.plot(ch, label='Channel Estimation 5')
-            plt.title(f'Channel {i+1} Estimation 5')
-            plt.legend()
+        """ import matplotlib.pyplot as plt
+
+        plt.figure(figsize=(15, 5))
+
+        # Select channel 1 (for example)
+        channel_index = 0  # Change this index to select a different channel if needed
+        audio_channel = audiowav[:, channel_index]
+
+        # Detect segments and find peaks for segment 4 of channel 1
+        segments = localization.detect_segments(audio_channel, 8)
+        channel_responses = [localization.ch3(segment, reference) for segment in segments]
+        peaks_segments = localization.find_segment_peaks(segments)
+        peaks_ch = localization.find_segment_peaks(channel_responses)
+
+        # Plot the original segment with peaks
+        segment_index = 3  # Adjust this index (0-based) to select a different segment if needed
+
+        segment = segments[segment_index]
+        peaks_segment = peaks_segments[segment_index]
+
+        # Plot on the left (1x2 grid, first plot)
+        plt.subplot(1, 2, 1)
+        plt.plot(segment)
+        plt.xlabel('Time')
+        plt.ylabel('Amplitude')
+        plt.legend()
+
+        # Plot the channel estimation for the same segment
+        ch = channel_responses[segment_index]
+        peaks_ch_segment = peaks_ch[segment_index]
+
+        # Plot on the right (1x2 grid, second plot)
+        plt.subplot(1, 2, 2)
+        plt.plot(ch)
+        plt.scatter(peaks_ch_segment, ch[peaks_ch_segment], color='red', zorder=5, label='Peak')
+        plt.title(f'Channel {channel_index + 1} Estimation {segment_index + 1}')
+        plt.xlabel('Time')
+        plt.ylabel('Amplitude')
+        plt.legend()
 
         plt.tight_layout()
-        plt.show()  """
+        plt.show() """
 
 
-        """ plt.figure(figsize=(30, 10))
+
+
+        plt.figure(figsize=(80, 100))  # Adjust the figure size as needed
 
         for i in range(5):
             audio_channel_i = audiowav[:, i]
             segments = localization.detect_segments(audio_channel_i, 8)
-            peaks_segments_i = localization.find_segment_peaks(segments) # get the peaks from the channel estimated segments
-
+            peaks_segments_i = localization.find_segment_peaks(segments)
+            
             for j in range(8):
-                segment = segments[j]     
-                peak_index_seg = peaks_segments_i[j]           
-
-                plt.subplot(5, 8, i * 8 + j + 1)
+                segment = segments[j]
+                peak_index_seg = peaks_segments_i[j]
+                
+                subplot_index = i * 8 + j + 1
+                plt.subplot(10, 4, subplot_index)  # 10 rows, 4 columns, and the subplot index
                 plt.plot(segment)
                 plt.scatter(peak_index_seg, segment[peak_index_seg], color='red', zorder=5, label='Peak')
                 plt.title(f'Channel {i+1} Segment {j+1}')
                 plt.legend()
+
         plt.tight_layout()
         plt.show()
 
-        plt.figure(figsize=(30, 10))
+        # Plot channel estimation
+        plt.figure(figsize=(40, 100))  # Adjust the figure size as needed
 
         for i in range(5):
             audio_channel_i = audiowav[:, i]
             segments = localization.detect_segments(audio_channel_i, 8)
-            channel_responses_i = [localization.ch3(segment, ref) for segment in segments] # retrieve the channel estimation for each segment using the function ch3()
+            channel_responses_i = [localization.ch3(segment, reference) for segment in segments]
             peaks_ch_i = localization.find_segment_peaks(channel_responses_i)
-            print(i, "ch:", peaks_ch_i)
-            print(i, "seg:", peaks_segments_i)
-
-
-
+            
             for j in range(8):
-                peak_index = peaks_ch_i[j]
-                ch = channel_responses_i[j]           
-
-                plt.subplot(5, 8, i * 8 + j + 1)
+                ch = channel_responses_i[j]
+                peak_index_ch = peaks_ch_i[j]
+                
+                subplot_index = i * 8 + j + 1
+                plt.subplot(10, 4, subplot_index)  # 10 rows, 4 columns, and the subplot index
                 plt.plot(ch)
-                plt.scatter(peak_index, ch[peak_index], color='red', zorder=5, label='Peak')
-                plt.title(f'Channel {i+1} Segment {j+1}')
+                plt.scatter(peak_index_ch, ch[peak_index_ch], color='red', zorder=5, label='Peak')
+                plt.title(f'Channel {i+1} Estimation {j+1}')
                 plt.legend()
+
         plt.tight_layout()
-        plt.show() """
+        plt.show()
         
 
         TDOA_list = []  
@@ -105,7 +131,7 @@ class localization:
                 TDOA_list.append(TDOA)
 
 
-
+        #print(TDOA_list)
         # calculate the coordinates using the function coordinates_2d and the TDOA-list
         location = localization.coordinates_2d(TDOA_list)
         x_car = location[0]
@@ -115,15 +141,15 @@ class localization:
     
     def process_channel(channel_data, ref):
         # function goal: return the mean of the peaks (using segments) of the signal
-        num_segments = 20
+        num_segments = 8
         segments = localization.detect_segments(channel_data, num_segments) # split signal into segments using function detect_segments()
         channel_responses = [localization.ch3(segment, ref) for segment in segments] # retrieve the channel estimation for each segment using the function ch3()
         channel_responses_array = np.array(channel_responses)
         peaks = localization.find_segment_peaks(channel_responses_array) # get the peaks from the channel estimated segments
-        """ peaks.pop(np.argmax(peaks))
+        peaks.pop(np.argmax(peaks))
         peaks.pop(np.argmin(peaks))
         peaks.pop(np.argmax(peaks))
-        peaks.pop(np.argmin(peaks)) """
+        peaks.pop(np.argmin(peaks))
         mean_peak = np.mean(peaks)
         return mean_peak
     
@@ -166,7 +192,7 @@ class localization:
 
         L = Nsignal_1 - Nreference_signal + 1
         Lhat = max(len(reference_signal), len(signal_1)) 
-        epsi = 0.15
+        epsi = 0.05
 
         reference_signal = np.append(reference_signal, [0]* (L-1))
 
@@ -259,34 +285,34 @@ if __name__ == "__main__":
         #"gold_codes\\gold_code_ref10.wav",
         #"gold_codes\\gold_code_ref11.wav",
         #"gold_codes\\gold_code_ref12.wav",
-        #"gold_codes\\gold_code_ref13.wav"
+        "gold_codes\\gold_code_ref13.wav"
         #"extra test/12-06_ref2.wav",
         #"extra test/ref1.wav",
-        "newtest/12-06_ref2.wav"
+        #"newtest/12-06_ref2.wav"
         ]
     
     audio_files = [
-        #"opnames nieuw\\gold_code13_test200-195.wav"
-        # "opnames nieuw\\gold_code13_test128-375.wav",
-        # "opnames nieuw\\gold_code13_test334-354.wav",
-        #"failures\\failure1718378635.395296.wav",
-        # "failures\\failure1718378639.9232068.wav",
-        # "failures\\failure1718378644.446856.wav",
-        #"failures\\failure1718378648.973517.wav",
+        #"opnames_nieuw/gold_code13_test128-375.wav",
+        "opnames_nieuw/gold_code13_test200-195.wav",
+        #"opnames_nieuw/gold_code13_test334-354.wav",
+        "failures\\failure1718378635.395296.wav",
+        "failures\\failure1718378639.9232068.wav",
+        "failures\\failure1718378644.446856.wav",
+        "failures\\failure1718378648.973517.wav",
         #"extra test/12-06_x430_y317.wav",
         #"extra test/12-06_x426_y36.wav",
         #"extra test/12-06_x339_y157.wav",
         #"extra test/12-06_x334_y354.wav",
         #"extra test/12-06_x267_y258.wav",
         #"extra test/12-06_x45_y267.wav",
-        "newtest/12-06_x45_y267.wav",
-        "newtest/12-06_x64_y40.wav",
-        "newtest/12-06_x334_y354.wav",
-        "newtest/12-06_x426_y36.wav",
-        "newtest/12-06_x430_y317.wav",
-        "newtest/12-06_x339_y157.wav",
-        "newtest/12-06_x267_y258.wav",
-        "newtest/12-06_x45_y267.wav",
+        #"newtest/12-06_x45_y267.wav",
+        #"newtest/12-06_x64_y40.wav",
+        #"newtest/12-06_x334_y354.wav",
+        #"newtest/12-06_x426_y36.wav",
+        #"newtest/12-06_x430_y317.wav",
+        #"newtest/12-06_x339_y157.wav",
+        #"newtest/12-06_x267_y258.wav",
+        #"newtest/12-06_x45_y267.wav",
 
     ]
 
@@ -295,25 +321,23 @@ if __name__ == "__main__":
         Fs, audio = wavfile.read(ref)
         audio = audio[:, 0]
         for i in range(len(audio)):
-            if np.abs(audio[i])>200:
+            if np.abs(audio[i])>50:
                 start=i
                 break   
-        pulse=308
-        segment = audio[start-30:start+pulse]
-    
-        #[start:start+pulse_length]
+        pulse=306
+        segment = audio[start:start+pulse]
 
-        # plt.plot(segment)
-        # plt.xlabel('Sample Index')
-        # plt.ylabel('Amplitude')
-        # plt.title('Reference Signal')
-        # plt.show()
-        # plt.close()
+        """ plt.plot(segment)
+        plt.xlabel('Sample Index')
+        plt.ylabel('Amplitude')
+        plt.title('Reference Signal')
+        plt.show()
+        plt.close() """
 
         start = time.time()
         for file in audio_files:
             Fs, audio = wavfile.read(file)
-            x_car, y_car = localization.localization(audio, segment)
+            x_car, y_car = localization.localization(audio, segment, file)
             print(f"{file}, {ref}: x6 = {x_car}, y6 = {y_car}")
     end = time.time()
     print("Total time:", end - start)
