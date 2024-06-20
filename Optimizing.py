@@ -67,7 +67,7 @@ class localization:
 
 
 
-        plt.figure(figsize=(80, 100))  # Adjust the figure size as needed
+        plt.figure(figsize=(10, 20))  # Adjust the figure size as needed
 
         for i in range(5):
             audio_channel_i = audiowav[:, i]
@@ -86,10 +86,11 @@ class localization:
                 plt.legend()
 
         plt.tight_layout()
-        plt.show()
+        plt.savefig(f"segmenten")
+        plt.close()
 
         # Plot channel estimation
-        plt.figure(figsize=(40, 100))  # Adjust the figure size as needed
+        plt.figure(figsize=(10, 20))  # Adjust the figure size as needed
 
         for i in range(5):
             audio_channel_i = audiowav[:, i]
@@ -109,7 +110,8 @@ class localization:
                 plt.legend()
 
         plt.tight_layout()
-        plt.show()
+        plt.savefig("ch")
+        plt.close()
         
 
         TDOA_list = []  
@@ -293,11 +295,11 @@ if __name__ == "__main__":
     
     audio_files = [
         #"opnames_nieuw/gold_code13_test128-375.wav",
-        "opnames_nieuw/gold_code13_test200-195.wav",
+        #"opnames_nieuw/gold_code13_test200-195.wav",
         #"opnames_nieuw/gold_code13_test334-354.wav",
-        "failures\\failure1718378635.395296.wav",
-        "failures\\failure1718378639.9232068.wav",
-        "failures\\failure1718378644.446856.wav",
+        #"failures\\failure1718378635.395296.wav",
+        #"failures\\failure1718378639.9232068.wav",
+        #"failures\\failure1718378644.446856.wav",
         "failures\\failure1718378648.973517.wav",
         #"extra test/12-06_x430_y317.wav",
         #"extra test/12-06_x426_y36.wav",
